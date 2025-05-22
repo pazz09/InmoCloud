@@ -1,7 +1,8 @@
 import Head from 'next/head';
 import NavigationBar from '@/components/Navbar';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { FaHome, FaUsers, FaMoneyBillWave, FaFileAlt } from 'react-icons/fa';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -14,9 +15,19 @@ export default function Home() {
         <h2 className="mb-4 text-center" style={{ color: '#2c3e50' }}>
           Bienvenida a InmoCloud
         </h2>
-        <p className="text-center text-muted mb-5">
-          Selecciona un módulo para comenzar
+        <p className="text-center text-muted mb-4">
+          Selecciona un módulo para comenzar o inicia sesión / regístrate
         </p>
+
+        <div className="d-flex justify-content-center gap-3 mb-5">
+          <Link href="/login" passHref>
+            <Button variant="primary">Iniciar Sesión</Button>
+          </Link>
+          <Link href="/register" passHref>
+            <Button variant="outline-primary">Registrarse</Button>
+          </Link>
+        </div>
+
         <Row className="g-4">
           <Col md={6} lg={3}>
             <Card className="text-center shadow-sm border-0 h-100">

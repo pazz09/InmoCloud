@@ -2,9 +2,10 @@ import { useState } from 'react';
 import Head from 'next/head';
 import NavigationBar from '@/components/Navbar';
 import { Form, Button, Alert, Container, Row, Col } from 'react-bootstrap';
+import { useRouter } from 'next/router';
 
 function validarRut(rut: string): boolean {
-  rut = rut.replace(/[^\dkK]/g, '').toUpperCase(); // Elimina puntos y guiones
+  rut = rut.replace(/[^\dkK]/g, '').toUpperCase();
   if (rut.length < 8) return false;
 
   const cuerpo = rut.slice(0, -1);
@@ -23,10 +24,21 @@ function validarRut(rut: string): boolean {
   return dv === dvCalculado;
 }
 
-export default function Login() {
+type UserType = 'arrendador' | 'arrendatario' | 'administrador';
+
+const Login = () => {
   const [rut, setRut] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
+
+  const mockLogin = (rut: string, password: string): UserType | null => {
+    // Simulamos que según el RUT, el usuario tiene un rol
+    if (rut.startsWith('1')) return 'arrendador';
+    if (rut.startsWith('2')) return 'arrendatario';
+    if (rut.startsWith('3')) return 'administrador';
+    return null;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +53,27 @@ export default function Login() {
       return;
     }
 
+    const userType = mockLogin(rut, password);
+
+    if (!userType) {
+      setError('Usuario o contraseña incorrectos.');
+      return;
+    }
+
     setError('');
-    // Aquí se conectará con el backend
-    console.log('Login con:', { rut, password });
+
+    // Redirigir según tipo de usuario
+    switch (userType) {
+      case 'arrendador':
+        router.push('/dashboard/arrendador');
+        break;
+      case 'arrendatario':
+        router.push('/dashboard/arrendatario');
+        break;
+      case 'administrador':
+        router.push('/dashboard/administrador');
+        break;
+    }
   };
 
   return (
@@ -95,4 +125,6 @@ export default function Login() {
       </Container>
     </>
   );
-}
+};
+
+export default Login;
