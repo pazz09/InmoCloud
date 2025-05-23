@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import NavigationBar from '@/components/Navbar';
-import { Form, Button, Alert, Container, Row, Col } from 'react-bootstrap';
+import { Form, Button, Alert, Container, Row, Col, Card} from 'react-bootstrap';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/context/AuthContext';
 
 function validarRut(rut: string): boolean {
   rut = rut.replace(/[^\dkK]/g, '').toUpperCase();
@@ -24,21 +25,21 @@ function validarRut(rut: string): boolean {
   return dv === dvCalculado;
 }
 
-type UserType = 'arrendador' | 'arrendatario' | 'administrador';
+type UserType = 'administrador';
 
 const Login = () => {
   const [rut, setRut] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth(); // Importante: usamos el contexto aquí
 
   const mockLogin = (rut: string, password: string): UserType | null => {
-    // Simulamos que según el RUT, el usuario tiene un rol
-    if (rut.startsWith('1')) return 'arrendador';
-    if (rut.startsWith('2')) return 'arrendatario';
     if (rut.startsWith('3')) return 'administrador';
     return null;
   };
+
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,10 +49,13 @@ const Login = () => {
       return;
     }
 
+    /*
+
     if (!validarRut(rut)) {
       setError('El RUT ingresado no es válido.');
       return;
     }
+    */
 
     const userType = mockLogin(rut, password);
 
@@ -61,20 +65,15 @@ const Login = () => {
     }
 
     setError('');
+    login(); // Activamos el estado de autenticación global
 
-    // Redirigir según tipo de usuario
     switch (userType) {
-      case 'arrendador':
-        router.push('/dashboard/arrendador');
-        break;
-      case 'arrendatario':
-        router.push('/dashboard/arrendatario');
-        break;
       case 'administrador':
-        router.push('/dashboard/administrador');
+        router.push('/dashboard/principal');
         break;
     }
   };
+  
 
   return (
     <>
