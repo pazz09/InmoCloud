@@ -1,13 +1,20 @@
+import { loginRoute } from './routes/login.js'
+// import { userRoute } from './routes/user.js'
 import express from 'express';
 
-// const express = require("express");
-
 const app = express()
+app.use(express.json());
+
 const port = 3000
 
-app.get('/login', (req, res) => {
-  res.send('Hello world');
-})
+
+
+
+
+app.use('/login', loginRoute);
+// app.use('/users', userRoute);
+
+
 
 app.get('/users', (req, res) => {
   res.send('Hello world');
