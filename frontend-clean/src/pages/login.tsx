@@ -5,17 +5,16 @@ import { Form, Button, Alert, Container, Row, Col, Card} from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 
-function formatRutInput(ev: React.ChangeEvent<HTMLInputElement>): string {
-  const value = ev.target.value;
+function formatRutInput(value: string): string {
+  // const value = ev.target.value;
   // Remove any character that isn't digit or 'k'/'K'
   const clean = value.replace(/[^\dkK]/g, '').toUpperCase();
 
-  let result = '';
   const body = clean.slice(0, -1);
 
   // Format body with thousands separators
   let formattedBody = '';
-  let reversed = body.split('').reverse();
+  const reversed = body.split('').reverse();
 
   for (let i = 0; i < reversed.length; i++) {
     formattedBody = reversed[i] + formattedBody;
@@ -116,7 +115,7 @@ const Login = () => {
                     type="text"
                     placeholder="Ej: 12.345.678-K"
                     value={rut}
-                    onChange={(e) => setRut(formatRutInput(e))}
+                    onChange={(e) => setRut(formatRutInput(e.target.value))}
                     required
                   />
                 </Form.Group>

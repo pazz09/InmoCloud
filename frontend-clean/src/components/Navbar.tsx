@@ -23,7 +23,7 @@ export default function NavigationBar() {
                 <Link href="/reportes" className="nav-link">Reportes</Link>
               </Nav>
               <Nav>
-                <Nav.Link onClick={logout} style={{ cursor: 'pointer' }}>
+                <Nav.Link /*onClick={logout}*/ style={{ cursor: 'pointer' }}>
                   Cerrar sesión
                 </Nav.Link>
               </Nav>

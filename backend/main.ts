@@ -1,5 +1,5 @@
 import { loginRoute } from './routes/login.js'
-// import { userRoute } from './routes/user.js'
+import { userRoute } from './routes/user.js'
 import express from 'express';
 
 const app = express()
