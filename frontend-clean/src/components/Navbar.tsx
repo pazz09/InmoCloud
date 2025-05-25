@@ -3,7 +3,7 @@ import { Navbar, Nav, Container } from 'react-bootstrap';
 import { useAuth } from '@/context/AuthContext';
 
 export default function NavigationBar() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth(); // 👈 incluir logout
 
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm">
@@ -21,7 +21,6 @@ export default function NavigationBar() {
                 <Link href="/usuarios" className="nav-link">Usuarios</Link>
                 <Link href="/pagos" className="nav-link">Pagos</Link>
                 <Link href="/reportes" className="nav-link">Reportes</Link>
-                <Link href="/login" className="nav-link">Cerrar sesión</Link>
               </Nav>
               <Nav>
                 <Nav.Link onClick={logout} style={{ cursor: 'pointer' }}>
@@ -30,10 +29,7 @@ export default function NavigationBar() {
               </Nav>
             </Navbar.Collapse>
           </>
-        ) : (
-          // Solo se muestra la marca (nombre de empresa)
-          null
-        )}
+        ) : null}
       </Container>
     </Navbar>
   );
