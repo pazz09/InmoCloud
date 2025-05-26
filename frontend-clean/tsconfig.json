@@ -13,10 +13,16 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/backend/*": ["lib/backend/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "lib/backend/**/*"],
+  "exclude": ["node_modules", "lib/backend/node_modules"] // ,
+
+  // "references": [
+  //   { "path": "lib/backend" }
+  // ]
 }

@@ -1,4 +1,4 @@
-DROP DATABASE inmocloud;
+DROP DATABASE if exists inmocloud;
 CREATE DATABASE inmocloud;
 
 DROP USER if exists 'corredor';
@@ -10,8 +10,6 @@ CREATE USER 'server'@'%' IDENTIFIED BY 'contrasenaServer';
 
 
 use inmocloud;
-GRANT ALL PRIVILEGES ON inmocloud TO corredor;
-GRANT ALL PRIVILEGES ON inmocloud TO server;
 
 
 CREATE TABLE users_t (
@@ -27,3 +25,7 @@ INSERT INTO users_t (name, role, passwordHash) VALUES
 ('Patricia Propietaria','Propietario', 'hashed_password_2'),
 ('Luis Arrendatario',   'Arrendatario', 'hashed_password_3'),
 ('Ana Administradora',  'Administrador','hashed_password_4');
+
+GRANT ALL PRIVILEGES ON inmocloud.* TO corredor;
+GRANT ALL PRIVILEGES ON inmocloud.* TO server;
+FLUSH PRIVILEGES;
