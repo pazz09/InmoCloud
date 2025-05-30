@@ -1,8 +1,15 @@
-import { verify, JwtPayload, sign } from 'jsonwebtoken';
+import { verify, sign } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { token_schema, token_t } from './types';
 import z from 'zod';
-import { warn } from 'console';
+
+export const getToken = (req: NextApiRequest): string => {
+    const safe_token = z.string({required_error: "El Token es obligatorio"})
+      .parse(req.headers.authorization);
+
+    return safe_token.split(' ')[1];
+}
+
 
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -14,11 +21,7 @@ export function withAuth(
 )  {
   // console.log("withAuth start");
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    const authHeader = req.headers['authorization'];
-    // console.log("got header " + authHeader);
-    //
-    const token = authHeader?.split(' ')[1];
-
+    const token = getToken(req);
     try {
       const user = token ? verifyToken(token) : null;
 
@@ -44,7 +47,7 @@ export function withAuth(
 
 }
 
-export function verifyToken(token: string) : z.infer<typeof token_schema> | null {
+export function verifyToken(token: string) : token_t {
     const payload = verify(token, JWT_SECRET);
     return token_schema.parse(payload);
 }

@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import { addUser, getUsers } from "@/backend/users"
-import  { response_t, user_add_schema, user_schema, UserRoleEnum }  from "@/backend/types"
+import { addUser, getUsers, updateUser } from "@/backend/users"
+import  { response_t, Roles, user_add_schema, empty_response_t, user_schema }  from "@/backend/types"
 import { withAuth } from "@/backend/auth"
 import z from "zod";
 
@@ -13,21 +13,30 @@ export default async function handler(
 ) {
   
   switch (req.method) {
-    case 'PUT':
+    case 'POST':
       withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
         const user = user_add_schema.parse(req.body);
         if (!user) return res.status
 
-        addUser(user).then((data: response_t<z.ZodNull>)=> {
+        addUser(user).then((data: empty_response_t)=> {
           res.status(200).json(data);
 
         });
-      }, [UserRoleEnum.Administrador, UserRoleEnum.Corredor])(req, res);
+      }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
       break;
 
-      
+    case 'PUT':
+      withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
+        const user = user_schema.parse(req.body);
+        if (!user) return res.status
+
+        updateUser(user).then((data: empty_response_t)=> {
+          res.status(200).json(data);
+
+        });
+      }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
+      break;
     case 'GET':
-      console.log("got get");
       withAuth(async (_: NextApiRequest, res: NextApiResponse) => {
         try {
           getUsers().then((data)=> {
@@ -40,7 +49,8 @@ export default async function handler(
           }
 
         }
-      }, [UserRoleEnum.Administrador, UserRoleEnum.Corredor])(req, res);
+      }, [Roles.ADMINISTRADOR, Roles.CORREDOR, Roles.PROPIETARIO, Roles.ARRENDATARIO])
+      (req, res);
       break;
 
     case '':
