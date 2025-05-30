@@ -11,8 +11,18 @@ const pool: mariadb.Pool = mariadb.createPool({
   password: process.env.MARIADB_USER_SERVER_PASSWORD
 })
 
-const query = (sql: string, params?: SQLParam[]) => {
-  return pool.query(sql, params)
+const query = async (sql: string, params?: SQLParam[]) => {
+  let conn: mariadb.PoolConnection | undefined;
+  try {
+    conn = await pool.getConnection();
+    const result = await conn.query(sql, params);
+    return result;
+  } catch (err) {
+    // Log or rethrow the error
+    throw err;
+  } finally {
+    if (conn) conn.release(); // Ensures the connection goes back to the pool
+  }
 };
  
 export default {

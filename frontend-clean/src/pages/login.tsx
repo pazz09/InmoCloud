@@ -5,7 +5,7 @@ import NavigationBar from '@/components/Navbar';
 import { Form, Button, Alert, Container, Row, Col, Card} from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
-import { login_response_schema, login_schema, response_login, response_login_t } from "@/backend/types";
+import { empty_response_schema, login_response_schema, login_schema, response_login, response_login_t } from "@/backend/types";
 import z from 'zod';
 
 function formatRutInput(value: string): string {
@@ -66,7 +66,7 @@ const Login = () => {
   // };
   //
 
-  
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,6 +105,8 @@ const Login = () => {
       if (!res.ok) {
         if (res.status === 401) {
           setError('Usuario o contraseña incorrectos.');
+        } else if (res.status === 404) {
+          setError(empty_response_schema.parse(await res.json()).message!);
         } else {
           setError('Error al iniciar sesión. Inténtalo más tarde.');
         }
@@ -117,6 +119,11 @@ const Login = () => {
       let login_response: response_login_t;
       try {
         login_response = response_login.parse(json_obj);
+        // All good, perform login
+        const token = login_response.data!.token; // assuming your backend returns { token, user }
+        localStorage.setItem('token', token);
+        login(token); // Context method
+        router.push('/dashboard/principal');
       } catch (err) {
         if (err instanceof z.ZodError) {
           console.error("Error en el schema de respuesta:", err);
@@ -124,92 +131,87 @@ const Login = () => {
           return;
         }
       }
+  } catch (err) {
+    console.error('Error en el fetch:', err);
+    setError('Error al conectar con el servidor.');
+  }
+};
 
-      // All good, perform login
-      login(); // Context method
-      router.push('/dashboard/principal');
+/*
 
-    } catch (err) {
-      console.error('Error en el fetch:', err);
-      setError('Error al conectar con el servidor.');
-    }
-  };
+   if (!validarRut(rut)) {
+   setError('El RUT ingresado no es válido.');
+   return;
+   }
+   */
 
-  /*
+// const userType = mockLogin(rut, password);
 
-     if (!validarRut(rut)) {
-     setError('El RUT ingresado no es válido.');
-     return;
-     }
-     */
+// if (!userType) {
+//   setError('Usuario o contraseña incorrectos.');
+//   return;
+// }
 
-  // const userType = mockLogin(rut, password);
-
-  // if (!userType) {
-  //   setError('Usuario o contraseña incorrectos.');
-  //   return;
-  // }
-
-  //   setError('');
-  //   login(); // Activamos el estado de autenticación global
-  //
-  //   switch (userType) {
-  //     case 'administrador':
-  //       router.push('/dashboard/principal');
-  //       break;
-  //   }
-  // };
+//   setError('');
+//   login(); // Activamos el estado de autenticación global
+//
+//   switch (userType) {
+//     case 'administrador':
+//       router.push('/dashboard/principal');
+//       break;
+//   }
+// };
 
 
-  return (
-    <>
-    <Head>
-    <title>Iniciar sesión – InmoCloud</title>
-    </Head>
-    <NavigationBar />
-    <Container fluid className="d-flex align-items-center justify-content-center" style={{ minHeight: '90vh', backgroundColor: '#f5f6f7' }}>
-    <Row>
-    <Col md={12}>
-    <div className="p-5 shadow rounded bg-white" style={{ minWidth: '300px', maxWidth: '400px' }}>
-    <h3 className="text-center mb-4" style={{ color: '#2c3e50' }}>Iniciar sesión</h3>
-    <Form onSubmit={handleSubmit}>
-    <Form.Group className="mb-3" controlId="formRut">
-    <Form.Label>RUT</Form.Label>
-    <Form.Control
-    type="text"
-    placeholder="Ej: 12.345.678-K"
-    value={rut}
-    onChange={(e) => setRut(formatRutInput(e.target.value))}
-    required
-    />
-    </Form.Group>
+return (
+  <>
+  <Head>
+  <title>Iniciar sesión – InmoCloud</title>
+  </Head>
+  <NavigationBar />
+  <Container fluid className="d-flex align-items-center justify-content-center" style={{ minHeight: '90vh', backgroundColor: '#f5f6f7' }}>
+  <Row>
+  <Col md={12}>
+  <div className="p-5 shadow rounded bg-white" style={{ minWidth: '300px', maxWidth: '400px' }}>
+  <h3 className="text-center mb-4" style={{ color: '#2c3e50' }}>Iniciar sesión</h3>
+  <Form onSubmit={handleSubmit}>
+  <Form.Group className="mb-3" controlId="formRut">
+  <Form.Label>RUT</Form.Label>
+  <Form.Control
+  type="text"
+  placeholder="Ej: 12.345.678-K"
+  value={rut}
+  onChange={(e) => setRut(formatRutInput(e.target.value))}
+  required
+  />
+  </Form.Group>
 
-    <Form.Group className="mb-3" controlId="formPassword">
-    <Form.Label>Contraseña</Form.Label>
-    <Form.Control
-    type="password"
-    placeholder="Ingresa tu contraseña"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    required
-    />
-    </Form.Group>
+  <Form.Group className="mb-3" controlId="formPassword">
+  <Form.Label>Contraseña</Form.Label>
+  <Form.Control
+  type="password"
+  placeholder="Ingresa tu contraseña"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  required
+  />
+  </Form.Group>
 
-    {error && <Alert variant="danger">{error}</Alert>}
+  {error && <Alert variant="danger">{error}</Alert>}
 
-    <Button variant="dark" type="submit" className="w-100 mt-2">
-    Ingresar
-    </Button>
-    <div className="text-center mt-3">
-    <a href="#" style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>¿Olvidaste tu contraseña?</a>
-    </div>
-    </Form>
-    </div>
-    </Col>
-    </Row>
-    </Container>
-    </>
-  );
+  <Button variant="dark" type="submit" className="w-100 mt-2">
+  Ingresar
+  </Button>
+  <div className="text-center mt-3">
+  <a href="#" style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>¿Olvidaste tu contraseña?</a>
+  </div>
+  </Form>
+  </div>
+  </Col>
+  </Row>
+  </Container>
+  </>
+);
 };
 
 export default Login;

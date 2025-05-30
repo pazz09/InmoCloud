@@ -10,8 +10,10 @@ export const NotAllowedMethodResponse: response_t<z.ZodNull> = {
 export function handleZodError(e: unknown, res: NextApiResponse<response_t<z.ZodAny>>) {
   if (e instanceof z.ZodError) {
     const mensaje = e.errors.map(err => err.message).join('. ') + '.';
-    return res.status(400).json({ status: "error", message: mensaje });
+    res.status(400).json({ status: "error", message: mensaje });
+    return true;
   }
+  return false;
 }
 
 

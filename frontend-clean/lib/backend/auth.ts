@@ -16,35 +16,52 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN!;
 
 export function withAuth(
-  handler: (req: NextApiRequest, res: NextApiResponse) => void,
+  handler: (req: NextApiRequest, res: NextApiResponse) => void | Promise<void>,
   allowedRoles: string[] = []
-)  {
-  // console.log("withAuth start");
+) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    const token = getToken(req);
     try {
+      console.log("Checking auth", allowedRoles);
+
+      let token;
+      try {
+        token = getToken(req);
+        console.log("token:", token);
+      } catch (err) {
+        console.error("Error getting token:", err);
+        return res.status(400).json({ error: "missing_token"});
+      }
+
       const user = token ? verifyToken(token) : null;
 
-      if (!user)
-        return res.status(401).json({'error': 'Unauthorized'})
-      if (allowedRoles.length && !allowedRoles.includes(user.role)) 
-        return res.status(403).json({'error': 'Forbidden'})
-      
-    } catch (err) {
-      if (err instanceof Error) {
-        if ((err as Error).name == "TokenExpiredError") {
-          return res.status(401).json({"error": "Token expiró"});
-        }
+      if (!user) {
+        return res.status(401).json({ error: "unauthorized" });
       }
+
+      if (allowedRoles.length && !allowedRoles.includes(user.role)) {
+        return res.status(403).json({ error: "forbidden" });
+      }
+
+      // // Optionally attach user info to request
+      // (req as any).user = user;
+
+      return await handler(req, res);
+
+    } catch (err) {
+      console.error("withAuth error:", err);
+
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: "missing_token" });
+      }
+
+      if ((err as Error)?.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "expired_token" });
+      }
+
+      // Catch-all error return
+      return res.status(500).json({ error: "Internal Server Error" });
     }
-
-
-
-
-    return handler(req, res);
-
-  }
-
+  };
 }
 
 export function verifyToken(token: string) : token_t {
