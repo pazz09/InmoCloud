@@ -15,6 +15,32 @@ import { z } from 'zod';
  *
  */
 
+// Respuestas
+
+export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => 
+z.object({
+  status: z.enum(['success', 'error']),
+  message: z.string().optional(),
+  data: dataSchema.optional(),
+
+})
+
+export type response_t<T extends z.ZodTypeAny> = 
+  z.infer<ReturnType<typeof response_schema<T>>>;
+
+export type empty_response_t = response_t<z.ZodNull>;
+
+
+export type SQLParam = string | number | boolean | Date | null;
+
+export const OkPacket = z.object({
+  insertId: z.bigint(),
+  affectedRows: z.number(),
+})
+
+export type OkPacket_t = z.infer<typeof OkPacket>;
+
+
 // Roles
 export enum UserRoleEnum {
   Arrendatario = 'Arrendatario',
@@ -50,11 +76,28 @@ export type user_t = z.infer<typeof user_schema>;
 export const user_safe_schema = user_schema.omit({ passwordHash: true });
 export type user_safe_t = z.infer<typeof user_safe_schema>;
 
-// Usuario para POST /users/
+// Usuario para POST /api/users/
 export const user_add_schema = user_schema.omit({id: true})
 export type user_add_t = z.infer<typeof user_add_schema>;
 
 
+
+// Log In POST /api/users/login
+export const login_schema = z.object({
+  rut: z.string({required_error: "El RUT es obligatorio"}),
+  password: z.string({required_error: "La contraseña es obligatoria"})
+});
+
+export type login_t = z.infer<typeof login_schema>;
+
+export const login_response_schema = z.object({
+  user: user_schema,
+  token: z.string({required_error: 
+          "El token es necesario para acceder a la funcionalidad del sistema"}),
+});
+
+export const response_login = response_schema(login_response_schema);
+export type response_login_t = z.infer<typeof response_login>;
 
 
 export const transaction_schema = z.object({
@@ -71,27 +114,4 @@ export const token_schema = z.object({
 })
 
 export type token_t = z.infer<typeof token_schema>;
-
-export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => 
-z.object({
-  status: z.enum(['success', 'error']),
-  message: z.string().optional(),
-  data: dataSchema.optional(),
-
-})
-
-export type response_t<T extends z.ZodTypeAny> = 
-  z.infer<ReturnType<typeof response_schema<T>>>;
-
-export type empty_response_t = response_t<z.ZodNull>;
-
-
-export type SQLParam = string | number | boolean | Date | null;
-
-export const OkPacket = z.object({
-  insertId: z.bigint(),
-  affectedRows: z.number(),
-})
-
-export type OkPacket_t = z.infer<typeof OkPacket>;
 
