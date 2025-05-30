@@ -1,9 +1,17 @@
 import Link from 'next/link';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/router';
 
 export default function NavigationBar() {
   const { isAuthenticated, logout } = useAuth(); // 👈 incluir logout
+  const router = useRouter();
+
+  const logOutHandler = () => {
+    localStorage.removeItem('token');
+    logout(); // optional: update auth context
+    router.push('/login');
+  }
 
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm">
@@ -23,7 +31,7 @@ export default function NavigationBar() {
                 <Link href="/reportes" className="nav-link">Reportes</Link>
               </Nav>
               <Nav>
-                <Nav.Link /*onClick={logout}*/ style={{ cursor: 'pointer' }}>
+                <Nav.Link onClick={logOutHandler} style={{ cursor: 'pointer' }}>
                   Cerrar sesión
                 </Nav.Link>
               </Nav>

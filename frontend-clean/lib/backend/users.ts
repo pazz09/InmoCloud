@@ -18,7 +18,7 @@ import z from "zod";
  */
 // Only to be used by admin, must check in higher level.
 export async function getUsers(): Promise<user_t[]> {
-    const rows = db.query("SELECT * FROM users_t");
+    const rows = await db.query("SELECT * FROM users_t");
 
     // Parse array of rows using Zod
     const parsed = z.array(user_schema).parse(rows);
@@ -97,14 +97,14 @@ export async function login(rut: string, password: string): Promise<login_respon
   const rows = await db.query('SELECT * FROM users_t WHERE rut = ?', [rut]);
 
   if (rows.length === 0) {
-    throw new Error("Usuario no encontrado");
+    throw new Error("user_not_found");
   }
 
   try {
     const user: user_t = user_schema.parse(rows[0]);
 
     if (!user.passwordHash) {
-      throw new Error("Usuario no encontrado");
+      throw new Error("user_not_found");
     }
 
     const match = await compare(password, user.passwordHash);
@@ -120,7 +120,7 @@ export async function login(rut: string, password: string): Promise<login_respon
     return { user: safeUser, token };
   } catch (err) {
     if (err instanceof z.ZodError) {
-      throw new Error("Usuario no encontrado");
+      throw new Error("user_not_found");
     }
     throw err; // Re-lanza cualquier otro error no manejado
   }

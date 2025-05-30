@@ -1,16 +1,42 @@
+'use client'
 import Head from 'next/head';
 import NavigationBar from '@/components/Navbar';
 import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import { FaHome, FaUsers, FaMoneyBillWave, FaBell } from 'react-icons/fa';
+import { dashboard_metrics_t, dashboard_response_schema } from '@/backend/types';
+import { useRouter } from 'next/router';
+// app/page.tsx or app/dashboard/page.tsx (Server Component)
+import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function Home() {
-  // Datos de ejemplo, luego puedes reemplazarlos con datos reales desde API o contexto
-  const propiedadesActivas = 12;
-  const inquilinos = 20;
-  const propiedadesEnArriendo = 8;
-  const pagosAtrasados = 3;
 
-  return (
+
+export default function Dashboard() {
+  const router = useRouter();
+  const [data, setData] = useState<dashboard_metrics_t>();
+
+  useEffect(() => {
+    fetch('/api/dashboard', { headers: {'authorization': `Bearer ${localStorage.getItem('token') || ""}`}   })
+      .then(res => {
+        if (!res.ok) {
+          router.push('/login');
+          return null;
+        }
+        return res.json();
+      })
+      .then(json => {
+        if (!json) return;
+        const parsed = dashboard_response_schema.safeParse(json);
+        if (!parsed.success || !parsed.data.data) {
+          router.push('/login');
+          return;
+        }
+        setData(parsed.data.data);
+      });
+  }, []);
+
+  if (!data) return <p>Cargando...</p>;
+ return (
     <>
       <Head>
         <title>Dashboard – InmoCloud</title>
@@ -28,7 +54,7 @@ export default function Home() {
                 <FaHome size={40} className="mb-3 text-primary" />
                 <Card.Title>Propiedades Activas</Card.Title>
                 <Card.Text style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                  {propiedadesActivas}
+                  {data.propiedadesActivas}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -40,7 +66,7 @@ export default function Home() {
                 <FaUsers size={40} className="mb-3 text-success" />
                 <Card.Title>Inquilinos</Card.Title>
                 <Card.Text style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                  {inquilinos}
+                  {data.inquilinos}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -52,7 +78,7 @@ export default function Home() {
                 <FaMoneyBillWave size={40} className="mb-3 text-warning" />
                 <Card.Title>Propiedades en Arriendo</Card.Title>
                 <Card.Text style={{ fontSize: '2rem', fontWeight: 'bold' }}>
-                  {propiedadesEnArriendo}
+                  {data.propiedadesEnArriendo}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -67,10 +93,10 @@ export default function Home() {
                 <strong>Notificaciones</strong>
               </Card.Header>
               <Card.Body>
-                {pagosAtrasados > 0 ? (
+                {data.pagosAtrasados > 0 ? (
                   <p>
                     <Badge bg="danger" pill>
-                      {pagosAtrasados}
+                      {data.pagosAtrasados}
                     </Badge>{' '}
                     pagos atrasados de inquilinos pendientes.
                   </p>

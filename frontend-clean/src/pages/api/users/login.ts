@@ -19,6 +19,10 @@ export default async function handler(
       } catch (e: unknown) {
         handleZodError(e, res);
         const err = e as Error;
+        if (err.message = "user_not_found") {
+          res.status(404) .json({status: "error", message: "Usuario no encontrado"})
+
+        }
         res.status(500) .json({status: "error", message: err.message})
       }
       break;

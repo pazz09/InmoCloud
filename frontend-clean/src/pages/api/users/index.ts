@@ -16,10 +16,9 @@ export default async function handler(
     case 'POST':
       withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
         const user = user_add_schema.parse(req.body);
-        if (!user) return res.status
 
         addUser(user).then((data: empty_response_t)=> {
-          res.status(200).json(data);
+          return res.status(200).json(data);
 
         });
       }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
@@ -28,7 +27,6 @@ export default async function handler(
     case 'PUT':
       withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
         const user = user_schema.parse(req.body);
-        if (!user) return res.status
 
         updateUser(user).then((data: empty_response_t)=> {
           res.status(200).json(data);
@@ -49,7 +47,7 @@ export default async function handler(
           }
 
         }
-      }, [Roles.ADMINISTRADOR, Roles.CORREDOR, Roles.PROPIETARIO, Roles.ARRENDATARIO])
+      }, [Roles.ADMINISTRADOR, Roles.CORREDOR])
       (req, res);
       break;
 
