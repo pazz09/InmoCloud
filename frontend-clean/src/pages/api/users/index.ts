@@ -1,61 +1,45 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import { addUser, getUsers, updateUser } from "@/backend/users"
-import  { response_t, Roles, user_add_schema, empty_response_t, user_schema }  from "@/backend/types"
-import { withAuth } from "@/backend/auth"
-import z from "zod";
+import { getUsersFiltered, } from "@/backend/users"
+import  { Roles, user_t, UserRoleEnum } from "@/backend/types"
+import { getToken, verifyToken, withAuth } from "@/backend/auth";
 
 
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<response_t<z.AnyZodObject>>
-) {
-  
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (req.method) {
-    case 'POST':
-      withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
-        const user = user_add_schema.parse(req.body);
+    case "POST":
+      return withAuth(
+        async (req: NextApiRequest, res: NextApiResponse) => {
 
-        addUser(user).then((data: empty_response_t)=> {
-          return res.status(200).json(data);
+          const token = getToken(req);
+          const token_data = verifyToken(token);
 
-        });
-      }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
-      break;
 
-    case 'PUT':
-      withAuth(async (req: NextApiRequest, res: NextApiResponse) => {
-        const user = user_schema.parse(req.body);
+          const { role } = token_data;
+          console.log("Requester role:", role)
+          const filters = req.body || {};
 
-        updateUser(user).then((data: empty_response_t)=> {
-          res.status(200).json(data);
+          // Get users (with or without filters)
+          const users = await getUsersFiltered(filters);
 
-        });
-      }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
-      break;
-    case 'GET':
-      withAuth(async (_: NextApiRequest, res: NextApiResponse) => {
-        try {
-          getUsers().then((data)=> {
-            res.status(200).json(data);
-
+          // Remove passwordHash from ADMINISTRADOR users
+          const sanitized = users.map((user: user_t) => {
+            console.log("Iterating user", user.name)
+            if (user.role === UserRoleEnum.ADMINISTRADOR || (role === user.role)) {
+              console.log("Is common, is match");
+              const { passwordHash, ...rest } = user;
+              return rest;
+            }
+            return user;
           });
-        } catch (err) {
-          if (err instanceof Error) {
-            res.status(500).json({error: err.message});
-          }
 
-        }
-      }, [Roles.ADMINISTRADOR, Roles.CORREDOR])
-      (req, res);
-      break;
+          return res.status(200).json(sanitized);
+        },
+        [Roles.ADMINISTRADOR, Roles.CORREDOR] // Auth required, any role allowed
+      )(req, res);
 
-    case '':
-
-
-
+    default:
+      return res.status(405).json({ error: "method_not_allowed" });
   }
-
-
 }

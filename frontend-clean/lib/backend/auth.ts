@@ -1,6 +1,6 @@
 import { verify, sign } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { token_schema, token_t } from './types';
+import { Roles, token_schema, token_t, user_role_enum_t, UserRoleEnum } from './types';
 import z from 'zod';
 
 export const getToken = (req: NextApiRequest): string => {
@@ -9,6 +9,18 @@ export const getToken = (req: NextApiRequest): string => {
 
     return safe_token.split(' ')[1];
 }
+
+export const rolePriority: Record<user_role_enum_t, number> = {
+  [UserRoleEnum.ARRENDATARIO]: 0,
+  [UserRoleEnum.PROPIETARIO]: 1,
+  [UserRoleEnum.CORREDOR]: 2,
+  [UserRoleEnum.ADMINISTRADOR]: 3,
+};
+
+export function canAccessSensitiveFields(currentRole: user_role_enum_t, targetRole: user_role_enum_t): boolean {
+  return currentRole > targetRole;
+}
+
 
 
 
@@ -70,6 +82,8 @@ export function verifyToken(token: string) : token_t {
 }
 
 export function generateToken(payload: token_t): string {
+
+  console.log('expiresIn:', Number.parseInt(JWT_EXPIRES_IN));
   return sign(payload, JWT_SECRET, { expiresIn: Number.parseInt(JWT_EXPIRES_IN)});
 }
 // import type { NextApiRequest, NextApiResponse, NextApi } from "next";
