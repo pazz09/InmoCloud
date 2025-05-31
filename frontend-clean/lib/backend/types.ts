@@ -46,10 +46,10 @@ export type OkPacket_t = z.infer<typeof OkPacket>;
 
 // Roles
 export enum UserRoleEnum {
-  Arrendatario  = 'Arrendatario',
-  Propietario   = 'Propietario',
-  Corredor      = 'Corredor',
-  Administrador = 'Administrador'
+  ARRENDATARIO  = 'Arrendatario',
+  PROPIETARIO   = 'Propietario',
+  CORREDOR      = 'Corredor',
+  ADMINISTRADOR = 'Administrador'
 }
 
 export const user_role_enum = z.nativeEnum(UserRoleEnum,
@@ -70,20 +70,24 @@ export const user_schema = z.object({
   name:         z.string({message: "El campo Nombre"}),
   rut:          z.string(),
   role:         user_role_enum,
-  passwordHash: z.string().optional()
+  passwordHash: z.string()
   },{required_error: "El campo Usuario es requerido"});
-
-// Usuario (tipo)
 export type user_t = z.infer<typeof user_schema>;
 
 // Usuario (esquema), sin passwordHash. Seguro de exponer al público
 export const user_safe_schema = user_schema.omit({ passwordHash: true });
-// Usuario (tipo), sin passwordHash. Seguro de exponer al público
 export type user_safe_t = z.infer<typeof user_safe_schema>;
 
 // Usuario para POST /api/users/
 export const user_add_schema = user_schema.omit({id: true})
 export type user_add_t = z.infer<typeof user_add_schema>;
+
+// Búsqueda de usuario (esquema)
+export const user_search_schema = z.object({
+  name:          z.string().optional(),
+  property_name: z.string().optional()
+});
+export type user_search_t = z.infer<typeof user_search_schema>;
 
 
 
