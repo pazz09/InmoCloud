@@ -18,11 +18,13 @@ export default async function handler(
         const { user, token } = await login(body.rut, body.password);
         res.status(200).json({ status: "success", data: { user, token } });
       } catch (e: unknown) {
+        console.log(e);
         // Handle Zod validation errors
         if (handleZodError(e, res)) return;
 
         const err = e as Error;
 
+        console.log(err.message);
         if (err.message === "user_not_found") {
           return res.status(404).json({ status: "error", message: "Usuario no encontrado" });
         }

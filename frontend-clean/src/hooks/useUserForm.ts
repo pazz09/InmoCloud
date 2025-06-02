@@ -1,0 +1,62 @@
+import { Mode, user_add_schema, user_edit_schema, user_form_data } from "@/backend/types";
+import { useState } from "react";
+
+export function useUserForm({
+  mode,
+  initialValues,
+  onSave,
+}: {
+  mode: Mode;
+  initialValues: user_form_data;
+  onSave: (data: user_form_data) => Promise<void>;
+}) {
+  const [formValues, setFormValues] = useState<user_form_data>(initialValues);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+
+  const schema = mode === "edit" ? user_edit_schema : user_add_schema;
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormValues((prev: user_form_data) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validate = () => {
+    const parsed = schema.safeParse(formValues);
+    if (!parsed.success) {
+      const errors: { [key: string]: string } = {};
+      for (const [key, messages] of Object.entries(parsed.error.formErrors.fieldErrors)) {
+        if (messages && messages.length > 0) errors[key] = messages[0];
+      }
+      setFieldErrors(errors);
+      return null;
+    }
+    return parsed.data;
+  };
+
+  const handleSave = async () => {
+    const validated = validate();
+    if (!validated) return;
+    await onSave(validated);
+  };
+
+  const resetForm = () => {
+    setFormValues(initialValues);
+    setFieldErrors({});
+    setGeneratedPassword(null);
+  };
+
+  return {
+    formValues,
+    fieldErrors,
+    generatedPassword,
+    setFormValues,
+    setGeneratedPassword,
+    handleInputChange,
+    handleSave,
+    resetForm,
+  };
+}

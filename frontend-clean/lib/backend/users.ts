@@ -1,5 +1,5 @@
 import db from "./db";
-import { empty_response_t, OkPacket, response_t, SQLParam, user_add_t, user_role_enum, user_role_enum_t, user_safe_schema, user_safe_t, user_schema, user_search_schema, user_search_t, user_t } from "./types"
+import { empty_response_t, OkPacket, response_t, SQLParam, user_add_t, user_role_enum, user_response_t, user_safe_schema, user_safe_t, user_schema, user_search_schema, user_search_t, user_t } from "./types"
 import { generateToken } from "./auth";
 
 import { compare } from "bcryptjs";
@@ -16,14 +16,15 @@ import z from "zod";
  * }
  *
  */
-// Only to be used by admin and corredor, must check in higher level.
+
 export async function getUsers(): Promise<user_t[]> {
   const rows = await db.query("SELECT * FROM users_t");
 
-  // Parse array of rows using Zod
-  const parsed = z.array(user_schema).parse(rows);
+  // Inject `type: "full"` into each row
+  const withType = rows.map((row: user_t) => ({ ...row, type: "full" }));
 
-  return parsed;
+  // Now safely parse with Zod
+  return z.array(user_schema).parse(withType);
 }
 
 export async function getUser(uid: number): Promise<user_t> {
@@ -33,20 +34,46 @@ export async function getUser(uid: number): Promise<user_t> {
 
   if (res.length === 0)
     throw new Error("user_not_found");
-  return user_schema.parse(res[0]);
+  return user_schema.parse({type: "full", ...res[0]});
 
 }
 
-export async function addUser(user: user_add_t): Promise<empty_response_t> 
+export async function addUser(user: user_add_t): Promise<user_t> 
 {
+
+  const existingRut = await db.query(
+    `SELECT id FROM users_t
+        WHERE rut = ?`,
+    [user.rut]
+  );
+
+  const existingName = await db.query(
+    `SELECT id FROM users_t
+        WHERE name = ?`,
+    [user.name]
+  );
+
+
+  if (existingRut.length > 0) {
+    throw new Error("user-rut-already-exists");
+  }
+
+  if (existingName.length > 0) {
+    throw new Error("user-name-already-exists");
+  }
+
   const res = await 
   db.query(`INSERT INTO users_t (name, rut, role, passwordHash)
            VALUES(?, ?, ?, ?)`,
            [user.name!, user.rut!, user.role!, user.passwordHash!]);
-           const okpacket = OkPacket.parse(res);
-           if (okpacket.affectedRows == 1)
-             return {status: "success"};
-           return {status: "error"};
+  console.log("addUser:res", res);
+  const okpacket = OkPacket.parse(res);
+  if (okpacket.affectedRows == 1) {
+    const user = await getUser(okpacket.insertId);
+    return user
+  }
+  throw new Error("error-adding-user");
+             //   return {status: "success"};
 
 }
 
@@ -57,10 +84,11 @@ export async function updateUser(user: user_t): Promise<empty_response_t>
            SET name = ?, rut = ?, role = ?,
              passwordHash = ? WHERE id = ?`,
              [user.name!, user.rut!, user.role!, user.passwordHash!, user.id!]);
-           const okpacket = OkPacket.parse(res);
-           if (okpacket.affectedRows == 1)
-             return {status: "success"};
-           return {status: "error", message: "Ningún dato ha sido modificado." };
+  const okpacket = OkPacket.parse(res);
+  console.log(okpacket);
+    if (okpacket.affectedRows == 1)
+      return {status: "success"};
+  return {status: "error", message: "Ningún dato ha sido modificado." };
 
 }
 
@@ -83,7 +111,7 @@ export async function deleteUser(uid: number): Promise<empty_response_t>
 }
 
 const login_response_schema = z.object({
-  user: user_schema,
+  user: user_safe_schema,
   token: z.string().jwt()
 })
 
@@ -101,31 +129,36 @@ export async function login(rut: string, password: string): Promise<login_respon
   }
 
   try {
-    const user: user_t = user_schema.parse(rows[0]);
+    const dbUser = rows[0];
+
+    // 👇 Inject `type: "full"` before parsing
+    const user: user_t = user_schema.parse({ ...dbUser, type: "full" });
 
     if (!user.passwordHash) {
       throw new Error("user_not_found");
     }
+
 
     const match = await compare(password, user.passwordHash);
     if (!match) {
       throw new Error("Contraseña inválida");
     }
 
-    // Copia segura sin passwordHash
-    const { passwordHash, ...safeUser } = user;
+    // 👇 Safely strip passwordHash and inject `type: "safe"`
+    const { passwordHash, ...rest } = user;
+    const safeUser: user_safe_t = user_safe_schema.parse({ ...rest, type: "safe" });
 
-    const token = generateToken({ id: user.id, role: user.role });
+    const token = generateToken({
+      id: user.id,
+      role: user_role_enum.parse(user.role),
+    });
 
     return { user: safeUser, token };
   } catch (err) {
-    if (err instanceof z.ZodError) {
-      throw new Error("user_not_found");
-    }
-    throw err; // Re-lanza cualquier otro error no manejado
+    console.error("Login error:", err);
+    throw err;
   }
 }
-
 // Solo para admin y corredor, autenticación debe ocurrir a nivel superior
 export async function searchUsers(params: user_search_t): Promise<user_t[]> {
   // Validar parámetros con Zod
@@ -163,7 +196,9 @@ export async function searchUsers(params: user_search_t): Promise<user_t[]> {
     values
   );
 
-  const parsed = z.array(user_schema).parse(rows);
+  const parsed = z.array(user_schema).parse(
+    rows.map((row: user_t) => ({ ...row, type: "full" }))
+  );
   return parsed;
 }
 

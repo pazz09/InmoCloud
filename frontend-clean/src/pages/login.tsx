@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { empty_response_schema, login_response_schema, login_schema, response_login, response_login_t } from "@/backend/types";
 import z from 'zod';
 
-function formatRutInput(value: string): string {
+export function formatRutInput(value: string): string {
   // const value = ev.target.value;
   // Remove any character that isn't digit or 'k'/'K'
   const clean = value.replace(/[^\dkK]/g, '').toUpperCase();
@@ -30,7 +30,7 @@ function formatRutInput(value: string): string {
   return dv ? `${formattedBody}-${dv}` : formattedBody;
 }
 
-function validarRut(rut: string): boolean {
+export function validarRut(rut: string): boolean {
   rut = rut.replace(/[^\dkK]/g, '').toUpperCase();
   if (rut.length < 8) return false;
 

@@ -10,18 +10,10 @@ export const getToken = (req: NextApiRequest): string => {
     return safe_token.split(' ')[1];
 }
 
-export const rolePriority: Record<user_role_enum_t, number> = {
-  [UserRoleEnum.ARRENDATARIO]: 0,
-  [UserRoleEnum.PROPIETARIO]: 1,
-  [UserRoleEnum.CORREDOR]: 2,
-  [UserRoleEnum.ADMINISTRADOR]: 3,
-};
 
-export function canAccessSensitiveFields(currentRole: user_role_enum_t, targetRole: user_role_enum_t): boolean {
+export function isHigherRole(currentRole: user_role_enum_t, targetRole: user_role_enum_t): boolean {
   return currentRole > targetRole;
 }
-
-
 
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -33,18 +25,20 @@ export function withAuth(
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
-      console.log("Checking auth", allowedRoles);
+      // console.log("Checking auth", allowedRoles);
 
       let token;
+      let user;
       try {
         token = getToken(req);
-        console.log("token:", token);
+        // console.log("token:", token);
+        user = token ? verifyToken(token) : null;
       } catch (err) {
+        console.log(err);
         console.error("Error getting token:", err);
         return res.status(400).json({ error: "missing_token"});
       }
 
-      const user = token ? verifyToken(token) : null;
 
       if (!user) {
         return res.status(401).json({ error: "unauthorized" });
@@ -76,6 +70,7 @@ export function withAuth(
   };
 }
 
+// Returns safe/parsed token_t data
 export function verifyToken(token: string) : token_t {
     const payload = verify(token, JWT_SECRET);
     return token_schema.parse(payload);

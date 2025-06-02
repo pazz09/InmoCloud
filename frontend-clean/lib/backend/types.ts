@@ -17,13 +17,46 @@ import { z } from 'zod';
  *
  */
 
+//RUT 
+
+// Helper function to validate RUT format and check digit
+const isValidRUT = (rut: string): boolean => {
+  rut = rut.replace(/\./g, "").replace(/-/g, "").toUpperCase();
+
+  if (!/^\d{7,8}[0-9K]$/.test(rut)) return false;
+
+  const body = rut.slice(0, -1);
+  const checkDigit = rut.slice(-1);
+
+  let sum = 0;
+  let multiplier = 2;
+
+  for (let i = body.length - 1; i >= 0; i--) {
+    sum += parseInt(body[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+
+  const expectedCheck = 11 - (sum % 11);
+  const expectedDigit =
+    expectedCheck === 11 ? "0" : expectedCheck === 10 ? "K" : expectedCheck.toString();
+
+  return checkDigit === expectedDigit;
+};
+
+// Zod schema
+const rut_schema = z
+  .string()
+  .refine(isValidRUT, {
+    message: "El RUT es inválido",
+  });
+
 // Respuestas
 
 export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => 
 z.object({
   status:   z.enum(['success', 'error']),
   message:  z.string().optional(),
-  data:     dataSchema.optional(),
+  data:     dataSchema.nullable().optional(),
 
 })
 
@@ -34,10 +67,13 @@ export const empty_response_schema = response_schema(z.null());
 export type empty_response_t = z.infer<typeof empty_response_schema>;
 
 
-export type SQLParam = string | number | boolean | Date | null;
+
+
+
+export type SQLParam = string | number | boolean | Date | number | null;
 
 export const OkPacket = z.object({
-  insertId:     z.bigint(),
+  insertId:     z.string().transform((val) => Number(val)),
   affectedRows: z.number(),
 })
 
@@ -46,10 +82,12 @@ export type OkPacket_t = z.infer<typeof OkPacket>;
 
 // Roles
 export enum UserRoleEnum {
+  SIN_SESION    = 'Sin sesión',
   ARRENDATARIO  = 'Arrendatario',
   PROPIETARIO   = 'Propietario',
   CORREDOR      = 'Corredor',
   ADMINISTRADOR = 'Administrador'
+
 }
 
 export const user_role_enum = z.nativeEnum(UserRoleEnum,
@@ -57,30 +95,63 @@ export const user_role_enum = z.nativeEnum(UserRoleEnum,
 export type user_role_enum_t = z.infer<typeof user_role_enum>;
 
 export const Roles = {
+  SIN_SESION:     user_role_enum.parse("Sin sesión"    ),
   ARRENDATARIO:   user_role_enum.parse("Arrendatario"  ),
   PROPIETARIO:    user_role_enum.parse("Propietario"   ),
   CORREDOR:       user_role_enum.parse("Corredor"      ),
   ADMINISTRADOR:  user_role_enum.parse("Administrador" ),
 };
 
+export const RoleHierarchy = [
+  UserRoleEnum.ARRENDATARIO,
+  UserRoleEnum.PROPIETARIO,
+  UserRoleEnum.CORREDOR,
+  UserRoleEnum.ADMINISTRADOR
+]
 
-// Usuario (esquema).
-export const user_schema = z.object({
-  id:           z.number({message: "El campo ID debe ser del tipo numérico"}),
-  name:         z.string({message: "El campo Nombre"}),
-  rut:          z.string(),
-  role:         user_role_enum,
-  passwordHash: z.string()
-  },{required_error: "El campo Usuario es requerido"});
+export const rolePriority: Record<user_role_enum_t, number> = {
+  [UserRoleEnum.SIN_SESION]: -1,
+  [UserRoleEnum.ARRENDATARIO]: 0,
+  [UserRoleEnum.PROPIETARIO]: 1,
+  [UserRoleEnum.CORREDOR]: 2,
+  [UserRoleEnum.ADMINISTRADOR]: 3,
+};
+
+const base_user = z.object({
+  id: z.number(),
+  name: z.string(),
+  rut: rut_schema,
+  role: user_role_enum,
+});
+
+export const user_safe_schema = base_user.extend({
+  type: z.literal("safe"),
+});
+
+export const user_schema = base_user.extend({
+  passwordHash: z.string(),
+  type: z.literal("full"),
+});
+
+// Discriminated union based on `type`
+export const user_union_schema = z.discriminatedUnion("type", [
+  user_safe_schema,
+  user_schema,
+]);
+
+export type user_union_t = z.infer<typeof user_union_schema>;
+
+
 export type user_t = z.infer<typeof user_schema>;
-
-// Usuario (esquema), sin passwordHash. Seguro de exponer al público
-export const user_safe_schema = user_schema.omit({ passwordHash: true });
 export type user_safe_t = z.infer<typeof user_safe_schema>;
 
-// Usuario para POST /api/users/
-export const user_add_schema = user_schema.omit({id: true})
-export type user_add_t = z.infer<typeof user_add_schema>;
+
+
+// Lista de usuarios:
+export const users_list_schema = z.array(user_union_schema);
+export type users_list_t = z.infer<typeof users_list_schema>;
+
+
 
 // Búsqueda de usuario (esquema)
 export const user_search_schema = z.object({
@@ -88,6 +159,9 @@ export const user_search_schema = z.object({
   property_name: z.string().optional()
 });
 export type user_search_t = z.infer<typeof user_search_schema>;
+
+export const user_response_schema = response_schema(user_schema);
+export type user_response_t = z.infer<typeof user_response_schema>;
 
 
 
@@ -100,7 +174,7 @@ export const login_schema = z.object({
 export type login_t = z.infer<typeof login_schema>;
 
 export const login_response_schema = z.object({
-  user:   user_schema,
+  user:   user_safe_schema,
   token:  z.string({required_error: 
           "El token es necesario para acceder a la funcionalidad del sistema"}),
 });
@@ -138,3 +212,12 @@ export const dashboard_response_schema =
 export type dashboard_response_t = z.infer<typeof dashboard_response_schema>;
 
 
+
+export type Mode  = "add" | "edit";
+
+// Usuario para POST /api/users/id
+export const user_add_schema = user_schema.omit({id: true})
+export type user_add_t = z.infer<typeof user_add_schema>;
+
+
+export type user_form_data = z.infer<typeof user_add_schema| typeof user_schema>;

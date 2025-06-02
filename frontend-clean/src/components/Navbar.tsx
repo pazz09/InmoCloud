@@ -26,7 +26,7 @@ export default function NavigationBar() {
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="me-auto">
                 <Link href="/propiedades" className="nav-link">Propiedades</Link>
-                <Link href="/usuarios" className="nav-link">Usuarios</Link>
+                <Link href="/dashboard/usuarios" className="nav-link">Usuarios</Link>
                 <Link href="/pagos" className="nav-link">Pagos</Link>
                 <Link href="/reportes" className="nav-link">Reportes</Link>
               </Nav>
