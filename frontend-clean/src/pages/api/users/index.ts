@@ -28,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           } catch (err) {
             if (err instanceof z.ZodError) {
-              res.status(400).json(ErrorTemplate("unauthorized"));
+              return res.status(400).json(ErrorTemplate("unauthorized"));
             } else if (err instanceof TokenExpiredError) {
-              res.status(400).json(ErrorTemplate("expired_token"));
+              return res.status(400).json(ErrorTemplate("expired_token"));
             } else {
               console.log(err);
             }
@@ -74,20 +74,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             try {
               user = await addUser(user_add_schema.parse(newUser)); // You should implement this
             } catch (err) {
-              res.status(400).json(ErrorTemplate((err as Error).message));
+              return res.status(400).json(ErrorTemplate((err as Error).message));
               if (err instanceof z.ZodError) {
-                res.status(400).json(ErrorTemplate("invalid-data"));
+                return res.status(400).json(ErrorTemplate("invalid-data"));
               }
             }
 
-            res.status(200).json({
+            return res.status(200).json({
               status: 'success',
               message: `Usuario creado correctamente.`,
               data: user,
             });
           } catch (err) {
             if ((err as Error).message === 'user_not_found') {
-              res.status(404).json(ErrorTemplate('user_not_found'));
+              return res.status(404).json(ErrorTemplate('user_not_found'));
             }
             throw err;
           }

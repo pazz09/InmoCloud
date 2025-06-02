@@ -4,7 +4,7 @@ import z, { ZodNull } from 'zod'
 
 import { getToken, isHigherRole, verifyToken } from '@/backend/auth';
 import { ErrorTemplate, handleZodError } from '@/backend/messages';
-import { response_t, Roles, user_edit_schema, user_role_enum, user_role_enum_t } from '@/backend/types'
+import { response_t, Roles, user_form_data, user_role_enum, user_role_enum_t } from '@/backend/types'
 import { getUser, updateUser } from '@/backend/users';
 import { assert } from 'console';
 import { parse } from 'path';
@@ -26,7 +26,7 @@ export default async function handler(
     const idRaw = req.query.id;
 
     if (typeof idRaw !== 'string') {
-      res.status(400).json(ErrorTemplate('ID inválido'));
+      return res.status(400).json(ErrorTemplate('ID inválido'));
     }
 
     /* Parses the idRaw string,
@@ -72,45 +72,73 @@ export default async function handler(
 
           // Si se quiere ver un admin y no se es admin (ni corredor), error.
           if (targetIsAdmin && isRegularUser && !isSelf) {
-            res.status(403).json(ErrorTemplate('No Autorizado'));
+            return res.status(403).json(ErrorTemplate('No Autorizado'));
           }
 
           // Corredores pueden ver admins o corredores, pero sin ver el passwordHash
           if ((targetIsAdmin || targetIsCorredor) && isCorredor && !isSelf) {
             const { passwordHash, ...safeUser } = user;
-            res.status(200).json({ status: 'success', data: safeUser });
+            return res.status(200).json({ status: 'success', data: safeUser });
           }
 
           assert(isAdmin || isCorredor);
           return res.status(200).json({ status: 'success', data: user });
         } catch (err) {
           if ((err as Error).message === 'user_not_found') {
-            res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
           }
           throw err; // fallback to outer catch
         }
       }
 
       case 'PUT': {
+        const body = req.body;
+
+        const parsedBody = user_form_data.safeParse(body);
+        if (!parsedBody.success) {
+          console.log(parsedBody.error);
+          handleZodError(parsedBody.error, res);
+          break;
+        }
+        const id = parsedId; // Use the parsed ID from the query
+        const { name, rut, role, passwordHash } = parsedBody.data;
+        // Check if rut exists
+        const status = await updateUser({
+          id, name, rut, role, passwordHash,
+          type: 'full'
+        });
+
+        if (status.status === 'error') {
+          return res.status(400).json(ErrorTemplate(status.message!));
+          break;
+        }
+        return res.status(200).json({
+          status: 'success',
+          message: `Usuario con ID ${id} actualizado correctamente.`,
+          data: 
+        });
+        
+
+        break;
       }
 
       case 'DELETE': {
         // Delete logic goes here
-        res.status(200).json({ status: 'success', message: `Eliminado usuario con ID: ${parsedId}.` });
+        return res.status(200).json({ status: 'success', message: `Eliminado usuario con ID: ${parsedId}.` });
       }
 
       default:
-        res.status(405).json(ErrorTemplate(`Método ${req.method} no permitido`));
+        return res.status(405).json(ErrorTemplate(`Método ${req.method} no permitido`));
     }
   } catch (err) {
     if (err instanceof z.ZodError) {
       handleZodError(err, res);
     }
     else if (err instanceof JsonWebTokenError) {
-      res.status(405).json(ErrorTemplate("Tóken inválido"));
+      return res.status(401).json(ErrorTemplate("invalid_token"));
     }
     console.error('Unhandled error:', err);
-    res.status(500).json(ErrorTemplate('Error interno del servidor'));
+    return res.status(500).json(ErrorTemplate('Error interno del servidor'));
   }
 }
 

@@ -61,7 +61,17 @@ export default function UsersDashboard() {
         }
         setUsers(parsed.data);
       })
-      .catch(err => setError(err.message));
+      // if error is 401, redirect to login
+      .catch (err => {
+        if (err.message === 'No autorizado') {
+          setError('No autorizado. Por favor, inicia sesión.');
+          router.push('/login');
+        } else {
+          setError('Error al cargar los usuarios.');
+          console.error(err);
+        }
+      }
+      );
   }, []);
 
   const handleEditClick = (user: User) => {

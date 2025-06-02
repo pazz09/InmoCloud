@@ -1,31 +1,40 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
-type TimedError = {
+type TimedAlert = {
   id: number;
   message: string;
+  type: 'error' | 'success'; // Extendable to 'info' | 'warning'
 };
 
-export function useErrorQueue(duration = 3000) {
-  const [visibleErrors, setVisibleErrors] = useState<TimedError[]>([]);
+export function useTimedAlerts(duration = 3000) {
+  const [visibleAlerts, setVisibleAlerts] = useState<TimedAlert[]>([]);
   const nextIdRef = useRef(0);
 
-  const addError = (message: string) => {
-    // const alreadyVisible = visibleErrors.some(e => e.message === message);
+  const addAlert = (message: string,  type: TimedAlert['type']) => {
+    // const alreadyVisible = visibleAlerts.some(e => e.message === message);
     // if (alreadyVisible) return;
 
     const id = ++nextIdRef.current;
-    const newError = { id, message };
+    const newAlert = { id, message, type };
 
-    setVisibleErrors(prev => [...prev, newError]);
+    setVisibleAlerts(prev => [...prev, newAlert]);
 
     setTimeout(() => {
-      setVisibleErrors(prev => prev.filter(e => e.id !== id));
+      setVisibleAlerts(prev => prev.filter(e => e.id !== id));
     }, duration);
   };
 
-  const dismissError = (id: number) => {
-    setVisibleErrors(prev => prev.filter(e => e.id !== id));
+  const addError = useCallback((message: string) => {
+    addAlert(message, 'error');
+  }, [addAlert]);
+
+  const addSuccess = useCallback((message: string) => {
+    addAlert(message, 'success');
+  }, [addAlert]);
+
+  const dismissAlert = (id: number) => {
+    setVisibleAlerts(prev => prev.filter(e => e.id !== id));
   };
 
-  return { visibleErrors, addError, dismissError };
+  return { visibleAlerts, addError, addSuccess, dismissAlert };
 }

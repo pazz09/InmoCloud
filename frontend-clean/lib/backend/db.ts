@@ -22,13 +22,19 @@ const query = async (sql: string, params?: SQLParam[]) => {
   let conn: mariadb.PoolConnection | undefined;
   try {
     conn = await pool.getConnection();
+    console.log('[DB] Connection acquired');
     const result = await conn.query(sql, params);
     return result;
   } catch (err) {
+    console.error('[DB] Query error:', err);
     throw err;
   } finally {
-    if (conn) conn.release();
+    if (conn) {
+      conn.release();
+      console.log('[DB] Connection released');
+    }
   }
 };
+
 
 export default { query };

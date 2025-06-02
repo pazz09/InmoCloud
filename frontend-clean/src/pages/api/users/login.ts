@@ -1,11 +1,9 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import { login } from '@/backend/users'
+import { login } from '@/backend/users';
 import { login_schema, login_t, response_login_t } from "@/backend/types";
-// import z from "zod";
-// import { userAgentFromString } from "next/server";
 import { handleZodError } from "@/backend/messages";
-
+import { AppError, convertZodError, UnexpectedError } from "@/backend/errors";
+import z from "zod";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,27 +12,40 @@ export default async function handler(
   switch (req.method) {
     case 'POST':
       try {
+        // 🔍 Validate request body
         const body: login_t = login_schema.parse(req.body);
+
+        // 🔐 Execute business logic
         const { user, token } = await login(body.rut, body.password);
-        res.status(200).json({ status: "success", data: { user, token } });
+
+        // ✅ Send success response
+        return res.status(200).json({
+          status: "success",
+          data: { user, token },
+        });
+
       } catch (e: unknown) {
-        console.log(e);
-        // Handle Zod validation errors
-        if (handleZodError(e, res)) return;
-
-        const err = e as Error;
-
-        console.log(err.message);
-        if (err.message === "user_not_found") {
-          return res.status(404).json({ status: "error", message: "Usuario no encontrado" });
+        console.error("API Error: ", e);
+        if (e instanceof z.ZodError) {
+          const appErr = convertZodError(e);
+          return res.status(appErr.statusCode).json({
+            status: "error",
+            message: appErr.message,
+            code: appErr.code, // Optional: only include if your frontend uses it
+          });
         }
-
-        return res.status(500).json({ status: "error", message: err.message });
+        return res.status(500).json({
+          status: "error",
+          message: "Error interno del servidor",
+          code: "INTERNAL_SERVER_ERROR",
+        });
       }
-      break;
 
     default:
-      res.status(405).json({ status: "error", message: "Método no permitido" });
+      return res.status(405).json({
+        status: "error",
+        message: "Método no permitido",
+        code: "METHOD_NOT_ALLOWED",
+      });
   }
 }
-

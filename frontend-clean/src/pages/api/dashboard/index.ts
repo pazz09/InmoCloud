@@ -14,11 +14,11 @@ export default async function handler(
     case "GET":
         withAuth(async (_: NextApiRequest, res: NextApiResponse) => {
           const metrics = await getDashboardMetrics()
-          res.status(200).json({status: "success", data: metrics});
+          return res.status(200).json({status: "success", data: metrics});
         }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
       break;
     default:
-      res.status(400).json(ErrorTemplate("method_not_allowed"))
+      return res.status(400).json(ErrorTemplate("method_not_allowed"))
       
   }
 

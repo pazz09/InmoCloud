@@ -1,12 +1,12 @@
 'use client';
 
-import { user_union_t } from "@/backend/types";
-import ErrorAlerts from "@/components/ErrorAlerts";
+import { update_response_schema, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
+import ErrorAlerts from "@/components/TimedAlerts";
 import NavigationBar from "@/components/Navbar";
 import UserModal from "@/components/UserModal";
 import UserTable from "@/components/UserTable";
 import { useAuth } from "@/context/AuthContext";
-import { useErrorQueue } from "@/hooks/useErrorQueue";
+import { useTimedAlerts } from "@/hooks/useErrorQueue";
 import { useUserList } from "@/hooks/useUserList";
 // import { Head } from "next/document";
 import { useRouter } from "next/router";
@@ -20,19 +20,90 @@ export default function UsersDashboard() {
   const auth = useAuth();
   const router = useRouter();
   const { users, loading, error, searchUsers } = useUserList();
-  const { visibleErrors, addError, dismissError } = useErrorQueue();
-  const [id, setId] = useState(-1)
+  const { visibleAlerts, addError, addSuccess, dismissAlert } = useTimedAlerts();
+  const [selectedId, setSelectedUser] = useState(-1)
+
+  const initialValues: user_form_data_t = {
+    name: "",
+    role: UserRoleEnum.SIN_SESION,
+    rut: "",
+    passwordHash: "",
+    type: "full"
+  };
+  const [formValues, setFormValues] = useState<user_form_data_t>(initialValues);
 
 
   const onUserEdit = (user: user_union_t) => {
-    console.log("onUserEdit")
+    setSelectedUser(user.id);
+    console.log("Editando usuario con ID:", user.id);
     console.log(user);
+
     if (user.type === "safe") {
       console.log("sin permiso")
       addError('No tienes los permisos para hacer eso.');
       return
     }
+    setFormValues(user)
     setShowModal(true);
+  }
+
+  const onUserAdd = () => {
+    setShowModal(true);
+  }
+
+  const editSubmit = async (values: user_form_data_t, id: number) => {
+    console.log("editSubmit", values, id);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      addError("No estás autenticado. Por favor, inicia sesión.");
+      return;
+    }
+    const res = await fetch(`/api/users/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(values),
+    });
+    if (!res.ok) {
+      const errorText = await res.text();
+      addError(`Error al editar el usuario: ${errorText}`);
+      return;
+    }
+    const json = await res.json();
+    const parsed = update_response_schema.safeParse(json);
+    console.log("parsed", parsed);
+    if (!parsed.success)
+      console.error("Error al parsear la respuesta:", parsed.error);
+    // Check if the response is valid
+    console.log("parsed.data", parsed.data);
+    if (parsed && parsed.data &&  !(parsed.data.status === "success")) {
+      console.error("Error en la respuesta del servidor:", parsed.data.message);
+      addError(`Error al editar el usuario: ${parsed.data.message}`);
+    }
+
+    if (!parsed.success) {
+      addError(`Error al editar el usuario`);
+      return;
+    }
+    console.log(parsed);
+    if (parsed.data.data?.affectedRows! > 0) {
+      console.log("Usuario editado correctamente:", parsed.data);
+      addSuccess("Usuario editado correctamente");
+      setShowModal(false);
+      setSelectedUser(-1);
+      // Optionally, you can refresh the user list or update the state
+      searchUsers(); // Refresh the user list
+
+    }
+  }
+
+  const onSubmit = async (values: user_form_data_t, id?: number) => {
+    const editing = id !== undefined && id !== -1;
+    if (editing) 
+      editSubmit(values, id)
+    console.log("onSubmit", values, id);
   }
 
 
@@ -54,15 +125,16 @@ export default function UsersDashboard() {
     <NavigationBar />
     <Container className="mt-5">
     <h2 className="mb-4 text-left">Lista de Usuarios</h2>
-    {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={()=> {}} onDelete={()=> {}} /> : null}
+    {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={()=> {}} /> : null}
     </Container>
-    <ErrorAlerts errors={visibleErrors} onDismiss={dismissError}/>
+    <ErrorAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>
     <UserModal
       show={showModal} 
-      onClose= {()=>{setShowModal(false)}}
-      onSubmit= {()=>{console.log("On modal submit")}}
-      // initialValues = {initialValues}
-      userId = {id}
+      editing={selectedId !== -1}
+      onClose= {()=>{setSelectedUser(-1); setFormValues(initialValues); setShowModal(false);}}
+      onSubmit= {onSubmit}
+      initialFormValues = {formValues}
+      userId = {selectedId}
 
       />
 

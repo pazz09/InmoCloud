@@ -2,18 +2,19 @@
 
 import { Alert, CloseButton } from 'react-bootstrap';
 
-type TimedError = {
+type TimedAlert = {
   id: number;
   message: string;
+  type: 'error' | 'success'
 };
 
-type ErrorAlertsProps = {
-  errors: TimedError[];
+type TimedAlertsProps = {
+  alerts: TimedAlert[];
   onDismiss: (id: number) => void;
 };
 
-export default function ErrorAlerts({ errors, onDismiss }: ErrorAlertsProps) {
-  if (errors.length === 0) return null;
+export default function TimedAlerts({ alerts, onDismiss }: TimedAlertsProps) {
+  if (alerts.length === 0) return null;
 
   return (
     <div
@@ -28,15 +29,15 @@ export default function ErrorAlerts({ errors, onDismiss }: ErrorAlertsProps) {
         pointerEvents: 'none',
       }}
     >
-      {errors.map((error) => (
+      {alerts.map((alert) => (
         <Alert
-          key={error.id}
-          variant="danger"
+          key={alert.id}
+          variant={alert.type === 'error' ? 'danger' : alert.type}
           className="mb-2 text-center fade show d-flex justify-content-between align-items-center"
           style={{ pointerEvents: 'auto' }}
         >
-          <span className="flex-grow-1">{error.message}</span>
-          <CloseButton onClick={() => onDismiss(error.id)} />
+          <span className="flex-grow-1">{alert.message}</span>
+          <CloseButton onClick={() => onDismiss(alert.id)} />
         </Alert>
       ))}
     </div>

@@ -51,15 +51,21 @@ const rut_schema = z
   });
 
 // Respuestas
-
-export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => 
-z.object({
-  status:   z.enum(['success', 'error']),
-  message:  z.string().optional(),
-  data:     dataSchema.nullable().optional(),
-
-})
-
+export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.discriminatedUnion("status", [
+    z.object({
+      status: z.literal("success"),
+      data: dataSchema,
+      message: z.string().optional(),
+    }),
+    z.object({
+      status: z.literal("error"),
+      message: z.string(),
+      code: z.string(), // e.g., "VALIDATION_ERROR", "USER_NOT_FOUND"
+      data: dataSchema.nullable().optional(), // optional even on error
+    }),
+  ]);
+  
 export type response_t<T extends z.ZodTypeAny> = 
   z.infer<ReturnType<typeof response_schema<T>>>;
 
@@ -132,6 +138,10 @@ export const user_schema = base_user.extend({
   passwordHash: z.string(),
   type: z.literal("full"),
 });
+
+export const user_form_data = user_schema.omit({id: true});
+export type user_form_data_t = z.infer<typeof user_form_data>;
+
 
 // Discriminated union based on `type`
 export const user_union_schema = z.discriminatedUnion("type", [
@@ -219,5 +229,8 @@ export type Mode  = "add" | "edit";
 export const user_add_schema = user_schema.omit({id: true})
 export type user_add_t = z.infer<typeof user_add_schema>;
 
+export const update_response_schema = response_schema(OkPacket);
+export type update_response_t = z.infer<typeof update_response_schema>;
 
-export type user_form_data = z.infer<typeof user_add_schema| typeof user_schema>;
+
+// export type user_form_data = z.infer<typeof user_add_schema| typeof user_schema>;

@@ -1,9 +1,10 @@
 import db from "./db";
-import { empty_response_t, OkPacket, response_t, SQLParam, user_add_t, user_role_enum, user_response_t, user_safe_schema, user_safe_t, user_schema, user_search_schema, user_search_t, user_t } from "./types"
+import { empty_response_t, OkPacket, response_t, SQLParam, user_add_t, user_role_enum, user_response_t, user_safe_schema, user_safe_t, user_schema, user_search_schema, user_search_t, user_t, OkPacket_t } from "./types"
 import { generateToken } from "./auth";
 
 import { compare } from "bcryptjs";
 import z from "zod";
+import { InvalidPasswordError, MissingCredentialsError, UserNotFoundError, UserParsingError } from "./errors";
 
 
 // TODO: Add Filters!
@@ -77,7 +78,7 @@ export async function addUser(user: user_add_t): Promise<user_t>
 
 }
 
-export async function updateUser(user: user_t): Promise<empty_response_t>
+export async function updateUser(user: user_t): Promise<OkPacket_t>
 {
   const res = await 
   db.query(`UPDATE users_t 
@@ -86,10 +87,7 @@ export async function updateUser(user: user_t): Promise<empty_response_t>
              [user.name!, user.rut!, user.role!, user.passwordHash!, user.id!]);
   const okpacket = OkPacket.parse(res);
   console.log(okpacket);
-    if (okpacket.affectedRows == 1)
-      return {status: "success"};
-  return {status: "error", message: "Ningún dato ha sido modificado." };
-
+  return okpacket;
 }
 
 export async function deleteUser(uid: number): Promise<empty_response_t>
@@ -117,48 +115,50 @@ const login_response_schema = z.object({
 
 type login_response_t = z.infer<typeof login_response_schema>;
 
+
 export async function login(rut: string, password: string): Promise<login_response_t> {
   if (!rut || !password) {
-    throw new Error("No se ingresaron datos");
+    throw MissingCredentialsError();
   }
 
   const rows = await db.query('SELECT * FROM users_t WHERE rut = ?', [rut]);
 
   if (rows.length === 0) {
-    throw new Error("user_not_found");
+    throw UserNotFoundError();
   }
 
+  const dbUser = rows[0];
+
+  let user: user_t;
   try {
-    const dbUser = rows[0];
-
-    // 👇 Inject `type: "full"` before parsing
-    const user: user_t = user_schema.parse({ ...dbUser, type: "full" });
-
-    if (!user.passwordHash) {
-      throw new Error("user_not_found");
-    }
-
-
-    const match = await compare(password, user.passwordHash);
-    if (!match) {
-      throw new Error("Contraseña inválida");
-    }
-
-    // 👇 Safely strip passwordHash and inject `type: "safe"`
-    const { passwordHash, ...rest } = user;
-    const safeUser: user_safe_t = user_safe_schema.parse({ ...rest, type: "safe" });
-
-    const token = generateToken({
-      id: user.id,
-      role: user_role_enum.parse(user.role),
-    });
-
-    return { user: safeUser, token };
-  } catch (err) {
-    console.error("Login error:", err);
-    throw err;
+    user = user_schema.parse({ ...dbUser, type: "full" });
+  } catch (e) {
+    console.error("User schema parse error", e);
+    throw UserParsingError();
   }
+
+  if (!user.passwordHash) {
+    throw UserNotFoundError(); // treat as same error to avoid leaking info
+  }
+
+  const match = await compare(password, user.passwordHash);
+  if (!match) {
+    throw InvalidPasswordError();
+  }
+
+  // Strip sensitive data
+  const { passwordHash, ...rest } = user;
+  const safeUser: user_safe_t = user_safe_schema.parse({ ...rest, type: "safe" });
+
+  const token = generateToken({
+    id: user.id,
+    role: user_role_enum.parse(user.role),
+  });
+
+  return { user: safeUser, token };
 }
+
+
 // Solo para admin y corredor, autenticación debe ocurrir a nivel superior
 export async function searchUsers(params: user_search_t): Promise<user_t[]> {
   // Validar parámetros con Zod

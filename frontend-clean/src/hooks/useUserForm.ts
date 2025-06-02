@@ -1,4 +1,4 @@
-import { Mode, user_add_schema, user_edit_schema, user_form_data } from "@/backend/types";
+import { Mode, user_add_schema, user_form_data, user_form_data_t } from "@/backend/types";
 import { useState } from "react";
 
 export function useUserForm({
@@ -7,14 +7,14 @@ export function useUserForm({
   onSave,
 }: {
   mode: Mode;
-  initialValues: user_form_data;
-  onSave: (data: user_form_data) => Promise<void>;
+  initialValues: user_form_data_t;
+  onSave: (data: user_form_data_t) => Promise<void>;
 }) {
-  const [formValues, setFormValues] = useState<user_form_data>(initialValues);
+  const [formValues, setFormValues] = useState<user_form_data_t>(initialValues);
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
 
-  const schema = mode === "edit" ? user_edit_schema : user_add_schema;
+  const schema = mode === "edit" ? user_edit__t : user_add_schema;
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
