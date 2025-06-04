@@ -1,11 +1,13 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import { addUser, getUser, getUsersFiltered, } from "@/backend/users"
-import  { Roles, user_add_schema, user_edit_schema, user_safe_schema, user_safe_t, user_t, UserRoleEnum } from "@/backend/types"
+import  { Roles, user_add_schema, user_safe_schema, user_safe_t, user_t, UserRoleEnum } from "@/backend/types"
 import { getToken, verifyToken, withAuth } from "@/backend/auth";
-import { ErrorTemplate, handleZodError } from "@/backend/messages";
+import { AppErrorResponse, ErrorTemplate, handleZodError } from "@/backend/messages";
 import z from "zod";
 import { TokenExpiredError } from "jsonwebtoken";
+import App from "@/pages/_app";
+import { convertZodError, InvalidTokenError, MethodNotAllowedError, UnauthorizedError, UnexpectedError, UserNotFoundError } from "@/backend/errors";
 
 
 function sanitizeUser(user: user_t): user_safe_t {
@@ -14,8 +16,6 @@ function sanitizeUser(user: user_t): user_safe_t {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-
-
 
   switch (req.method) {
     case "POST": {  // Should be: Upload user
@@ -28,16 +28,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           } catch (err) {
             if (err instanceof z.ZodError) {
-              return res.status(400).json(ErrorTemplate("unauthorized"));
+              return AppErrorResponse(res, convertZodError(err));
             } else if (err instanceof TokenExpiredError) {
-              return res.status(400).json(ErrorTemplate("expired_token"));
+              return AppErrorResponse(res, InvalidTokenError());
             } else {
               console.log(err);
             }
           }
           // Only admins or the user themselves can update the user
           if (!udata)
-            return res.status(400).json(ErrorTemplate("unauthorized"));
+            return AppErrorResponse(res, UnauthorizedError());
           const isAdmin = udata.role === Roles.ADMINISTRADOR;
 
           // if (!isAdmin && !isSelf) {
@@ -48,21 +48,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           console.log("reqbody", req.body)
 
-          const parsedBody = user_edit_schema.safeParse(req.body);
+          const parsedBody = user_add_schema.safeParse(req.body);
 
           if (!parsedBody.success) {
             console.log(parsedBody.error);
             handleZodError(parsedBody.error, res);
           }
 
-          const { name, rut, role, passwordHash } = parsedBody.data!;
-
+          const { nombre, apellidos, mail, telefono, rut, role, passwordHash } = parsedBody.data!;
 
           try {
 
             // Only admins can change roles
             const newUser = {
-              name,
+              nombre,
+              apellidos,
+              mail,
+              telefono,
               rut,
               role,
               passwordHash,
@@ -74,10 +76,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             try {
               user = await addUser(user_add_schema.parse(newUser)); // You should implement this
             } catch (err) {
-              return res.status(400).json(ErrorTemplate((err as Error).message));
               if (err instanceof z.ZodError) {
-                return res.status(400).json(ErrorTemplate("invalid-data"));
+                return AppErrorResponse(res, convertZodError(err));
               }
+              return AppErrorResponse(res, UnexpectedError());
             }
 
             return res.status(200).json({
@@ -87,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             });
           } catch (err) {
             if ((err as Error).message === 'user_not_found') {
-              return res.status(404).json(ErrorTemplate('user_not_found'));
+              return AppErrorResponse(res, UserNotFoundError());
             }
             throw err;
           }
@@ -97,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
     default:
-      return res.status(405).json({ error: "method_not_allowed" });
+      return AppErrorResponse(res, MethodNotAllowedError());
   }
 
 }

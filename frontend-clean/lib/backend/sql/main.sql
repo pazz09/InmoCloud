@@ -14,18 +14,20 @@ use inmocloud;
 
 CREATE TABLE users_t (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name TEXT NOT NULL,
+  nombre VARCHAR(100) NOT NULL,
+  apellidos VARCHAR(150) NOT NULL,
+  telefono VARCHAR(20),
+  mail VARCHAR(100),
   role ENUM('Corredor', 'Propietario', 'Arrendatario', 'Administrador') NOT NULL,
-  passwordHash TEXT NOT NULL,
-  rut TEXT NOT NULL
+  passwordHash TEXT, 
+  rut VARCHAR(15) NOT NULL
 );
 
-
-INSERT INTO users_t (name, role, passwordHash, rut) VALUES
-('Carlos Corredor',     'Corredor',     '$2b$10$MYv7M9NzO33FwkZMyNWZwO/xl07nJYI86K1O8c7ACx1yVHl470i5G', '11.111.111-1'),
-('Patricia Propietaria','Propietario',  '$2b$10$QqS1OleeUdna2dh1lw.wVu6sUBZtjw7Bi6SUlriaw.OL8WIXC8JRO', '22.222.222-2'),
-('Luis Arrendatario',   'Arrendatario', '$2b$10$hVS0cFxSh1GUO91eVEDOoeizmnEI6OndtB1.9UZ8z5hzuNZq1yTeS', '33.333.333-3'),
-('Ana Administradora',  'Administrador','$2b$10$6C.DuPVcbCgMCoUKw.3jJeCzQ2VmduIb0NSdDDCUSvTOlx./txHdS', '44.444.444-4');
+INSERT INTO users_t (nombre, apellidos, telefono, mail, role, passwordHash, rut) VALUES
+('Carlos',   'Corredor',     '912345678', 'carlos@inmobiliaria.cl',     'Corredor',     '$2b$10$MYv7M9NzO33FwkZMyNWZwO/xl07nJYI86K1O8c7ACx1yVHl470i5G', '11.111.111-1'),
+('Patricia', 'Propietaria',  '922345678', 'patricia@propiedades.cl',    'Propietario',  '$2b$10$QqS1OleeUdna2dh1lw.wVu6sUBZtjw7Bi6SUlriaw.OL8WIXC8JRO', '22.222.222-2'),
+('Luis',     'Arrendatario', '933345678', 'luis@arrendatarios.cl',      'Arrendatario', '$2b$10$QqS1OleeUdna2dh1lw.wVu6sUBZtjw7Bi6SUlriaw.OL8WIXC8JRO', '33.333.333-3'),
+('Ana',      'Administradora','944345678','ana@administracion.cl',      'Administrador','$2b$10$6C.DuPVcbCgMCoUKw.3jJeCzQ2VmduIb0NSdDDCUSvTOlx./txHdS', '44.444.444-4');
 
 
 -- PROPERTIES

@@ -15,8 +15,8 @@ export async function getDashboardMetrics() {
 
   const [{ count: pagosAtrasados }] = await db.query(`
     SELECT COUNT(*) AS count 
-    FROM transactions_t
-    WHERE pagado = FALSE AND fecha_pago < NOW();
+    FROM pagos_t
+    WHERE pagado = FALSE AND fecha < CURDATE();
   `);
 
   return {

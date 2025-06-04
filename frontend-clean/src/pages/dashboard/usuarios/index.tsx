@@ -1,6 +1,6 @@
 'use client';
 
-import { update_response_schema, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
+import { OkPacket, response_schema, update_response_schema, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
 import ErrorAlerts from "@/components/TimedAlerts";
 import NavigationBar from "@/components/Navbar";
 import UserModal from "@/components/UserModal";
@@ -12,6 +12,7 @@ import { useUserList } from "@/hooks/useUserList";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
+import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 
 const initialValues = {name: "", role: "", rut: "", passwordHash: ""}
 
@@ -23,8 +24,14 @@ export default function UsersDashboard() {
   const { visibleAlerts, addError, addSuccess, dismissAlert } = useTimedAlerts();
   const [selectedId, setSelectedUser] = useState(-1)
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<user_union_t | null>(null);
+
   const initialValues: user_form_data_t = {
-    name: "",
+    nombre: "",
+    apellidos: "",
+    mail: "",
+    telefono: "",
     role: UserRoleEnum.SIN_SESION,
     rut: "",
     passwordHash: "",
@@ -51,6 +58,53 @@ export default function UsersDashboard() {
     setShowModal(true);
   }
 
+  const createUserSubmit = async (values: user_form_data_t) => {
+    console.log("createUserSubmit", values);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      addError("No estás autenticado. Por favor, inicia sesión.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        const parsed = response_schema(OkPacket).parse(json);
+        addError(`Error al crear el usuario: ${parsed.message}`);
+        return;
+      }
+
+      const json = await res.json();
+      const parsed = update_response_schema.parse(json);
+      if (parsed.status !== "success") {
+        addError(`Error al crear el usuario: ${parsed.message}`);
+        return;
+      }
+
+      if (parsed.data.affectedRows === 0) {
+        addError("No se creó ningún usuario. Verifica que los datos sean correctos.");
+        return;
+      }
+
+      addSuccess("Usuario creado correctamente.");
+      setShowModal(false);
+      setFormValues(initialValues);
+      await searchUsers();
+    } catch (error) {
+      console.error("Error al crear el usuario:", error);
+      addError(`Error al crear el usuario: ${error instanceof Error ? error.message : "Error desconocido"}`);
+    }
+  };
+
   const editSubmit = async (values: user_form_data_t, id: number) => {
     console.log("editSubmit", values, id);
     const token = localStorage.getItem("token");
@@ -58,44 +112,45 @@ export default function UsersDashboard() {
       addError("No estás autenticado. Por favor, inicia sesión.");
       return;
     }
-    const res = await fetch(`/api/users/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(values),
-    });
-    if (!res.ok) {
-      const errorText = await res.text();
-      addError(`Error al editar el usuario: ${errorText}`);
-      return;
-    }
-    const json = await res.json();
-    const parsed = update_response_schema.safeParse(json);
-    console.log("parsed", parsed);
-    if (!parsed.success)
-      console.error("Error al parsear la respuesta:", parsed.error);
-    // Check if the response is valid
-    console.log("parsed.data", parsed.data);
-    if (parsed && parsed.data &&  !(parsed.data.status === "success")) {
-      console.error("Error en la respuesta del servidor:", parsed.data.message);
-      addError(`Error al editar el usuario: ${parsed.data.message}`);
-    }
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(values),
+      });
 
-    if (!parsed.success) {
-      addError(`Error al editar el usuario`);
-      return;
-    }
-    console.log(parsed);
-    if (parsed.data.data?.affectedRows! > 0) {
-      console.log("Usuario editado correctamente:", parsed.data);
-      addSuccess("Usuario editado correctamente");
-      setShowModal(false);
-      setSelectedUser(-1);
-      // Optionally, you can refresh the user list or update the state
-      searchUsers(); // Refresh the user list
+      if (!res.ok) {
+        const json = await res.json();
+        const parsed = response_schema(OkPacket).parse(json);
+        addError(`Error al editar el usuario: ${parsed.message}`);
+        return;
+      }
 
+      const json = await res.json();
+      console.log("Respuesta del servidor:", json);
+      console.log("expecting", update_response_schema);
+      const parsed = update_response_schema.parse(json);
+      if (parsed.status !== "success") {
+        addError(`Error al editar el usuario: ${parsed.message}`);
+        return;
+      }
+      if (parsed.data.affectedRows === 0) {
+        addError("No se modificó ningún usuario. Verifica que los datos sean correctos.");
+        return;
+      } else {
+        addSuccess("Usuario editado correctamente.");
+        setShowModal(false);
+        setSelectedUser(-1);
+        setFormValues(initialValues);
+        // Refresh the user list
+        await searchUsers();
+      }
+    } catch (error) {
+      console.error("Error al editar el usuario:", error);
+      addError(`Error al editar el usuario: ${error instanceof Error ? error.message : "Error desconocido"}`);
     }
   }
 
@@ -103,8 +158,65 @@ export default function UsersDashboard() {
     const editing = id !== undefined && id !== -1;
     if (editing) 
       editSubmit(values, id)
+    else 
+      createUserSubmit(values);
     console.log("onSubmit", values, id);
   }
+
+  const onUserDelete = (user: user_union_t) => {
+  if (user.type === "safe") {
+    addError('No tienes los permisos para hacer eso.');
+    return;
+  }
+  setDeleteTarget(user);
+  setShowDeleteModal(true);
+};
+
+const confirmDelete = async () => {
+  if (!deleteTarget) return;
+  setShowDeleteModal(false);
+  setDeleteTarget(null);
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    addError("No estás autenticado. Por favor, inicia sesión.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/users/${deleteTarget.id}`, {
+      method: "DELETE",
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      addError(`Error al eliminar el usuario: ${errorText}`);
+      return;
+    }
+
+    const json = await res.json();
+    const response = response_schema(OkPacket).parse(json);
+    if (json.status !== "success") {
+      if (json.code === "SESSION_EXPIRED") {
+        addError("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+        router.push("/login");
+        return;
+      }
+
+      addError(`Error al eliminar el usuario: ${json.message}`);
+      return;
+    }
+
+    addSuccess("Usuario eliminado correctamente.");
+    await searchUsers();
+  } catch (error) {
+    console.error("Error al eliminar el usuario:", error);
+    addError(`Error desconocido al eliminar: ${error instanceof Error ? error.message : "Error desconocido"}`);
+  }
+};
 
 
   // const [editMode, setEditMode] = useState<Mode>()
@@ -125,7 +237,7 @@ export default function UsersDashboard() {
     <NavigationBar />
     <Container className="mt-5">
     <h2 className="mb-4 text-left">Lista de Usuarios</h2>
-    {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={()=> {}} /> : null}
+    {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
     </Container>
     <ErrorAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>
     <UserModal
@@ -136,7 +248,13 @@ export default function UsersDashboard() {
       initialFormValues = {formValues}
       userId = {selectedId}
 
-      />
+    />
+    <ConfirmDeleteModal
+      show={showDeleteModal}
+      onClose={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
+      onConfirm={confirmDelete}
+      itemName={deleteTarget!.nombre + deleteTarget!.apellidos}
+    />
 
     </>
   );

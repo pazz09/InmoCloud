@@ -1,5 +1,5 @@
 import { Modal, Button, Form, Alert } from "react-bootstrap";
-import { RoleHierarchy, token_t, user_form_data_t, user_union_schema, user_union_t, UserRoleEnum } from "@/backend/types";
+import { RoleHierarchy, token_t, user_form_data, user_form_data_t, user_union_schema, user_union_t, UserRoleEnum } from "@/backend/types";
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 
@@ -30,11 +30,14 @@ export default function UserModal({
 }: UserModalProps) {
 
   const [formValues, setFormValues] = useState<user_form_data_t>({
-    name: "",
-    rut: "",
-    role: UserRoleEnum.SIN_SESION,
+    nombre: "",
+    apellidos: "",
+    mail: "",
+    telefono: "",
     passwordHash: "",
     type: "full",
+    rut: "",
+    role: UserRoleEnum.SIN_SESION,
   });
   
 
@@ -53,7 +56,10 @@ export default function UserModal({
       setFormValues(initialFormValues);
     } else if (show && !initialFormValues) {
       setFormValues({
-        name: "",
+        nombre: "",
+        apellidos: "",
+        mail: "",
+        telefono: "",
         rut: "",
         role: UserRoleEnum.SIN_SESION,
         passwordHash: "",
@@ -78,7 +84,7 @@ export default function UserModal({
         }
       })();
 
-  console.log("requesterRole", requesterRole)
+  // console.log("requesterRole", requesterRole)
 
     // if (show && initialValues) {
     //   setFormValues(initialValues);
@@ -95,7 +101,7 @@ export default function UserModal({
     //   });
     //   setFormErrors({});
     // }
-  }, [show, formValues, userId]);
+  }, [show, userId]);
 
 
   
@@ -106,7 +112,18 @@ export default function UserModal({
   };
 
   const handleSubmit = () => {
-    const parsed = user_union_schema.safeParse(formValues);
+    console.log("Submitting form values:", formValues);
+
+    const cleanedFormValues = {
+      ...formValues,
+      mail: formValues.mail === "" ? undefined : formValues.mail,
+      telefono: formValues.telefono === "" ? undefined : formValues.telefono,
+    };
+
+    const parsed = user_form_data.safeParse(cleanedFormValues);
+    console.log("Parsed form values:", parsed);
+    console.log("errors", parsed.error);
+
     if (!parsed.success) {
       const errors: Partial<Record<keyof user_union_t, string>> = {};
       parsed.error.errors.forEach((err) => {
@@ -117,7 +134,7 @@ export default function UserModal({
       return;
     }
 
-    onSubmit(formValues, userId);
+    onSubmit(cleanedFormValues, userId);
     onClose();
   };
 
@@ -130,17 +147,31 @@ export default function UserModal({
       <Modal.Body>
         <Form>
           <Form.Group className="mb-3">
-            <Form.Label>Nombre Completo</Form.Label>
+            <Form.Label>Nombre</Form.Label>
             <Form.Control
-              name="name"
-              value={formValues.name}
+              name="nombre"
+              value={formValues.nombre}
               onChange={handleChange}
-              isInvalid={!!formErrors.name}
+              isInvalid={!!formErrors.nombre}
             />
             <Form.Control.Feedback type="invalid">
-              {formErrors.name}
+              {formErrors.nombre}
             </Form.Control.Feedback>
           </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Apellidos</Form.Label>
+          <Form.Control
+            type="text"
+            name="apellidos"
+            value={formValues.apellidos}
+            onChange={handleChange}
+            isInvalid={!!formErrors.apellidos}
+          />
+          <Form.Control.Feedback type="invalid">
+            {formErrors.apellidos}
+          </Form.Control.Feedback>
+        </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label>RUT</Form.Label>
@@ -154,6 +185,35 @@ export default function UserModal({
               {formErrors.rut}
             </Form.Control.Feedback>
           </Form.Group>
+
+          <Form.Group className="mb-3">
+
+          <Form.Label>Correo electrónico</Form.Label>
+          <Form.Control
+            type="email"
+            name="mail"
+            value={formValues.mail ? formValues.mail : ""}
+            onChange={handleChange}
+            isInvalid={!!formErrors.mail}
+          />
+          <Form.Control.Feedback type="invalid">
+            {formErrors.mail}
+          </Form.Control.Feedback>
+        </Form.Group>
+
+        <Form.Group className="mb-3">
+          <Form.Label>Teléfono</Form.Label>
+          <Form.Control
+            type="text"
+            name="telefono"
+            value={formValues.telefono ? formValues.telefono : ""}
+            onChange={handleChange}
+            isInvalid={!!formErrors.telefono}
+          />
+          <Form.Control.Feedback type="invalid">
+            {formErrors.telefono}
+          </Form.Control.Feedback>
+      </Form.Group>
 
           <Form.Group controlId="formRole" className="mb-3">
             <Form.Label>Rol</Form.Label>

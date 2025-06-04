@@ -4,7 +4,7 @@ import { user_union_t } from "@/backend/types";
 interface UserTableProps {
   users: user_union_t[];
   onEdit: (user: user_union_t) => void;
-  onDelete: (id: number) => void;
+  onDelete: (user: user_union_t) => void;
   onAdd: () => void;
 }
 
@@ -37,7 +37,7 @@ export default function UserTable({ users, onEdit, onDelete, onAdd }: UserTableP
             users.map((user) => (
               <tr key={user.id}>
                 <td>{user.id}</td>
-                <td>{user.name}</td>
+                <td>{`${user.nombre} ${user.apellidos}`}</td>
                 <td>{user.role}</td>
                 <td>
                   <Button
@@ -51,7 +51,7 @@ export default function UserTable({ users, onEdit, onDelete, onAdd }: UserTableP
                   <Button
                     variant="outline-danger"
                     size="sm"
-                    onClick={() => onDelete(user.id)}
+                    onClick={() => onDelete(user)}
                   >
                     Eliminar
                   </Button>

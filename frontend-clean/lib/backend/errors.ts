@@ -32,5 +32,27 @@ export const MissingCredentialsError = () =>
 export const UserParsingError = () =>
   new AppError("INVALID_USER_DATA", 500, "Error al procesar datos del usuario");
 
+export const UnauthorizedError = () =>
+    new AppError("UNAUTHORIZED", 401, "No autorizado para realizar esta acción");
+
+export const ForbiddenError = () =>
+    new AppError("FORBIDDEN", 403, "Acción prohibida para el usuario actual");
+
 export const UnexpectedError = () =>
      new AppError("UNEXPECTED", 500, "Error inesperado, por favor intente más tarde");
+
+export const MethodNotAllowedError = () =>
+    new AppError("METHOD_NOT_ALLOWED", 405, "Método no permitido para esta ruta");
+
+export const SessionExpiredError = () =>
+    new AppError("SESSION_EXPIRED", 401, "La sesión ha expirado, por favor inicie sesión nuevamente");
+
+export const RutAlreadyExistsError = () =>
+    new AppError("RUT_ALREADY_EXISTS", 409, "El RUT ya está en uso por otro usuario");
+
+export const MissingTokenError = () =>
+    new AppError("MISSING_TOKEN", 401, "Token de autenticación faltante o inválido");
+
+export const InvalidTokenError = () =>
+    new AppError("INVALID_TOKEN", 401, "Token de autenticación inválido o expirado");
+

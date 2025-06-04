@@ -1,7 +1,8 @@
 import { getToken, verifyToken, withAuth } from "@/backend/auth";
-import { ErrorTemplate } from "@/backend/messages";
-import { empty_response_t, Roles, user_safe_schema, user_safe_t, user_t, UserRoleEnum } from "@/backend/types";
-import { getUsersFiltered } from "@/backend/users";
+import { AppError, convertZodError, InvalidTokenError, MethodNotAllowedError, UnexpectedError } from "@/backend/errors";
+import { AppErrorResponse, ErrorTemplate, SuccessTemplate } from "@/backend/messages";
+import { empty_response_t, Roles, user_safe_schema, user_safe_t, user_search_filters_schema, user_t, UserRoleEnum } from "@/backend/types";
+import { getUsersFiltered, sanitizeUsers } from "@/backend/users";
 import { TokenExpiredError } from "jsonwebtoken";
 import { NextApiRequest, NextApiResponse } from "next";
 import z from "zod";
@@ -22,42 +23,34 @@ export default async function handler(
             token_data = verifyToken(token);
           } catch (err) {
             if (err instanceof z.ZodError) {
-              res.status(400).json(ErrorTemplate("unauthorized"));
+              const appError = convertZodError(err);
+              return AppErrorResponse(res, appError);
             } else if (err instanceof TokenExpiredError) {
-              res.status(400).json(ErrorTemplate("expired_token"));
+              return AppErrorResponse(res, InvalidTokenError());
             }
           }
 
-          // const { role } = token_data;
-          const filters = req.body || {};
-
-          // Get users (with or without filters)
-          const users = await getUsersFiltered(filters);
-
-          // Use safe schema to sanitize sensitive users
-          const sanitized = users.map((user: user_t) => {
-            const isRestricted = 
-              user.role === UserRoleEnum.ADMINISTRADOR ||
-              (user.role === UserRoleEnum.CORREDOR && token_data && token_data.role === UserRoleEnum.CORREDOR);
-
-            if (isRestricted)  {
-              return sanitizeUser(user); // ✅ Strip passwordHash, enforce schema
-            }
-
-            // Return full user with passwordHash if allowed
-            return user;
-          });
-
-          return res.status(200).json(sanitized);
+          try {
+            const filters = req.body || {};
+            const parsedFilters = user_search_filters_schema.parse(filters);
+            const users = await getUsersFiltered(parsedFilters);
+            // Use safe schema to sanitize sensitive users
+            const sanitized = sanitizeUsers(token_data!.role, users)
+            return res.status(200).json(SuccessTemplate(sanitized, "Lista de usuarios obtenida correctamente"));
+          } catch (err) {
+            if (err instanceof z.ZodError) {
+              console.log(err);
+              const appError = convertZodError(err);
+              return AppErrorResponse(res, appError);
+              }
+            console.error("Error inesperado al buscar usuarios:", err);
+            return AppErrorResponse(res, UnexpectedError());
+          }
         },
         [Roles.ADMINISTRADOR, Roles.CORREDOR]
       )(req, res);
     default:
-    res.status(400).json(ErrorTemplate("method_not_allowed"));
+    return AppErrorResponse(res, MethodNotAllowedError());
   }
 }
 
-function sanitizeUser(user: user_t): user_safe_t {
-  const { passwordHash, ...rest } = user;
-  return user_safe_schema.parse({ ...rest, type: "safe" });
-}

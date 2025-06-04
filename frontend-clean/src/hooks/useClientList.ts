@@ -1,45 +1,49 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { users_list_t, users_list_schema, user_form_data, response_schema } from '@/backend/types';
+import {
+  client_list_t,
+  client_list_schema,
+  response_schema
+} from '@/backend/types';
 
-export function useUserList() {
+type ClientSearchFilters = {
+  name?: string;
+  property_name?: string;
+};
 
-  const [users, setUsers] = useState<users_list_t | null>(null);
+export function useClientList() {
+  const [users, setUsers] = useState<client_list_t | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string| null> (null);
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
-  const fetchUsers = useCallback(
-    async (searchParams: Record<string, string> = {}) => {
-      console.log("fetching users");
-      if (!token) 
-        return;
+  const fetchClients = useCallback(
+    async (filters?: ClientSearchFilters) => {
+      if (!token) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const res = await fetch('/api/users/search', {
+        const res = await fetch('/api/users/clients/search', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(searchParams),
+          body: JSON.stringify(filters || {}),
         });
 
         if (!res.ok) {
-          console.log(res.json());
           setError('No autorizado');
           router.push('/login');
           return;
         }
 
         const json = await res.json();
-        console.log("yeison", json);
-        const parsed = response_schema(users_list_schema).safeParse(json);
+        const parsed = response_schema(client_list_schema).safeParse(json);
 
         if (!parsed.success) {
           console.error(parsed.error);
@@ -58,18 +62,17 @@ export function useUserList() {
   );
 
   useEffect(() => {
-    console.log("useUserList");
     const _token = localStorage.getItem("token");
     setToken(_token);
-    fetchUsers(); // Initial load without filters
-  }, [fetchUsers]);
+    if (_token) fetchClients(); // Initial load
+  }, [fetchClients]);
 
   return {
     users,
     loading,
     error,
-    refresh: () => fetchUsers(),         // No search params
-    searchUsers: fetchUsers,             // Accepts { name, email, etc. }
+    refresh: () => fetchClients(),
+    searchClients: (filters: ClientSearchFilters) => fetchClients(filters),
     setUsers,
   };
 }

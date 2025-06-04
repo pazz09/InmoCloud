@@ -3,11 +3,14 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import z, { ZodNull } from 'zod'
 
 import { getToken, isHigherRole, verifyToken } from '@/backend/auth';
-import { ErrorTemplate, handleZodError } from '@/backend/messages';
-import { response_t, Roles, user_form_data, user_role_enum, user_role_enum_t } from '@/backend/types'
-import { getUser, updateUser } from '@/backend/users';
+import { AppErrorResponse, ErrorTemplate, handleZodError, SuccessTemplate } from '@/backend/messages';
+import { OkPacket, response_t, RoleHierarchy, Roles, user_form_data, user_role_enum, user_role_enum_t } from '@/backend/types'
+import { deleteUser, getAuthorizedUserView, getUser, updateUser } from '@/backend/users';
 import { assert } from 'console';
 import { parse } from 'path';
+import { ok } from 'assert';
+import { AppError, convertZodError, MethodNotAllowedError, SessionExpiredError, UnauthorizedError, UnexpectedError, UserParsingError } from '@/backend/errors';
+import App from '@/pages/_app';
 
 async function get(
   req: NextApiRequest,
@@ -26,7 +29,7 @@ export default async function handler(
     const idRaw = req.query.id;
 
     if (typeof idRaw !== 'string') {
-      return res.status(400).json(ErrorTemplate('ID inválido'));
+      return res.status(400).json(ErrorTemplate('ID inválido', "INVALID_ID"));
     }
 
     /* Parses the idRaw string,
@@ -47,98 +50,104 @@ export default async function handler(
       udata.role === Roles.ARRENDATARIO;
 
     switch (req.method) {
+      // Returns the user data (safe or full) for the given ID
       case 'GET': {
-        console.log("Enter GET");
-        const allowedRoles: user_role_enum_t[] = [
-          Roles.ADMINISTRADOR,
-          Roles.CORREDOR,
-        ];
-
-        const isSelf = udata.id === parsedId; // Es su perfil?
-        const isAllowedRole = allowedRoles.includes(udata.role); // Tiene permiso
-
-        // Si no se es ni admin. ni corredor, y se quiere visualizar la 
-        // cuenta de otro usuario, error.
-        if (!isSelf && !isAllowedRole)
-          return res.status(403).json(ErrorTemplate('Acceso denegado'));
-
-
         try {
-          const user = await getUser(parsedId);
+          const self = await getUser(udata.id);
 
-          const targetIsAdmin = user.role === Roles.ADMINISTRADOR;
-          const targetIsCorredor = user.role === Roles.CORREDOR;
-
-
-          // Si se quiere ver un admin y no se es admin (ni corredor), error.
-          if (targetIsAdmin && isRegularUser && !isSelf) {
-            return res.status(403).json(ErrorTemplate('No Autorizado'));
-          }
-
-          // Corredores pueden ver admins o corredores, pero sin ver el passwordHash
-          if ((targetIsAdmin || targetIsCorredor) && isCorredor && !isSelf) {
-            const { passwordHash, ...safeUser } = user;
-            return res.status(200).json({ status: 'success', data: safeUser });
-          }
-
-          assert(isAdmin || isCorredor);
-          return res.status(200).json({ status: 'success', data: user });
+          const target_user = await getAuthorizedUserView(
+            {requestingUser: self, targetUserId: parsedId}
+          );
         } catch (err) {
-          if ((err as Error).message === 'user_not_found') {
-            return res.status(404).json({ status: 'error', message: 'Usuario no encontrado' });
+          if (err instanceof AppError) {
+            return AppErrorResponse(res, err);
           }
-          throw err; // fallback to outer catch
+          console.error('Error fetching user:', err);
+          return AppErrorResponse(res, UnexpectedError())
         }
       }
-
+      // Updates the user data for the given ID and body, returns OkPacket
       case 'PUT': {
         const body = req.body;
+        let parsedBody = null;
 
-        const parsedBody = user_form_data.safeParse(body);
-        if (!parsedBody.success) {
-          console.log(parsedBody.error);
-          handleZodError(parsedBody.error, res);
-          break;
+        try {
+          parsedBody = user_form_data.parse(body);
+        } catch (err) {
+          if (err instanceof z.ZodError) {
+            const app_err = convertZodError(err);
+            return AppErrorResponse(res, app_err);
+          }
+          throw err; // or return AppErrorResponse(res, err as AppError);
         }
-        const id = parsedId; // Use the parsed ID from the query
-        const { name, rut, role, passwordHash } = parsedBody.data;
-        // Check if rut exists
-        const status = await updateUser({
-          id, name, rut, role, passwordHash,
-          type: 'full'
-        });
 
-        if (status.status === 'error') {
-          return res.status(400).json(ErrorTemplate(status.message!));
-          break;
+        const id = parsedId; // ID from query
+        const { nombre, apellidos, mail, telefono, rut, role, passwordHash } = parsedBody!;
+        const requestingUser = await getUser(udata.id);
+
+        try {
+          const targetUser = await getAuthorizedUserView(
+            {requestingUser, targetUserId: parsedId});
+
+
+          const okpacket = await updateUser({
+            id,
+            nombre,
+            apellidos,
+            mail,
+            telefono,
+            rut,
+            role,
+            passwordHash,
+            type: 'full',
+          });
+
+          if (okpacket.affectedRows > 0) {
+            return res
+              .status(200)
+              .json(SuccessTemplate<typeof OkPacket>(okpacket, 'Usuario actualizado correctamente'));
+          } 
+        } catch (err) {
+          return AppErrorResponse(res, err as AppError);
         }
-        return res.status(200).json({
-          status: 'success',
-          message: `Usuario con ID ${id} actualizado correctamente.`,
-          data: 
-        });
-        
-
-        break;
       }
 
       case 'DELETE': {
-        // Delete logic goes here
-        return res.status(200).json({ status: 'success', message: `Eliminado usuario con ID: ${parsedId}.` });
+        try {
+          const requestingUser = udata;
+          const self = await getUser(requestingUser.id);
+          const okpacket = await deleteUser(
+            {requestingUser: self, targetUserId: parsedId});
+
+          if (okpacket.affectedRows > 0) {
+            return res
+              .status(200)
+              .json(SuccessTemplate<typeof OkPacket>(okpacket, `Usuario con ID ${parsedId} eliminado correctamente.`));
+          } else {
+            return AppErrorResponse(res, UnexpectedError());
+          }
+        } catch (err) {
+          if (err instanceof AppError) {
+            return AppErrorResponse(res, err);
+          }
+          console.error("Error deleting user:", err);
+          return AppErrorResponse(res, UnexpectedError());
+        }
       }
 
       default:
-        return res.status(405).json(ErrorTemplate(`Método ${req.method} no permitido`));
+        return AppErrorResponse(res, MethodNotAllowedError());
     }
   } catch (err) {
     if (err instanceof z.ZodError) {
       handleZodError(err, res);
     }
     else if (err instanceof JsonWebTokenError) {
-      return res.status(401).json(ErrorTemplate("invalid_token"));
+      return AppErrorResponse(res, SessionExpiredError());
+
     }
     console.error('Unhandled error:', err);
-    return res.status(500).json(ErrorTemplate('Error interno del servidor'));
+    return AppErrorResponse(res, UnexpectedError());
   }
 }
 

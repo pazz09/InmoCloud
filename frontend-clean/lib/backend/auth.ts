@@ -1,7 +1,10 @@
 import { verify, sign } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Roles, token_schema, token_t, user_role_enum_t, UserRoleEnum } from './types';
+import { response_t, Roles, token_schema, token_t, user_role_enum_t, UserRoleEnum } from './types';
 import z from 'zod';
+import { AppError, convertZodError, ForbiddenError, MissingTokenError, UnauthorizedError } from './errors';
+import { AppErrorResponse } from './messages';
+import App from 'next/app';
 
 export const getToken = (req: NextApiRequest): string => {
     const safe_token = z.string({required_error: "El Token es obligatorio"})
@@ -36,16 +39,16 @@ export function withAuth(
       } catch (err) {
         console.log(err);
         console.error("Error getting token:", err);
-        return res.status(400).json({ error: "missing_token"});
+        return AppErrorResponse(res, MissingTokenError());
       }
 
 
       if (!user) {
-        return res.status(401).json({ error: "unauthorized" });
+        return AppErrorResponse(res, UnauthorizedError());
       }
 
       if (allowedRoles.length && !allowedRoles.includes(user.role)) {
-        return res.status(403).json({ error: "forbidden" });
+        return AppErrorResponse(res, ForbiddenError());
       }
 
       // // Optionally attach user info to request
@@ -57,11 +60,12 @@ export function withAuth(
       console.error("withAuth error:", err);
 
       if (err instanceof z.ZodError) {
-        return res.status(400).json({ error: "missing_token" });
+        const appError = convertZodError(err);
+        return AppErrorResponse(res, appError);
       }
 
       if ((err as Error)?.name === "TokenExpiredError") {
-        return res.status(401).json({ error: "expired_token" });
+        return AppErrorResponse(res, UnauthorizedError());
       }
 
       // Catch-all error return

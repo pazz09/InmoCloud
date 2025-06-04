@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { isAborted, z } from 'zod';
 
 /* Esquema: Se utiliza para validar un tipo de dato. Por ejemplo:
  * ```ts
@@ -79,7 +79,9 @@ export type empty_response_t = z.infer<typeof empty_response_schema>;
 export type SQLParam = string | number | boolean | Date | number | null;
 
 export const OkPacket = z.object({
-  insertId:     z.string().transform((val) => Number(val)),
+  insertId: z.union([z.string(), z.number()]).transform((val) =>
+    typeof val === 'string' ? Number(val) : val
+  ),
   affectedRows: z.number(),
 })
 
@@ -125,8 +127,24 @@ export const rolePriority: Record<user_role_enum_t, number> = {
 
 const base_user = z.object({
   id: z.number(),
-  name: z.string(),
+  nombre: z.string()
+    .min(3, {message: "El nombre debe tener al menos 3 caracteres"})
+    .max(100, {message: "El nombre no puede exceder los 100 caracteres"}),
+
+  apellidos: z.string()
+    .min(3, {message: "Los apellidos deben tener al menos 3 caracteres"})
+    .max(100, {message: "Los apellidos no pueden exceder los 100 caracteres"}),
+
+  telefono: z.string()
+    .regex(/^\d{9}$/, {message: "El teléfono debe tener 9 dígitos"})
+    .optional(),
+  
   rut: rut_schema,
+
+  mail: z.string()
+    .email({message: "El correo electrónico es inválido"})
+    .optional(),
+
   role: user_role_enum,
 });
 
@@ -163,10 +181,12 @@ export type users_list_t = z.infer<typeof users_list_schema>;
 
 
 
+
 // Búsqueda de usuario (esquema)
 export const user_search_schema = z.object({
   name:          z.string().optional(),
-  property_name: z.string().optional()
+  property_name: z.string().optional(),
+  role:        user_role_enum.optional(),
 });
 export type user_search_t = z.infer<typeof user_search_schema>;
 
@@ -206,7 +226,15 @@ export const token_schema = z.object({
   role: user_role_enum,
 })
 
+export const token_decoded_schema = z.object({
+  id: z.number(),
+  role: user_role_enum,
+  iat: z.number(), // issued at
+  exp: z.number(), // expiration time
+});
+
 export type token_t = z.infer<typeof token_schema>;
+export type token_decoded_t = z.infer<typeof token_decoded_schema>;
 
 
 export const dashboard_metrics_schema = z.object({
@@ -234,3 +262,63 @@ export type update_response_t = z.infer<typeof update_response_schema>;
 
 
 // export type user_form_data = z.infer<typeof user_add_schema| typeof user_schema>;
+
+
+// // Búsqueda de usuario
+// export const user_search_filters_schema = z.object({
+//   name:          z.string().optional(),
+//   property_name: z.string().optional(),
+//   role:          user_role_enum.optional()
+// });
+// export type user_search_filters_t = z.infer<typeof user_search_filters_schema>;
+
+export const db_user_schema = user_union_schema.transform((data) => {
+  // Destructure `type` out; it will be `undefined` if not present
+  const { type, ...rest } = data;
+  return rest;
+});
+
+export const property_schema = z.object({
+  id: z.number(),
+  direccion: z.string().min(1, { message: "La dirección es obligatoria" }),
+  activa: z
+    .union([z.boolean(), z.number()])
+    .transform((val) => {
+      if (typeof val === "number") return val === 1;
+      return val;
+    }),
+  valor: z
+    .union([z.string(), z.number()])
+    .transform((val) => {
+      const num = typeof val === "string" ? parseFloat(val) : val;
+      return Number.isInteger(num) ? parseInt(num.toString(), 10) : num;
+    })
+  .refine((val) => val > 0, { message: "El valor debe ser positivo" }),
+  propietario_id: z.number(),
+  arrendatario_id: z.number().optional().nullable()
+});
+
+export type property_t = z.infer<typeof property_schema>;
+
+export const arrendatario_schema = user_schema.omit({role: true}).extend({
+  propiedad: property_schema.optional().nullable(),
+  role: z.literal(UserRoleEnum.ARRENDATARIO),
+});
+export type arrendatario_t = z.infer<typeof arrendatario_schema>;
+
+export const propietario_schema = user_schema.omit({role: true}).extend({
+  propiedades: z.array(property_schema).optional().nullable(),
+  role: z.literal(UserRoleEnum.PROPIETARIO),
+});
+
+export type propietario_t = z.infer<typeof propietario_schema>;
+
+export const client_union_schema = z.discriminatedUnion("role", [
+  arrendatario_schema,
+  propietario_schema,
+]);
+
+export type client_union_t = z.infer<typeof client_union_schema>;
+
+export const client_list_schema = z.array(client_union_schema);
+export type client_list_t = z.infer<typeof client_list_schema>;

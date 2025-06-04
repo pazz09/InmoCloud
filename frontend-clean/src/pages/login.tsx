@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import NavigationBar from '@/components/Navbar';
 import { Form, Button, Alert, Container, Row, Col, Card} from 'react-bootstrap';
@@ -50,15 +50,18 @@ export function validarRut(rut: string): boolean {
   return dv === dvCalculado;
 }
 
-type UserType = 'administrador';
+// type UserType = 'administrador';
 
 const Login = () => {
   const [rut, setRut] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const { login } = useAuth(); // Importante: usamos el contexto aquí
+  const { isAuthenticated, login } = useAuth(); // Importante: usamos el contexto aquí
   const body = login_schema.parse({rut, password});
+  useEffect(() => {
+    console.log("Is user authenticated?", isAuthenticated);
+  }, [isAuthenticated]);
 
   // const mockLogin = (rut: string, password: string): UserType | null => {
   //   if (rut.startsWith('3')) return 'administrador';
