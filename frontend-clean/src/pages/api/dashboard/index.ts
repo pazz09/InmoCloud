@@ -1,5 +1,5 @@
 import db from "@/backend/db";
-import { dashboard_metrics_t, response_t, Roles } from "@/backend/types";
+import { dashboard_metrics_t, response_t, Roles } from "@/types";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getDashboardMetrics } from "@/backend/dashboard";
 import { withAuth } from "@/backend/auth";
@@ -23,4 +23,3 @@ export default async function handler(
   }
 
 }
-

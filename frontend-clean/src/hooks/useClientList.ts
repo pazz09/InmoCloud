@@ -1,16 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import {
-  client_list_t,
-  client_list_schema,
-  response_schema
-} from '@/backend/types';
-
-type ClientSearchFilters = {
-  name?: string;
-  property_name?: string;
-};
+import { client_list_t } from '@/types';
+import { fetchClientList, ClientSearchFilters } from '@/services/clients';
 
 export function useClientList() {
   const [users, setUsers] = useState<client_list_t | null>(null);
@@ -27,33 +19,12 @@ export function useClientList() {
       setError(null);
 
       try {
-        const res = await fetch('/api/users/clients/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(filters || {}),
-        });
-
-        if (!res.ok) {
-          setError('No autorizado');
-          router.push('/login');
-          return;
-        }
-
-        const json = await res.json();
-        const parsed = response_schema(client_list_schema).safeParse(json);
-
-        if (!parsed.success) {
-          console.error(parsed.error);
-          setError('Error al validar los datos de usuarios.');
-          return;
-        }
-
-        setUsers(parsed.data.data!);
+        const data = await fetchClientList(token, filters);
+        setUsers(data);
       } catch (err: unknown) {
-        setError((err as Error).message || 'Error inesperado.');
+        const message = (err as Error).message || 'Error inesperado.';
+        if (message === 'No autorizado') router.push('/login');
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -64,7 +35,7 @@ export function useClientList() {
   useEffect(() => {
     const _token = localStorage.getItem("token");
     setToken(_token);
-    if (_token) fetchClients(); // Initial load
+    if (_token) fetchClients();
   }, [fetchClients]);
 
   return {

@@ -68,12 +68,11 @@ export async function getUsers(): Promise<user_t[]> {
 }
 
 export async function getUser(uid: number): Promise<user_t> {
-  console.log("doing req");
+  console.log("@/backend/users: getUser");
   const res = await db.query("SELECT * FROM users_t WHERE id = ?", [uid]);
-  console.log("Got", res)
 
   if (res.length === 0)
-    throw new Error("user_not_found");
+    throw UserNotFoundError();
   return user_schema.parse({type: "full", ...res[0]});
 
 }
@@ -105,9 +104,10 @@ export async function addUser(user: user_form_data_t): Promise<user_t>
 
 export async function updateUser(user: user_t): Promise<OkPacket_t>
 {
+  console.log("@/backend/users/ updateUser")
 
-  const rutExists = await checkIfRutExists(user.rut!);
-  if (rutExists)
+  const ids = await getUserIdsByRut(user.rut);
+  if (ids.some(id => id !== user.id))
     throw RutAlreadyExistsError();
 
   const noType = db_user_schema.parse(user);
@@ -168,12 +168,13 @@ export async function login(rut: string, password: string):
 
   const rows = await db.query('SELECT * FROM users_t WHERE rut = ?', [rut]);
 
+  console.log("rows", rows)
   if (rows.length === 0) {
     throw UserNotFoundError();
   }
 
   const dbUser = rows[0];
-
+  
   let user: user_t;
   try {
     user = user_schema.parse({ ...dbUser, type: "full" });
@@ -243,7 +244,7 @@ export async function searchUsers(params: user_search_t): Promise<user_t[]> {
 
   // Obtener columnas válidas para SELECT (sin "type")
   const keys = zodKeys(user_schema).filter(k => k !== "type");
-  console.log("Valid keys for user schema:", keys);
+  // console.log("Valid keys for user schema:", keys);
   const columns = keys.map(k => `u.${k}`).join(", ");
 
   const q = `
@@ -252,7 +253,7 @@ export async function searchUsers(params: user_search_t): Promise<user_t[]> {
     ${where}
   `;
 
-  console.log("Executing search query:", q, "with values:", values);
+  // console.log("Executing search query:", q, "with values:", values);
 
   const rows = await db.query(q, values);
 
@@ -315,6 +316,12 @@ export async function checkIfRutExists(rut: string): Promise<boolean> {
   const rows = await db.query("SELECT id FROM users_t WHERE rut = ?", [rut]);
   return rows.length > 0;
 }
+
+export async function getUserIdsByRut(rut: string): Promise<number[]> {
+  const rows = await db.query("SELECT id FROM users_t WHERE rut = ?", [rut]);
+  return rows.map((row: { id: number }) => row.id);
+}
+
 
 // export async function getClients(): Promise<user_safe_t[]> {
 //   //  append u. at begginning

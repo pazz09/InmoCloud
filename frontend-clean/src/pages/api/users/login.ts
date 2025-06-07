@@ -1,13 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { login } from '@/backend/users';
 import { login_schema, login_t, response_login_t } from "@/backend/types";
-import { handleZodError } from "@/backend/messages";
+import { handleZodError, AppErrorResponse } from "@/backend/messages";
 import { AppError, convertZodError, UnexpectedError } from "@/backend/errors";
 import z from "zod";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<response_login_t>
+  res: NextApiResponse
 ) {
   switch (req.method) {
     case 'POST':
@@ -33,6 +33,9 @@ export default async function handler(
             message: appErr.message,
             code: appErr.code, // Optional: only include if your frontend uses it
           });
+        } else if (e instanceof AppError) {
+          return AppErrorResponse(res, e);
+
         }
         return res.status(500).json({
           status: "error",

@@ -2,7 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { users_list_t, users_list_schema, user_form_data, response_schema } from '@/backend/types';
+import { AppError } from "@/utils/errors"
 
+import { fetchUsers } from "@/services/user"
 export function useUserList() {
 
   const [users, setUsers] = useState<users_list_t | null>(null);
@@ -11,7 +13,7 @@ export function useUserList() {
   const [token, setToken] = useState<string| null> (null);
   const router = useRouter();
 
-  const fetchUsers = useCallback(
+  const update = useCallback(
     async (searchParams: Record<string, string> = {}) => {
       console.log("fetching users");
       if (!token) 
@@ -21,54 +23,29 @@ export function useUserList() {
       setError(null);
 
       try {
-        const res = await fetch('/api/users/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(searchParams),
-        });
-
-        if (!res.ok) {
-          console.log(res.json());
-          setError('No autorizado');
-          router.push('/login');
-          return;
-        }
-
-        const json = await res.json();
-        console.log("yeison", json);
-        const parsed = response_schema(users_list_schema).safeParse(json);
-
-        if (!parsed.success) {
-          console.error(parsed.error);
-          setError('Error al validar los datos de usuarios.');
-          return;
-        }
-
-        setUsers(parsed.data.data!);
-      } catch (err: unknown) {
-        setError((err as Error).message || 'Error inesperado.');
-      } finally {
-        setLoading(false);
+        const users = await fetchUsers(token, searchParams);
+        setUsers(users);
+      } catch(e) {
+        console.log(e)
+        if (e instanceof AppError && e.code === "UNAUTHORIZED_ERROR")
+          router.push("/login");
       }
     },
     [token, router]
   );
 
   useEffect(() => {
-    console.log("useUserList");
+    // console.log("src/hooks/useUserList");
     const _token = localStorage.getItem("token");
     setToken(_token);
-    fetchUsers(); // Initial load without filters
-  }, [fetchUsers]);
+    update(); // Initial load without filters
+  }, [update]);
 
   return {
     users,
     loading,
     error,
-    refresh: () => fetchUsers(),         // No search params
+    refresh: () => fetchUsers(token!, {}),         // No search params
     searchUsers: fetchUsers,             // Accepts { name, email, etc. }
     setUsers,
   };

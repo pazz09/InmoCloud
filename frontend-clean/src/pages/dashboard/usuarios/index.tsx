@@ -13,6 +13,8 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
+import { createUser, editUser } from "@/services/user";
+import  { AppError } from "@/utils/errors"
 
 const initialValues = {name: "", role: "", rut: "", passwordHash: ""}
 
@@ -65,44 +67,18 @@ export default function UsersDashboard() {
       addError("No estás autenticado. Por favor, inicia sesión.");
       return;
     }
-
     try {
-      const res = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!res.ok) {
-        const json = await res.json();
-        const parsed = response_schema(OkPacket).parse(json);
-        addError(`Error al crear el usuario: ${parsed.message}`);
-        return;
-      }
-
-      const json = await res.json();
-      const parsed = update_response_schema.parse(json);
-      if (parsed.status !== "success") {
-        addError(`Error al crear el usuario: ${parsed.message}`);
-        return;
-      }
-
-      if (parsed.data.affectedRows === 0) {
-        addError("No se creó ningún usuario. Verifica que los datos sean correctos.");
-        return;
-      }
-
-      addSuccess("Usuario creado correctamente.");
-      setShowModal(false);
-      setFormValues(initialValues);
-      await searchUsers();
-    } catch (error) {
-      console.error("Error al crear el usuario:", error);
-      addError(`Error al crear el usuario: ${error instanceof Error ? error.message : "Error desconocido"}`);
+      const result = await createUser(formValues, token);
+      addSuccess("Usuario creado correctamente");
+    } catch (e) {
+      console.log("Error al crear usuario:", e);
+      addError(
+        `Error al crear el usuario: ${
+        (e instanceof Error) ? e.message : "Error desconocido"
+        }`
+      )
     }
+
   };
 
   const editSubmit = async (values: user_form_data_t, id: number) => {
@@ -113,46 +89,41 @@ export default function UsersDashboard() {
       return;
     }
     try {
-      const res = await fetch(`/api/users/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!res.ok) {
-        const json = await res.json();
-        const parsed = response_schema(OkPacket).parse(json);
-        addError(`Error al editar el usuario: ${parsed.message}`);
-        return;
-      }
-
-      const json = await res.json();
-      console.log("Respuesta del servidor:", json);
-      console.log("expecting", update_response_schema);
-      const parsed = update_response_schema.parse(json);
-      if (parsed.status !== "success") {
-        addError(`Error al editar el usuario: ${parsed.message}`);
-        return;
-      }
-      if (parsed.data.affectedRows === 0) {
-        addError("No se modificó ningún usuario. Verifica que los datos sean correctos.");
-        return;
-      } else {
-        addSuccess("Usuario editado correctamente.");
-        setShowModal(false);
-        setSelectedUser(-1);
-        setFormValues(initialValues);
-        // Refresh the user list
-        await searchUsers();
-      }
-    } catch (error) {
-      console.error("Error al editar el usuario:", error);
-      addError(`Error al editar el usuario: ${error instanceof Error ? error.message : "Error desconocido"}`);
+      const response = await editUser(id, values, token);;
+      addSuccess("Usuario editado correctamente");
+      setShowModal(false);
+      setFormValues(initialValues);
+      await searchUsers(token, {});
+    } catch (e) {
+       console.error("Error al editar al usuario:", error);
+       if (e instanceof AppError && (e.code === "TOKEN_EXPIRED" || e.code === "UNAUTHORIZED" || e.code === "SESSION_EXPIRED"))
+           router.push("/login")
+      addError(
+        `Error al editar el usuario: ${e instanceof Error ? e.message : "Error desconocido"
+        }`
+      );
     }
   }
+  //     if (parsed.status !== "success") {
+  //       addError(`Error al editar el usuario: ${parsed.message}`);
+  //       return;
+  //     }
+  //     if (parsed.data.affectedRows === 0) {
+  //       addError("No se modificó ningún usuario. Verifica que los datos sean correctos.");
+  //       return;
+  //     } else {
+  //       addSuccess("Usuario editado correctamente.");
+  //       setShowModal(false);
+  //       setSelectedUser(-1);
+  //       setFormValues(initialValues);
+  //       // Refresh the user list
+  //       await searchUsers();
+  //     }
+  //   } catch (error) {
+  //     console.error("Error al editar el usuario:", error);
+  //     addError(`Error al editar el usuario: ${error instanceof Error ? error.message : "Error desconocido"}`);
+  //   }
+  // }
 
   const onSubmit = async (values: user_form_data_t, id?: number) => {
     const editing = id !== undefined && id !== -1;
@@ -253,606 +224,9 @@ const confirmDelete = async () => {
       show={showDeleteModal}
       onClose={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
       onConfirm={confirmDelete}
-      itemName={deleteTarget!.nombre + deleteTarget!.apellidos}
+      itemName={deleteTarget?.nombre! + deleteTarget?.apellidos}
     />
 
     </>
   );
 }
-
-
-// import styles from "./style.css"
-// import Head from 'next/head';
-// import NavigationBar from '@/components/Navbar';
-// import {
-//   Container,
-//   Table,
-//   Spinner,
-//   Alert,
-//   Button,
-//   Modal,
-//   Form,
-// } from 'react-bootstrap';
-// // import { FormControlElement } from 'react-bootstrap/esm/FormControl';
-// import { useEffect, useState } from 'react';
-// import { useRouter } from 'next/router';
-// import { response_t, RoleHierarchy, user_add_schema, user_edit_schema, user_edit_t, user_response_schema, user_role_enum, user_safe_t, user_schema, user_t, UserRoleEnum, users_list_schema, users_list_t } from '@/backend/types';
-// import { useAuth } from '@/context/AuthContext';
-// import { useEffect, useState } from 'react';
-// import Head from 'next/head';
-// import NavigationBar from '@/components/Navbar';
-// import { useUserForm } from '@/hooks/useUserForm';
-// import { Mode } from '@/backend/types';
-// import { Container } from 'react-bootstrap';
-// import ErrorAlerts from '@/components/ErrorAlerts';
-// import { useUserList } from '@/hooks/useUserList';
-// import UserTable from '@/components/UserTable';
-// import {user_union_t} from '@/backend/types'
-// import { formatRutInput } from "@/pages/login";
-// import { parse } from "path";
-// import UserTable from "@/components/UserTable";
-// import UserModal from "@/components/UserModal";
-//
-// const TITULO_EDITAR = "Editar Usuario";
-// const TITULO_AGREGAR = "Agregar Usuario";
-//
-//
-//
-// async function generateHash(password: string) {
-//   const bcrypt = await import('bcryptjs');
-//   const salt = await bcrypt.genSalt(10);
-//   const hashed = await bcrypt.hash(password, salt);
-//   return hashed;
-// }
-
-
-
-// export default function UsersDashboard() {
-//   const [users, setUsers] = useState<users_list_t | null>(null);
-//   // const [self, setSelf] = useState<user_safe_t | null> (null);
-//   const [showModal, setShowModal] = useState(false);
-//   const [modalTitle, setModalTitle] = useState("");
-//   const [selectedUser, setSelectedUser] = useState<user_t | user_safe_t | null>(null);
-//   // const [isCreating, setIsCreating] = useState(false);
-//   const [formValues, setFormValues] = useState<user_edit_t>(
-//     {rut: '', name: '', role: UserRoleEnum.SIN_SESION, passwordHash: '', type: "full"});
-//   const [errors, setErrors] = useState<string[]>([]);
-//   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
-//   const [formFieldErrors, setFormFieldErrors] = useState<{ [key: string]: string }>({});
-//   const router = useRouter();
-//
-//   const { role: UserRole } = useAuth();
-//   const availableRoles = RoleHierarchy.filter(
-//       (role): boolean => RoleHierarchy.indexOf(role) < RoleHierarchy.indexOf(UserRole)
-//   );
-//   // console.log("We are", UserRole);
-//   // console.log("availableRoles", availableRoles);
-//
-//
-// async function addUserSubmit() {
-//       console.log("AddUserSubmit")
-//       const res =  await fetch("/api/users/", {method: "POST", headers:
-//             {
-//               "Content-Type": "application/json",
-//               authorization: `Bearer ${localStorage.getItem("token")}`
-//             }
-//       });
-//
-//       if (res.ok) {
-//         const parsedRes = user_response_schema.safeParse(await res.json());
-//         if (parsedRes.success) {
-//           setSelectedUser(parsedRes.data.data!); // ✔️ safe
-//         } else {
-//           console.error(parsedRes.error);
-//           setSelectedUser(null); // or show error
-//         }
-//
-//
-//       } else {
-//         // setShowModal(false);
-//         pushError("Ocurrió un error al añadir el usuario.")
-//         return
-//       }
-// }
-//
-//   const pushError = (message: string) => {
-//     const id = Date.now(); // Unique ID for the error
-//     setErrors(prev => [...prev, `${id}|${message}`]);
-//
-//     setTimeout(() => {
-//       setErrors(prev => prev.filter(e => !e.startsWith(`${id}|`)));
-//     }, 3000);
-//   };
-//
-//   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
-//
-//   useEffect(() => {
-//     if (!token) {
-//       router.push('/login');
-//       return;
-//     }
-//
-//
-//
-//
-//     fetch('/api/users/search', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify({}),
-//     })
-//       .then(res => {
-//         if (!res.ok) {
-//           router.push("/login");
-//           pushError("No autorizado");
-//           return;
-//         }
-//         return res.json();
-//       })
-//       .then(json => {
-//         // console.log("json", json);
-//         const parsed = users_list_schema.safeParse(json);
-//         if (!parsed.success) {
-//           console.log(parsed.error);
-//           pushError('Error al validar los datos de usuarios.');
-//           return;
-//         }
-//         // console.log(parsed.data);
-//         setUsers(parsed.data);
-//       })
-//       .catch(err => pushError(err.message));
-//   }, []);
-//
-//   const handleEditClick = (user: user_t | user_safe_t) => {
-//     console.log("Edit click");
-//     console.log(user);
-//     const parsed_user = user_schema.safeParse(user);
-//     if (!parsed_user.success) {
-//       pushError("No tienes permisos para realizar esa acción.");
-//       return;
-//     }
-//     if (parsed_user.data.passwordHash) setGeneratedPassword('');
-//     setSelectedUser(parsed_user.data);
-//     setFormValues({ 
-//       type: "full", 
-//       name: parsed_user.data.name, 
-//       rut: parsed_user.data.rut, 
-//       role: parsed_user.data.role, 
-//       passwordHash: generatedPassword || parsed_user.data.passwordHash  
-//     });
-//     setModalTitle(TITULO_EDITAR);
-//     setShowModal(true);
-//   };
-//
-//   const handleModalClose = () => {
-//     setShowModal(false);
-//     setSelectedUser(null);
-//   };
-//
-//
-//
-//   // const availableRoles = RoleHierarchy.filter(
-//   //   role => RoleHierarchy.indexOf(role) < RoleHierarchy.indexOf(user.role)
-//   // );
-//
-//
-//
-// const handleInputChange = (
-//   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-// ) => {
-//   const { name, value } = e.target;
-//
-//   if (name === "passwordHash") return;
-//
-//   const newValue = name === "rut" ? formatRutInput(value) : value;
-//
-//   setFormValues(prevValues => ({
-//     ...prevValues,
-//     [name]: newValue,
-//   }));
-//
-//   setFormFieldErrors(prev => ({ ...prev, [name]: '' })); // clear error as user types
-// };
-//
-//
-// async function createUser() {
-//   try {
-//     const res = await fetch(`/api/users/`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify(formValues),
-//     });
-//
-//     if (!res.ok) {
-//       const rawRes = await res.json();
-//       const parsedRes = user_response_schema.parse(rawRes);
-//       switch (parsedRes.message) {
-//         case "user-rut-already-exists":
-//           pushError(`Error al crear el usuario: Ya existe una o más entradas con el RUT ingresado`);
-//         case "user-name-already-exists":
-//           pushError(`Error al crear el usuario: Ya existe una o más entradas con el nombre ingresado`);
-//         default:
-//           setShowModal(false);
-//
-//
-//       }
-//       return;
-//     }
-//
-//     const parsed = user_response_schema.safeParse(await res.json());
-//     if (!parsed.success) {
-//       console.log(parsed.error);
-//       pushError("Error en la respuesta del servidor");
-//       return;
-//     }
-//
-//     setUsers(prev => prev ? [...prev, parsed.data.data!] : [parsed.data.data!]);
-//     handleModalClose();
-//   } catch (err) {
-//     pushError(`Error al conectar con el servidor: ${err}`);
-//   }
-// }
-//
-// const handleSave = async () => {
-//   console.log("handleSave");
-//
-//   const schema = selectedUser !== null ? user_edit_schema : user_add_schema;
-//   const parsed = schema.safeParse(formValues);
-//
-//   console.log("handleSave", parsed.error);
-//
-//   const fieldErrors: { [key: string]: string } = {};
-//
-//   if (!parsed.success) {
-//     for (const [key, messages] of Object.entries(parsed.error.formErrors.fieldErrors)) {
-//       if (messages && messages.length > 0) {
-//         fieldErrors[key] = messages[0];
-//       }
-//     }
-//     setFormFieldErrors(fieldErrors);
-//     return; // 🚨 Stop here if invalid!
-//   }
-//
-//   setFormFieldErrors({}); // Clear previous errors if valid
-//
-//   const isEditing = selectedUser !== null;
-//   if (isEditing) {
-//     await addUserSubmit();
-//   } else {
-//     await createUser();
-//   }
-// };
-//
-// //   const handleSave = async () => {
-// //   // if (!selectedUser) return;
-// //
-// //   const updatedUser = { ...selectedUser, ...formValues };
-// //   console.log("formValues", formValues);
-// //   console.log("selectedUser", selectedUser);
-// //   console.log("updatedUser", updatedUser);
-// //
-// //
-// //   try {
-// //     const res = await fetch(`/api/users`, {
-// //       method: 'POST',
-// //       headers: {
-// //         'Content-Type': 'application/json',
-// //         authorization: `Bearer ${token}`,
-// //       },
-// //       body: JSON.stringify(updatedUser),
-// //     });
-// //     console.log("updateUser", updatedUser);
-// //
-// //     if (!res.ok) {
-// //       const errorText = await res.text();
-// //       console.log(errorText);
-// //       pushError(`Error al guardar cambios: ${errorText}`);
-// //       return;
-// //     }
-// //
-// //     const response = user_response_schema.safeParse(await res.json());
-// //     console.log("ressponse", response);
-// //     if (!response.success) {
-// //       console.log(response.error)
-// //       pushError("Error al guardar cambios");
-// //       return;
-// //     }
-// //     if (response.data && response.data.data)
-// //       setSelectedUser(response.data.data);
-// //
-// //     // // Simulate update in local state
-// //     // setUsers(users =>
-// //     //   users?.map(u => (u.id === selectedUser.id ? updatedUser : u)) || null
-// //     // );
-// //
-// //     // Update the user in local state
-// //     setUsers(prevUsers =>
-// //       prevUsers?.map(u => u.id === selectedUser!.id ? { ...u, ...formValues } : u) || null
-// //     );
-// //
-// //     handleModalClose();
-// //   } catch (err) {
-// //     pushError(`Error al conectar con el servidor: ${err}`);
-// //   }
-// // };
-//
-//   const handleDelete = (userId: number) => {
-//     // You'd call DELETE /api/users/:id here
-//     console.log('Deleting user with ID:', userId);
-//
-//     setUsers(users => users?.filter(u => u.id !== userId) || null);
-//   };
-//
-//   async function handleAddUser(): Promise<void> {
-//
-//     setFormValues({
-//       name: '',
-//       role: UserRoleEnum.SIN_SESION,
-//       rut: '',
-//       passwordHash: '',
-//       type: 'full'
-//     });
-//
-//     setModalTitle(TITULO_AGREGAR);
-//     setShowModal(true);
-//
-//     // const result = user_schema.safeParse(formValues);
-//     // if (result.success) {
-//     //   setSelectedUser(result.data);
-//     // } else {
-//     //   console.error(result.error);
-//     //   setSelectedUser(null);
-//     // }
-//
-//   }
-//
-//   return (
-//     <>
-//       <Head>
-//         <title>Usuarios – InmoCloud</title>
-//       </Head>
-//       <NavigationBar />
-//       <Container className="mt-5">
-//         <h2 className="mb-4 text-center" style={{ color: '#2c3e50' }}>
-//           Lista de Usuarios
-//         </h2>
-//
-// {/* Error Alerts */}
-// <div style={{
-//   position: 'fixed',
-//   top: '10px',
-//   left: '50%',
-//   transform: 'translateX(-50%)',
-//   zIndex: 1050, // Ensure it's above other elements like modals
-//   width: '100%',
-//   maxWidth: '500px',
-//   pointerEvents: 'none' // optional: so clicks go through
-// }}>
-//   {errors.map((e, i) => {
-//     const [, msg] = e.split('|');
-//     return (
-//       <Alert
-//         key={i}
-//         variant="danger"
-//         className="fade-out mb-2 text-center"
-//         style={{ pointerEvents: 'auto' }} // allow dismiss if needed
-//       >
-//         {msg}
-//       </Alert>
-//     );
-//   })}
-// </div>
-//
-//         {!users && !errors && (
-//           <div className="d-flex justify-content-center">
-//             <Spinner animation="border" />
-//           </div>
-//         )}
-//
-//         {users && (
-//           <div className="table-responsive">
-//             <Table bordered hover striped className="shadow-sm">
-//               <thead className="table-dark">
-//                 <tr>
-//                   <th>ID</th>
-//                   <th>Nombre</th>
-//                   <th>RUT</th>
-//                   <th>Rol</th>
-//                   <th className='accionesCol'>Acciones</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {users.map(user => (
-//                   <tr key={user.id}>
-//                     <td>{user.id}</td>
-//                     <td>{user.name}</td>
-//                     <td>{user.rut}</td>
-//                     <td>{user.role}</td>
-//                     <td className="accionesCol">
-//                       <div className="d-flex justify-content-center align-items-right gap-2">
-//                         <Button
-//                           variant="outline-primary"
-//                           size="sm"
-//                           className="me-2"
-//                           onClick={() => handleEditClick(user)}
-//                         >
-//                           ✏️ Editar
-//                         </Button>
-//                         <Button
-//                           variant="outline-danger"
-//                           size="sm"
-//                           onClick={() => handleDelete(user.id)}
-//                         >
-//                           🗑️ Eliminar
-//                         </Button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))}
-//
-//                 <tr>
-//                     <td colSpan={5} className="text-center">
-//                       <Button variant="success" onClick={handleAddUser}>
-//                         ➕ Agregar Usuario
-//                       </Button>
-//                     </td>
-//                   </tr>
-//               </tbody>
-//             </Table>
-//           </div>
-//         )}
-//       </Container>
-//
-//       {/* Edit User Modal */}
-//       <Modal show={showModal} onHide={handleModalClose} centered>
-//         <Modal.Header closeButton>
-//           <Modal.Title>{modalTitle}</Modal.Title>
-//         </Modal.Header>
-//         <Modal.Body>
-//           <Form>
-//             <Form.Group controlId="formName" className="mb-3">
-//               <Form.Label>Nombre</Form.Label>
-//               <Form.Control
-//                 type="text"
-//                 name="name"
-//                 value={formValues.name}
-//                 onChange={handleInputChange}
-//                 isInvalid={!!formFieldErrors.name}
-//               />
-//             </Form.Group>
-//
-//             <Form.Group controlId="formRut" className="mb-3">
-//               <Form.Label>RUT</Form.Label>
-//               <Form.Control
-//                 type="text"
-//                 name="rut"
-//                 value={formValues.rut}
-//                 onChange={handleInputChange}
-//                 isInvalid={!!formFieldErrors.rut}
-//               />
-//               <Form.Control.Feedback type="invalid">
-//                 {formFieldErrors.rut}
-//               </Form.Control.Feedback>
-//             </Form.Group>
-//
-//            <Form.Group controlId="formRole" className="mb-3">
-//             <Form.Label>Rol</Form.Label>
-//             <Form.Select
-//               name="role"
-//               value={formValues.role}
-//               onChange={handleInputChange}
-//               isInvalid={!!formFieldErrors.role}
-//             >
-//               <option value="">Seleccione un rol</option>
-//               { availableRoles.map((role) => (
-//               <option key={role} value={role}>
-//         {role}
-//       </option>
-//     )) }
-//   </Form.Select>
-// </Form.Group>            {((formValues.type === 'full' || selectedUser?.type === 'full')) && (
-//               <>
-//                 <Form.Group className="mb-3">
-//                   <Form.Label>Contraseña</Form.Label>
-//                   <div className="d-flex justify-content-between align-items-center">
-//                     <div>
-//                       {(formValues.passwordHash !== '') ? 'Establecida' : 'No establecida'}
-//                     </div>
-//                   <Button
-//                     variant="warning"
-//                     className="mb-3"
-//                     onClick={async () => {
-//                       const plain = Math.random().toString(36).slice(-10);
-//                       setGeneratedPassword(plain);
-//                       const hashed = await generateHash(plain);
-//                       console.log(hashed);
-//                       setFormValues(prev => ({ ...prev, passwordHash: hashed }));
-//                     }}
-//                   >
-//         🔒 Resetear Contraseña
-//       </Button>
-//                   </div>
-//                 </Form.Group>
-//
-//
-//                 {generatedPassword && (
-//                   <Alert variant="info" className="mt-2">
-//                     Nueva contraseña: <strong>{generatedPassword}</strong>
-//                   </Alert>
-//                 )}
-//               </>
-//             )}
-//
-//           </Form>
-//         </Modal.Body>
-//         <Modal.Footer>
-//           <Button variant="secondary" onClick={handleModalClose}>
-//             Cancelar
-//           </Button>
-//           <Button variant="primary" onClick={handleSave}>
-//             Guardar Cambios
-//           </Button>
-//         </Modal.Footer>
-//       </Modal>
-//     </>
-//   );
-// }
-
-//
-// export default function UsersDashboard() {
-//   const [showModal, setShowModal] = useState(false);
-//   const [selectedUser, setSelectedUser] = useState<user_safe_t | null>(null);
-//
-//   const handleEditUser = (user: user_safe_t) => {
-//     setSelectedUser(user);
-//     setFormValues(user); // optionally map to modal form shape
-//     showModal = true;
-//   };
-//
-//   const handleAddUser = () => {
-//     setSelectedUser(null);
-//     setFormValues(DEFAULT_FORM_VALUES);
-//     setShowModal(true);
-//   };
-//
-//   return (
-//     <>
-//     <Head><title>Usuarios – InmoCloud</title></Head>
-//     <NavigationBar />
-//
-//     <Container className="mt-5">
-//     <h2 className="mb-4 text-center">Lista de Usuarios</h2>
-//
-//     <ErrorAlerts errors={errors} />
-//
-//     {!users ? <LoadingSpinner /> : (
-//       <UserTable 
-//       users={users}
-//       onEdit={openModal}
-//       onDelete={handleDeleteUser}
-//       onAdd={openModalForNew}
-//       />
-//     )}
-//
-//     <UserModal
-//     show={showModal}
-//     onClose={closeModal}
-//     onSubmit={(values, id) => {
-//       if (id) {
-//         updateUser(id, values);
-//       } else {
-//         createUser(values);
-//       }
-//     }}
-//     initialValues={formValues}
-//     userId={selectedUser?.id}
-//     />
-//     </Container>
-//     </>
-//   );
-// }

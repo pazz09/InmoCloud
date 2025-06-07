@@ -1,34 +1,30 @@
-'use client'
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/context/AuthContext';
-import { UserRoleEnum } from '@/backend/types';
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
+import { UserRoleEnum } from "@/backend/types";
 
 export default function HomeRedirect() {
   const router = useRouter();
   const { role, isAuthenticated } = useAuth();
-      
-
-
-
   useEffect(() => {
-    if (isAuthenticated) 
+    if (isAuthenticated)
       switch (role) {
         case UserRoleEnum.ADMINISTRADOR:
         case UserRoleEnum.CORREDOR:
-          router.push('/dashboard/principal');
+          router.push("/dashboard/principal");
           return;
         case UserRoleEnum.ARRENDATARIO:
         case UserRoleEnum.PROPIETARIO:
-          router.push('/user-profile');
+          router.push("/clientes");
           return;
         default:
-          router.push('/login');
+          router.push("/login");
           return;
-      } else {
-      router.push('/login');
+      }
+    else {
+      router.push("/login");
     }
   }, [router, role, isAuthenticated]);
-
   return null; // No se muestra nada, solo redirige
 }

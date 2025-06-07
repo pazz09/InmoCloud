@@ -1,4 +1,4 @@
-import { isAborted, z } from 'zod';
+import { z } from 'zod';
 
 /* Esquema: Se utiliza para validar un tipo de dato. Por ejemplo:
  * ```ts
@@ -44,26 +44,31 @@ const isValidRUT = (rut: string): boolean => {
 };
 
 // Zod schema
-const rut_schema = z
+export const rut_schema = z
   .string()
   .refine(isValidRUT, {
     message: "El RUT es inválido",
   });
 
-// Respuestas
-export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) =>
-  z.discriminatedUnion("status", [
-    z.object({
-      status: z.literal("success"),
-      data: dataSchema,
-      message: z.string().optional(),
-    }),
-    z.object({
+export const error_response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
       status: z.literal("error"),
       message: z.string(),
       code: z.string(), // e.g., "VALIDATION_ERROR", "USER_NOT_FOUND"
       data: dataSchema.nullable().optional(), // optional even on error
-    }),
+});
+
+export const success_response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
+      status: z.literal("success"),
+      data: dataSchema,
+      message: z.string().optional(),
+});
+
+
+// Respuestas
+export const response_schema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.discriminatedUnion("status", [
+      success_response_schema(dataSchema),
+      error_response_schema(dataSchema)
   ]);
   
 export type response_t<T extends z.ZodTypeAny> = 
@@ -137,13 +142,15 @@ const base_user = z.object({
 
   telefono: z.string()
     .regex(/^\d{9}$/, {message: "El teléfono debe tener 9 dígitos"})
-    .optional(),
+    .optional()
+    .nullable(),
   
   rut: rut_schema,
 
   mail: z.string()
     .email({message: "El correo electrónico es inválido"})
-    .optional(),
+    .optional()
+    .nullable(),
 
   role: user_role_enum,
 });
@@ -197,7 +204,7 @@ export type user_response_t = z.infer<typeof user_response_schema>;
 
 // Log In POST /api/users/login
 export const login_schema = z.object({
-  rut:      z.string({required_error: "El RUT es obligatorio"}),
+  rut:      rut_schema,
   password: z.string({required_error: "La contraseña es obligatoria"})
 });
 

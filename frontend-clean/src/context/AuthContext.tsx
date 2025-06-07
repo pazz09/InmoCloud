@@ -1,4 +1,4 @@
-import { token_decoded_t, token_t, user_role_enum_t, UserRoleEnum } from '@/backend/types';
+import { token_decoded_t, token_t, user_role_enum_t, UserRoleEnum } from '@/types';
 import { jwtDecode } from 'jwt-decode';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('Login token:', token);
+    // console.log('Login token:', token);
     if (token) {
       try {
         const decoded: token_decoded_t = jwtDecode(token);

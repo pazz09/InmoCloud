@@ -68,6 +68,7 @@ export default async function handler(
       }
       // Updates the user data for the given ID and body, returns OkPacket
       case 'PUT': {
+        console.log("PUT /api/users/id")
         const body = req.body;
         let parsedBody = null;
 

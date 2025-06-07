@@ -1,7 +1,7 @@
 'use client'
 import Head from 'next/head';
 import NavigationBar from '@/components/Navbar';
-import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Spinner } from 'react-bootstrap';
 import { FaHome, FaUsers, FaMoneyBillWave, FaBell } from 'react-icons/fa';
 import { dashboard_metrics_t, dashboard_response_schema } from '@/backend/types';
 import { useRouter } from 'next/router';
@@ -35,7 +35,11 @@ export default function Dashboard() {
       });
   }, []);
 
-  if (!data) return <p>Cargando...</p>;
+  if (!data) return       <Container className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>;
  return (
     <>
       <Head>

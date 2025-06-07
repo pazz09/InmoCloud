@@ -1,7 +1,7 @@
 import { getToken, verifyToken, withAuth } from "@/backend/auth";
 import { AppError, convertZodError, InvalidTokenError, MethodNotAllowedError, UnexpectedError } from "@/backend/errors";
 import { AppErrorResponse, ErrorTemplate, SuccessTemplate } from "@/backend/messages";
-import { empty_response_t, Roles, user_safe_schema, user_safe_t, user_search_filters_schema, user_t, UserRoleEnum } from "@/backend/types";
+import { empty_response_t, Roles, user_safe_schema, user_safe_t, user_search_schema, user_t, UserRoleEnum } from "@/backend/types";
 import { getUsersFiltered, sanitizeUsers } from "@/backend/users";
 import { TokenExpiredError } from "jsonwebtoken";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -32,7 +32,7 @@ export default async function handler(
 
           try {
             const filters = req.body || {};
-            const parsedFilters = user_search_filters_schema.parse(filters);
+            const parsedFilters = user_search_schema.parse(filters);
             const users = await getUsersFiltered(parsedFilters);
             // Use safe schema to sanitize sensitive users
             const sanitized = sanitizeUsers(token_data!.role, users)
