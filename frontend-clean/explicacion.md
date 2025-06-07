@@ -496,3 +496,43 @@ Ahora podemos organizar el componente login de la siguiente forma
 * `src/features/login/components/LoginForm.tsx`: Componente mínimo de login, 
     sólo se encarga del renderizado.
 * `src/lib/backend/users/login.ts`: Maneja la lógica de inicio de sesión en el backend.
+
+## Descargar código actualizado
+
+Actualmente el código está en un branch llamado `frontend-conn` (Conexión frontend/backend).
+
+Si ya tienes el repositorio, se obtiene de la siguiente forma.
+
+```bash
+cd InmoCloud
+
+git fetch # Obtener datos de las ramas
+git pull # Obtener ramas
+git checkout frontend-conn # Cambiar a la rama
+```
+Y listo, tendrás acceso al código actualizado, ahora puedes ejecutar
+
+```bash
+npm i // Instalar dependencias faltantes
+npm run dev // Ejecutar.
+```
+
+Pero ten cuidado! actualmente para ejecutarse, el backend depende de la base de datos,
+de la cual, por motivos de seguridad, no incluimos las credenciales en el repo,
+este es un archivo .env que puedes solicitar a Benjamín los datos de acceso.
+
+Si quieres hostear la base de datos localmente (recomendado) y tienes MariaDB o MySQL,
+puedes cargar el código desde `src/lib/backend/sql/second.sql`, el cual contiene todos
+los datos de prueba. Es necesario ejecutar como usuario root.
+
+Listo, las credenciales de prueba las puedes encontrar en el archivo de arriba.
+
+
+## Roadmap
+
+Actualmente están parcialmente implementados el login, dashboard, la vista /dashboard/usuarios 
+y la vista /dashboard/clientes sin terminar. Principalmente falta modularizar y ajustar
+a que coincida con los mockups, todo el resto falta por implementar, pero es buena idea partir
+por ahí.
+
+
