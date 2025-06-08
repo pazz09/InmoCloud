@@ -1,6 +1,6 @@
 // components/UserSearchBar.tsx
 import { Form, Row, Col, Button } from "react-bootstrap";
-import { RoleHierarchy, rolePriority, user_role_enum_t, UserRoleEnum } from "@/backend/types";
+import { rolePriority, UserRoleEnum } from "@/backend/types";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -24,7 +24,7 @@ export default function UserSearchBar({ onSearch }: Props) {
       let roles = Object.values(UserRoleEnum).filter(
           (r) => rolePriority[r as keyof typeof rolePriority] < rolePriority[userRole]
       );
-      console.log("Available roles based on user role:", roles);
+      // console.log("Available roles based on user role:", roles);
       roles = roles.filter((r) => r !== UserRoleEnum.SIN_SESION); // Exclude SIN_SESION
       setAvailableRoles(roles);
   }, [userRole]);

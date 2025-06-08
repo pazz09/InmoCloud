@@ -1,60 +1,48 @@
 import Head from "next/head";
-import NavigationBar from "@/components/Navbar";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 
 import LoginForm from "@/features/login/components/LoginForm";
 import { useLogin } from "@/features/login/hooks/useLogin";
 
-import { formatRutInput } from "@/utils/rut";
+import TimedAlerts from "@/components/TimedAlerts";
 
 const LoginPage = () => {
   const {
     rut,
-    setRut,
     password,
-    setPassword,
-    error,
     submitting,
     redirecting,
+    onRutChange,
+    onPasswordChange,
     handleSubmit,
+    formErrors,
+    visibleAlerts,
   } = useLogin();
 
   return (
     <>
-      <Head>
-        <title>Iniciar sesión – InmoCloud</title>
-      </Head>
-      {/* <NavigationBar />  No necesitamos esto en iniciar sesión )? */}
-      <Container
+    <Head><title>Iniciar Sesión</title></Head>
+    <Container 
         fluid
-        className="d-flex align-items-center justify-content-center"
+        className = "d-flex align-items-center justify-content-center"
         style={{ minHeight: "90vh", backgroundColor: "#f5f6f7" }}
-      >
-        <Row>
-          <Col md={12}>
-            <div
-              className="p-5 shadow rounded bg-white"
-              style={{ minWidth: "300px", maxWidth: "400px" }}
-            >
-              <h3 className="text-center mb-4" style={{ color: "#2c3e50" }}>
-                Iniciar sesión
-              </h3>
-              <LoginForm
-                rut={rut}
-                password={password}
-                error={error}
-                submitting={submitting}
-                redirecting={redirecting}
-                onRutChange={(val) => setRut(formatRutInput(val))}
-                onPasswordChange={setPassword}
-                onSubmit={handleSubmit}
-              />
-            </div>
-          </Col>
-        </Row>
-      </Container>
+    >
+
+      <LoginForm 
+          rut={rut}
+          password={password}
+          submitting={submitting}
+          redirecting={redirecting}
+          onRutChange={onRutChange}
+          onPasswordChange={onPasswordChange}
+          onSubmit={handleSubmit}
+          formErrors={formErrors}
+      />
+      <TimedAlerts alerts={visibleAlerts} onDismiss={()=>{}}/>
+    </Container>
     </>
   );
 };
+
 
 export default LoginPage;

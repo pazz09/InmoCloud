@@ -1,8 +1,5 @@
 "use client";
 import {
-  response_schema,
-  OkPacket,
-  update_response_schema,
   user_form_data_t,
   UserRoleEnum,
 } from "@/backend/types";
@@ -10,21 +7,18 @@ import ClientTable from "@/components/ClientTable";
 import NavigationBar from "@/components/Navbar";
 import UserModal from "@/components/UserModal";
 import UserSearchBar from "@/components/UserSearchBar";
-import { useAuth } from "@/context/AuthContext";
 import { useClientList } from "@/hooks/useClientList";
-import { useTimedAlerts } from "@/hooks/useErrorQueue";
-import { create } from "domain";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useTimedAlerts } from "@/hooks/useTimedAlerts";
+import { useState } from "react";
 import { Container } from "react-bootstrap";
 import { createUser } from "@/services/user"
 
 export default function ClientesDashboard() {
   const { users, searchClients } = useClientList();
-  const { visibleAlerts, addError, addSuccess, dismissAlert } =
+// TODO: Revisar (por qué tan pocas cosas?)
+  const { addError, addSuccess } =
     useTimedAlerts();
-  const router = useRouter();
-  const { logout } = useAuth();
+
 
   const initialValues: user_form_data_t = {
     nombre: "",
@@ -37,7 +31,6 @@ export default function ClientesDashboard() {
     type: "full",
   };
 
-  const [formValues, setFormValues] = useState<user_form_data_t>(initialValues);
 
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -49,16 +42,17 @@ export default function ClientesDashboard() {
       return;
     }
     try {
-      await createUser(formValues, token);
+      await createUser(initialValues, token);
       addSuccess("Usuario creado correctamente");
     } catch (e) {
       console.log("Error al crear usuario:", e);
       addError(
-        `Error al crear el usuario: ${
-        (e instanceof Error) ? e.message : "Error desconocido"
+        `Error al crear el usuario: ${(e instanceof Error) ? e.message : "Error desconocido"
         }`
       )
     }
+
+  };
 
   const handleSearch = (params: {
     name?: string;

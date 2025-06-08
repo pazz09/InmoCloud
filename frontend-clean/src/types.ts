@@ -138,7 +138,7 @@ const base_user = z.object({
 
   apellidos: z.string()
     .min(3, {message: "Los apellidos deben tener al menos 3 caracteres"})
-    .max(100, {message: "Los apellidos no pueden exceder los 100 caracteres"}),
+    .max(150, {message: "Los apellidos no pueden exceder los 100 caracteres"}),
 
   telefono: z.string()
     .regex(/^\d{9}$/, {message: "El teléfono debe tener 9 dígitos"})

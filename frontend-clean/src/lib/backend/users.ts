@@ -167,8 +167,7 @@ export async function login(rut: string, password: string):
   }
 
   const rows = await db.query('SELECT * FROM users_t WHERE rut = ?', [rut]);
-
-  console.log("rows", rows)
+  //console.log("rows", rows)
   if (rows.length === 0) {
     throw UserNotFoundError();
   }

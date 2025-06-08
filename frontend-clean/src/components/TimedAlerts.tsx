@@ -2,7 +2,7 @@
 
 import { Alert, CloseButton } from 'react-bootstrap';
 
-type TimedAlert = {
+export type TimedAlert = {
   id: number;
   message: string;
   type: 'error' | 'success'

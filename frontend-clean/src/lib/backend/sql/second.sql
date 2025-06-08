@@ -6,6 +6,7 @@ CREATE USER 'corredor'@'%' IDENTIFIED BY 'contrasenaCorredor';
 
 DROP USER if exists 'server';
 CREATE USER 'server'@'%' IDENTIFIED BY 'contrasenaServer';
+CREATE USER 'server'@'localhost' IDENTIFIED BY 'contrasenaServer';
 
 
 
@@ -63,7 +64,12 @@ CREATE TABLE pagos_t (
   propiedad_id INT NOT NULL,
   usuario_id INT NOT NULL,
   FOREIGN KEY (propiedad_id) REFERENCES properties_t(id),
-  FOREIGN KEY (usuario_id) REFERENCES users_t(id)
+  FOREIGN KEY (usuario_id) REFERENCES users_t(id),
+  -- ✅ Check constraint to allow only one of giro or deposito
+  CHECK (
+    (deposito IS NULL AND giro IS NOT NULL) OR
+    (deposito IS NOT NULL AND giro IS NULL)
+  )
 );
 
 -- 💰 Pagos actualizados
