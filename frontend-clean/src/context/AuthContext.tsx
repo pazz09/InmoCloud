@@ -1,5 +1,6 @@
 import { token_decoded_t, token_t, user_role_enum_t, UserRoleEnum } from '@/types';
 import { jwtDecode } from 'jwt-decode';
+import { useRouter } from 'next/router';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 type AuthContextType = {
@@ -23,6 +24,7 @@ const isTokenExpired = (decoded: token_decoded_t): boolean => {
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [role, setRole] = useState<user_role_enum_t>(UserRoleEnum.SIN_SESION);
   const [mounted, setMounted] = useState(false); // <-- hydration fix
@@ -39,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Invalid or expired token');
         logout();
+        router.push("/login");
+        return;
       }
     }
     setMounted(true); // render only after client has mounted

@@ -13,7 +13,7 @@ export default function NavigationBar() {
     // Verificar si el usuario está autenticado al cargar el componente
     if (!isAuthenticated ) {
       // Si no está autenticado, redirigir a la página de inicio de sesión
-      // router.push('/login');
+       router.push('/login');
     }
   }, [isAuthenticated, router]);
 
@@ -47,11 +47,16 @@ export default function NavigationBar() {
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
               <Nav className="me-auto">
-                <Link href="/propiedades" className="nav-link">Propiedades</Link>
-                {isAdmin && (<Link href="/dashboard/usuarios" className="nav-link">Usuarios</Link>)}
+
+                <Link href="/dashboard/banco" className="nav-link">Banco</Link>
+
                 <Link href="/dashboard/clientes" className="nav-link">Clientes</Link>
-                <Link href="/pagos" className="nav-link">Pagos</Link>
+                {isAdmin && (<Link href="/dashboard/usuarios" className="nav-link">Usuarios</Link>)}
+
+                <Link href="/propiedades" className="nav-link">Propiedades</Link>
+
                 <Link href="/reportes" className="nav-link">Reportes</Link>
+
               </Nav>
               <Nav>
                 <Nav.Link onClick={logOutHandler} style={{ cursor: 'pointer' }}>

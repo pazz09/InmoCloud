@@ -1,5 +1,7 @@
 'use client';
 
+// see "src/hooks/useTimedAlerts.ts"
+
 import { Alert, CloseButton } from 'react-bootstrap';
 
 export type TimedAlert = {

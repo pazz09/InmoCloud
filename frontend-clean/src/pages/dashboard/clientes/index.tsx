@@ -3,12 +3,12 @@ import {
   user_form_data_t,
   UserRoleEnum,
 } from "@/backend/types";
-import ClientTable from "@/components/ClientTable";
-import NavigationBar from "@/components/Navbar";
-import UserModal from "@/components/UserModal";
-import UserSearchBar from "@/components/UserSearchBar";
-import { useClientList } from "@/hooks/useClientList";
-import { useTimedAlerts } from "@/hooks/useTimedAlerts";
+import ClientTable from "@/features/dashboard/clientes/components/ClientTable";
+import NavigationBar from "@/features/common/components/NavigationBar";
+import UserModal from "@/features/common/components/UserModal";
+import UserSearchBar from "@/features/common/components/UserSearchBar";
+import { useClientList } from "@/features/dashboard/clientes/hooks/useClientList";
+import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import { useState } from "react";
 import { Container } from "react-bootstrap";
 import { createUser } from "@/services/user"

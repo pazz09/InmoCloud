@@ -4,7 +4,7 @@ import { Container } from "react-bootstrap";
 import LoginForm from "@/features/login/components/LoginForm";
 import { useLogin } from "@/features/login/hooks/useLogin";
 
-import TimedAlerts from "@/components/TimedAlerts";
+import TimedAlerts from "@/features/common/components/TimedAlerts";
 
 const LoginPage = () => {
   const {

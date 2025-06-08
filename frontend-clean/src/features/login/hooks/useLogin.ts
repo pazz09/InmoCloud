@@ -5,7 +5,7 @@ import { login_schema, response_login } from '@/backend/types';
 import { loginUser } from '@/services/login';
 import { rut_schema } from '@/types';
 import z from 'zod';
-import { useTimedAlerts } from '@/hooks/useTimedAlerts';
+import { useTimedAlerts } from '@/features/common/hooks/useTimedAlerts';
 import { AppError } from '@/utils/errors';
 
 const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 caracteres');

@@ -1,7 +1,6 @@
 import { Modal, Button, Form, Alert } from "react-bootstrap";
-import { RoleHierarchy, token_t, user_form_data, user_form_data_t, user_union_schema, user_union_t, UserRoleEnum } from "@/backend/types";
+import { RoleHierarchy, user_form_data, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
 import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
 
 import bcrypt from 'bcryptjs';
 import { useAuth } from "@/context/AuthContext";
@@ -73,16 +72,16 @@ export default function UserModal({
   useEffect(() => {
 
     // Decode token
-    const requesterRole = (() => {
-        try {
-          const token = localStorage.getItem("token");
-          const decoded = jwtDecode<token_t>(token!);
-          return decoded.role;
-        } catch (err) {
-          console.log(err)
-          return UserRoleEnum.SIN_SESION;
-        }
-      })();
+    //const requesterRole = (() => {
+    //    try {
+    //      const token = localStorage.getItem("token");
+    //      const decoded = jwtDecode<token_t>(token!);
+    //      return decoded.role;
+    //    } catch (err) {
+    //      console.log(err)
+    //      return UserRoleEnum.SIN_SESION;
+    //    }
+    //  })();
 
   // console.log("requesterRole", requesterRole)
 

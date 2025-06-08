@@ -1,4 +1,3 @@
-import { z } from 'zod';
 
 /* Esquema: Se utiliza para validar un tipo de dato. Por ejemplo:
  * ```ts
@@ -16,6 +15,7 @@ import { z } from 'zod';
  * ```
  *
  */
+import { z } from 'zod';
 
 //RUT 
 
@@ -220,18 +220,36 @@ export const response_login = response_schema(login_response_schema);
 export type response_login_t = z.infer<typeof response_login>;
 
 
-export const transaction_schema = z.object({
-  id:         z.number(),
-  timestamp:  z.date(),
-  amount:     z.number(),
+export const payment_schema = z.object({
+  id: z.number(),
+  timestamp: z.union([z.string(), z.date()]).transform((val) =>
+    typeof val === 'string' ? new Date(val) : val
+  ),
+  giro: z.number().optional().nullable(),
+  deposito: z.number().optional().nullable(),
+  categoria: z.string(),
+  detalle: z.string().optional().nullable(),
 });
-export type transaction_t = z.infer<typeof transaction_schema>;
+
+export type payment_t = z.infer<typeof payment_schema>;
+
+
+export const payment_search_params = payment_schema.partial();
+export type payment_search_params_t = z.infer<typeof payment_search_params>;
+
+export const payment_view_schema = payment_schema.extend({
+  cliente: z.string(),
+  propiedad: z.string()
+});
+export type payment_view_t = z.infer<typeof payment_view_schema>;
+
 
 
 export const token_schema = z.object({
   id: z.number(),
   role: user_role_enum,
 })
+
 
 export const token_decoded_schema = z.object({
   id: z.number(),
@@ -329,3 +347,30 @@ export type client_union_t = z.infer<typeof client_union_schema>;
 
 export const client_list_schema = z.array(client_union_schema);
 export type client_list_t = z.infer<typeof client_list_schema>;
+
+// get zod object keys recursively
+export const zodKeys = <T extends z.ZodTypeAny>(schema: T): string[] => {
+	// make sure schema is not null or undefined
+	if (schema === null || schema === undefined) return [];
+	// check if schema is nullable or optional
+	if (schema instanceof z.ZodNullable || schema instanceof z.ZodOptional)
+     return zodKeys(schema.unwrap());
+	// check if schema is an array
+	if (schema instanceof z.ZodArray) return zodKeys(schema.element);
+	// check if schema is an object
+	if (schema instanceof z.ZodObject) {
+		// get key/value pairs from schema
+		const entries = Object.entries(schema.shape);
+		// loop through key/value pairs
+		return entries.flatMap(([key, value]) => {
+			// get nested keys
+			const nested = value instanceof z.ZodType ?
+       zodKeys(value).map(subKey => `${key}.${subKey}`) : [];
+			// return nested keys
+			return nested.length ? nested : key;
+		});
+	}
+	// return empty array
+	return [];
+};
+

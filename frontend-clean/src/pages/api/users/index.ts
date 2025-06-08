@@ -1,13 +1,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import { addUser, getUser, getUsersFiltered, } from "@/backend/users"
-import  { Roles, user_add_schema, user_safe_schema, user_safe_t, user_t, UserRoleEnum } from "@/backend/types"
+import { addUser, } from "@/backend/users"
+import  { Roles, user_add_schema, user_safe_schema, user_safe_t, user_t } from "@/backend/types"
 import { getToken, verifyToken, withAuth } from "@/backend/auth";
-import { AppErrorResponse, ErrorTemplate, handleZodError } from "@/backend/messages";
+import { AppErrorResponse, handleZodError } from "@/backend/messages";
 import z from "zod";
 import { TokenExpiredError } from "jsonwebtoken";
-import App from "@/pages/_app";
-import { convertZodError, InvalidTokenError, MethodNotAllowedError, UnauthorizedError, UnexpectedError, UserNotFoundError } from "@/backend/errors";
+import { convertZodError, InvalidTokenError, MethodNotAllowedError, UnauthorizedError, UnexpectedError, UserNotFoundError, UserParsingError } from "@/backend/errors";
 
 
 function sanitizeUser(user: user_t): user_safe_t {
@@ -18,14 +17,23 @@ function sanitizeUser(user: user_t): user_safe_t {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   switch (req.method) {
-    case "POST": {  // Should be: Upload user
+    case "POST": {  // Add User
       withAuth(
         async (req: NextApiRequest, res: NextApiResponse) => {
-          let udata = null;
+
+          // Primero, verificamos que el cuerpo es válido
+          console.log("reqbody", req.body)
+
+          const parsedBody = user_add_schema.safeParse(req.body);
+
+          if (!parsedBody.success) {
+            console.log(parsedBody.error);
+            return AppErrorResponse(res, UserParsingError());
+          } 
+
           try {
             const token = getToken(req);
-            udata = verifyToken(token);
-
+            const udata = verifyToken(token);
           } catch (err) {
             if (err instanceof z.ZodError) {
               return AppErrorResponse(res, convertZodError(err));
@@ -35,10 +43,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               console.log(err);
             }
           }
+
           // Only admins or the user themselves can update the user
-          if (!udata)
-            return AppErrorResponse(res, UnauthorizedError());
-          const isAdmin = udata.role === Roles.ADMINISTRADOR;
 
           // if (!isAdmin && !isSelf) {
           //   return res.status(403).json(ErrorTemplate('No autorizado para actualizar este usuario.'));
@@ -46,14 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           // Define the expected payload schema
 
-          console.log("reqbody", req.body)
-
-          const parsedBody = user_add_schema.safeParse(req.body);
-
-          if (!parsedBody.success) {
-            console.log(parsedBody.error);
-            handleZodError(parsedBody.error, res);
-          }
 
           const { nombre, apellidos, mail, telefono, rut, role, passwordHash } = parsedBody.data!;
 
