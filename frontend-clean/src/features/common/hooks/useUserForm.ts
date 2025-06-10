@@ -1,4 +1,4 @@
-import { Mode, user_form_data, user_form_data_t } from "@/backend/types";
+import { Mode, user_form_data, user_form_data_t } from "@/types";
 import { useState } from "react";
 
 export function useUserForm({

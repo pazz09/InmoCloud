@@ -1,7 +1,7 @@
 import { getToken, verifyToken, withAuth } from "@/backend/auth";
 import { AppError, convertZodError, InvalidTokenError, MethodNotAllowedError, UnexpectedError } from "@/backend/errors";
 import { AppErrorResponse, ErrorTemplate, SuccessTemplate } from "@/backend/messages";
-import { empty_response_t, Roles, user_safe_schema, user_safe_t, user_search_schema, user_t, UserRoleEnum } from "@/backend/types";
+import { empty_response_t, Roles, user_safe_schema, user_safe_t, user_search_schema, user_t, UserRoleEnum } from "@/types";
 import { getUsersFiltered, sanitizeUsers } from "@/backend/users";
 import { TokenExpiredError } from "jsonwebtoken";
 import { NextApiRequest, NextApiResponse } from "next";

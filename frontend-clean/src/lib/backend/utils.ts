@@ -1,5 +1,5 @@
 import z from "zod";
-import { SQLParam } from "./types";
+import { SQLParam } from "@/types";
 
 export function objectToSqlInsert(obj: Record<string, SQLParam>) {
   const keys = Object.keys(obj);

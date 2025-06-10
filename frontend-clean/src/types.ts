@@ -2,7 +2,7 @@
 /* Esquema: Se utiliza para validar un tipo de dato. Por ejemplo:
  * ```ts
  * 
- * import {user_schema from "@backend/types"}
+ * import {user_schema from "@/types"}
  *
  * // Inseguro, puede contener cualquier cosa, null, undefined, ...
  * const user_data = response.body;

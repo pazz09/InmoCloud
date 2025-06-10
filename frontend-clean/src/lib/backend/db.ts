@@ -1,5 +1,5 @@
 import * as mariadb from 'mariadb';
-import { SQLParam } from './types';
+import { SQLParam } from '@/types';
 
 declare global {
   var mariadbPool: mariadb.Pool | undefined;

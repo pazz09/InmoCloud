@@ -2,7 +2,7 @@
 import {
   user_form_data_t,
   UserRoleEnum,
-} from "@/backend/types";
+} from "@/types";
 import ClientTable from "@/features/dashboard/clientes/components/ClientTable";
 import NavigationBar from "@/features/common/components/NavigationBar";
 import UserModal from "@/features/common/components/UserModal";

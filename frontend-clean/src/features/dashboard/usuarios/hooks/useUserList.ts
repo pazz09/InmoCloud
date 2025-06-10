@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { users_list_t, users_list_schema, user_form_data, response_schema } from '@/backend/types';
+import { users_list_t, users_list_schema, user_form_data, response_schema } from '@/types';
 import { AppError } from "@/utils/errors"
 
 import { fetchUsers } from "@/services/user"

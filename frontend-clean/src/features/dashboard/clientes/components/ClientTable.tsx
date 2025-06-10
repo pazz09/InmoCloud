@@ -5,7 +5,7 @@ import {
   client_union_t,
   user_union_t,
   UserRoleEnum,
-} from "@/backend/types";
+} from "@/types";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
 interface ClientTableProps {

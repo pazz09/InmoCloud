@@ -1,5 +1,5 @@
 import { Modal, Button, Form, Alert } from "react-bootstrap";
-import { RoleHierarchy, user_form_data, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
+import { RoleHierarchy, user_form_data, user_form_data_t, user_union_t, UserRoleEnum } from "@/types";
 import { useEffect, useState } from "react";
 
 import bcrypt from 'bcryptjs';

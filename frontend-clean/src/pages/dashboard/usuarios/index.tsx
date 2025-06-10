@@ -1,6 +1,6 @@
 'use client';
 
-import { OkPacket, response_schema, update_response_schema, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
+import { OkPacket, response_schema, update_response_schema, user_form_data_t, user_union_t, UserRoleEnum } from "@/types";
 
 import { useAuth } from "@/context/AuthContext";
 
