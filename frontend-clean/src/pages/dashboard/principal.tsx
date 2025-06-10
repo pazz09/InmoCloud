@@ -3,7 +3,7 @@ import Head from 'next/head';
 import NavigationBar from '@/features/common/components/NavigationBar';
 import { Container, Row, Col, Card, Badge, Spinner } from 'react-bootstrap';
 import { FaHome, FaUsers, FaMoneyBillWave, FaBell } from 'react-icons/fa';
-import { dashboard_metrics_t, dashboard_response_schema } from '@/backend/types';
+import { dashboard_metrics_t, dashboard_response_schema } from '@/types';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
