@@ -248,14 +248,16 @@ export const payment_schema = z.object({
 export type payment_t = z.infer<typeof payment_schema>;
 
 
-export const payment_search_params = payment_schema.partial();
-export type payment_search_params_t = z.infer<typeof payment_search_params>;
 
 export const payment_view_schema = payment_schema.extend({
   cliente: z.string(),
   propiedad: z.string()
 });
+
 export type payment_view_t = z.infer<typeof payment_view_schema>;
+
+export const payment_search_params = payment_view_schema.partial();
+export type payment_search_params_t = z.infer<typeof payment_search_params>;
 
 
 

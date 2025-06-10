@@ -14,7 +14,7 @@ import {
 
   Roles, UserRoleEnum,
 
-} from "./types"
+} from "@/types"
 import { extractFromRow } from "./utils";
 
 
