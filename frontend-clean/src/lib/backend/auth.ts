@@ -1,6 +1,6 @@
 import { verify, sign } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { response_t, Roles, token_schema, token_t, user_role_enum_t, UserRoleEnum } from './types';
+import { response_t, Roles, token_schema, token_t, user_role_enum_t, UserRoleEnum } from '@/types';
 import z from 'zod';
 import { AppError, convertZodError, ForbiddenError, MissingTokenError, UnauthorizedError } from './errors';
 import { AppErrorResponse } from './messages';

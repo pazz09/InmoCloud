@@ -1,3 +1,4 @@
+import z from "zod";
 import { SQLParam } from "./types";
 
 export function objectToSqlInsert(obj: Record<string, SQLParam>) {
@@ -19,4 +20,28 @@ export function objectToSqlUpdate(obj: Record<string, SQLParam>) {
     queryPart: `SET ${setClause}`,
     values
   };
+}
+
+export function extractFromRow<T>(
+  row: Record<string, any>,
+  prefix: string,
+  schema: z.ZodType<T>,
+  allowNull = false
+): T | null {
+  const data: Record<string, any> = {};
+
+  for (const key of Object.keys(row)) {
+    if (key.startsWith(`${prefix}_`)) {
+      const strippedKey = key.slice(prefix.length + 1);
+      const value = row[key];
+      if (value !== null) {
+        data[strippedKey] = value;
+      }
+    }
+  }
+
+  const isEmpty = Object.keys(data).length === 0;
+  if (allowNull && isEmpty) return null;
+
+  return schema.parse(data);
 }

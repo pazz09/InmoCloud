@@ -1,5 +1,5 @@
 import { Table, Button } from "react-bootstrap";
-import { user_union_t } from "@/backend/types";
+import { user_union_t } from "@/types";
 
 interface UserTableProps {
   users: user_union_t[];

@@ -5,6 +5,7 @@ DROP USER if exists 'corredor';
 CREATE USER 'corredor'@'%' IDENTIFIED BY 'contrasenaCorredor';
 
 DROP USER if exists 'server';
+DROP USER if exists 'server'@'localhost';
 CREATE USER 'server'@'%' IDENTIFIED BY 'contrasenaServer';
 CREATE USER 'server'@'localhost' IDENTIFIED BY 'contrasenaServer';
 
@@ -56,30 +57,30 @@ INSERT INTO properties_t (direccion, activa, propietario_id, arrendatario_id, va
 CREATE TABLE pagos_t (
   id INT AUTO_INCREMENT PRIMARY KEY,
   fecha DATE NOT NULL,
-  deposito DECIMAL(12, 2), -- saldo entrante
-  giro DECIMAL(12, 2),     -- saldo saliente
+
+  tipo BOOLEAN COMMENT 'FALSE = depósito, TRUE = giro',
+  monto DECIMAL(12, 2), -- saldo
+  pagado BOOLEAN DEFAULT FALSE,
+
   categoria ENUM('CAT_A', 'CAT_B', 'CAT_C', 'CAT_D') NOT NULL,
   detalle TEXT,
-  pagado BOOLEAN DEFAULT FALSE,
+
   propiedad_id INT NOT NULL,
   usuario_id INT NOT NULL,
+
   FOREIGN KEY (propiedad_id) REFERENCES properties_t(id),
-  FOREIGN KEY (usuario_id) REFERENCES users_t(id),
+  FOREIGN KEY (usuario_id) REFERENCES users_t(id)
   -- ✅ Check constraint to allow only one of giro or deposito
-  CHECK (
-    (deposito IS NULL AND giro IS NOT NULL) OR
-    (deposito IS NOT NULL AND giro IS NULL)
-  )
 );
 
 -- 💰 Pagos actualizados
-INSERT INTO pagos_t (fecha, deposito, giro, categoria, detalle, pagado, propiedad_id, usuario_id) VALUES
-('2025-05-20', 450000, NULL, 'CAT_A', 'Pago arriendo mayo', TRUE, 1, 3),
-('2025-04-20', 450000, NULL, 'CAT_A', 'Pago arriendo abril', TRUE, 1, 3),
-('2025-05-25', NULL, 150000, 'CAT_B', 'Reparación caldera', FALSE, 1, 2),
-('2025-06-01', 500000, NULL, 'CAT_A', 'Pago arriendo junio', TRUE, 2, 3),
-('2025-05-30', NULL, 120000, 'CAT_C', 'Honorarios corredor', TRUE, 2, 1),
-('2025-05-15', 300000, NULL, 'CAT_A', 'Pago arriendo parcial', FALSE, 3, 3);-- Seed transactions
+INSERT INTO pagos_t (fecha, monto, tipo, categoria, detalle, pagado, propiedad_id, usuario_id) VALUES
+('2025-05-20', 450000, FALSE, 'CAT_A', 'Pago arriendo mayo', TRUE, 1, 3),
+('2025-04-20', 450000, FALSE, 'CAT_A', 'Pago arriendo abril', TRUE, 1, 3),
+('2025-05-25', 150000, TRUE, 'CAT_B', 'Reparación caldera', FALSE, 1, 2),
+('2025-06-01', 500000, FALSE, 'CAT_A', 'Pago arriendo junio', TRUE, 2, 3),
+('2025-05-30', 120000, TRUE, 'CAT_C', 'Honorarios corredor', TRUE, 2, 1),
+('2025-05-15', 300000, TRUE, 'CAT_A', 'Pago arriendo parcial', FALSE, 3, 3);-- Seed transactions
 
 
 GRANT ALL PRIVILEGES ON inmocloud.* TO corredor;

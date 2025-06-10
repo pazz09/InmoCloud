@@ -1,7 +1,7 @@
 import { withAuth } from '@/backend/auth';
 import { AppError, MethodNotAllowedError } from '@/backend/errors';
 import { AppErrorResponse, SuccessTemplate } from '@/backend/messages';
-import { Roles } from '@/backend/types';
+import { Roles } from '@/types';
 import { getClients } from '@/backend/users';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { de } from 'zod/v4/locales';

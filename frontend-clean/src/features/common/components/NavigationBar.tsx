@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/router';
-import { UserRoleEnum } from '@/backend/types';
+import { UserRoleEnum } from '@/types';
 import { useEffect, useState } from 'react';
 
 export default function NavigationBar() {
@@ -53,9 +53,9 @@ export default function NavigationBar() {
                 <Link href="/dashboard/clientes" className="nav-link">Clientes</Link>
                 {isAdmin && (<Link href="/dashboard/usuarios" className="nav-link">Usuarios</Link>)}
 
-                <Link href="/propiedades" className="nav-link">Propiedades</Link>
+                <Link href="/dashboard/propiedades" className="nav-link">Propiedades</Link>
 
-                <Link href="/reportes" className="nav-link">Reportes</Link>
+                <Link href="/dashboard/reportes" className="nav-link">Reportes</Link>
 
               </Nav>
               <Nav>

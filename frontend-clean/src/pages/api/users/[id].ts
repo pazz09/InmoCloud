@@ -1,16 +1,12 @@
 import { JsonWebTokenError } from 'jsonwebtoken';
 import type { NextApiRequest, NextApiResponse } from 'next'
-import z, { ZodNull } from 'zod'
+import z from 'zod'
 
-import { getToken, isHigherRole, verifyToken } from '@/backend/auth';
+import { getToken, verifyToken } from '@/backend/auth';
 import { AppErrorResponse, ErrorTemplate, handleZodError, SuccessTemplate } from '@/backend/messages';
-import { OkPacket, response_t, RoleHierarchy, Roles, user_form_data, user_role_enum, user_role_enum_t } from '@/backend/types'
+import { OkPacket, response_t, Roles, user_form_data, user_role_enum } from '@/types'
 import { deleteUser, getAuthorizedUserView, getUser, updateUser } from '@/backend/users';
-import { assert } from 'console';
-import { parse } from 'path';
-import { ok } from 'assert';
-import { AppError, convertZodError, MethodNotAllowedError, SessionExpiredError, UnauthorizedError, UnexpectedError, UserParsingError } from '@/backend/errors';
-import App from '@/pages/_app';
+import { AppError, convertZodError, MethodNotAllowedError, SessionExpiredError, UnexpectedError } from '@/backend/errors';
 
 async function get(
   req: NextApiRequest,

@@ -37,8 +37,13 @@ const isValidRUT = (rut: string): boolean => {
   }
 
   const expectedCheck = 11 - (sum % 11);
+
+  // no idea
   const expectedDigit =
-    expectedCheck === 11 ? "0" : expectedCheck === 10 ? "K" : expectedCheck.toString();
+    expectedCheck === 11 ?
+    "0" : expectedCheck === 10 ?
+    "K" : expectedCheck.toString();
+
 
   return checkDigit === expectedDigit;
 };
@@ -50,14 +55,16 @@ export const rut_schema = z
     message: "El RUT es inválido",
   });
 
-export const error_response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
+export const error_response_schema = <T extends z.ZodTypeAny>
+(dataSchema: T) => z.object({
       status: z.literal("error"),
       message: z.string(),
       code: z.string(), // e.g., "VALIDATION_ERROR", "USER_NOT_FOUND"
       data: dataSchema.nullable().optional(), // optional even on error
 });
 
-export const success_response_schema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
+export const success_response_schema = <T extends z.ZodTypeAny>
+(dataSchema: T) => z.object({
       status: z.literal("success"),
       data: dataSchema,
       message: z.string().optional(),
@@ -222,13 +229,20 @@ export type response_login_t = z.infer<typeof response_login>;
 
 export const payment_schema = z.object({
   id: z.number(),
-  timestamp: z.union([z.string(), z.date()]).transform((val) =>
+  fecha: z.union([z.string(), z.date()]).transform((val) =>
     typeof val === 'string' ? new Date(val) : val
   ),
-  giro: z.number().optional().nullable(),
-  deposito: z.number().optional().nullable(),
+
+  tipo: z.boolean(), // 0: Giro 1: Depósito
+  monto: z.number(),
+
   categoria: z.string(),
+
   detalle: z.string().optional().nullable(),
+
+  usuario_id: z.number(),
+  propiedad_id: z.number().optional() ,
+
 });
 
 export type payment_t = z.infer<typeof payment_schema>;
@@ -322,8 +336,18 @@ export const property_schema = z.object({
   propietario_id: z.number(),
   arrendatario_id: z.number().optional().nullable()
 });
-
 export type property_t = z.infer<typeof property_schema>;
+
+export const property_view_schema = property_schema.extend({
+  "propietario": z.string(),
+  "arrendatario": z.string().optional().nullable(),
+})
+export type property_view_t = z.infer<typeof property_view_schema>;
+
+export const property_search_schema = property_view_schema.partial();
+export type property_search_t = z.infer<typeof property_search_schema>;
+
+
 
 export const arrendatario_schema = user_schema.omit({role: true}).extend({
   propiedad: property_schema.optional().nullable(),
@@ -335,14 +359,12 @@ export const propietario_schema = user_schema.omit({role: true}).extend({
   propiedades: z.array(property_schema).optional().nullable(),
   role: z.literal(UserRoleEnum.PROPIETARIO),
 });
-
 export type propietario_t = z.infer<typeof propietario_schema>;
 
 export const client_union_schema = z.discriminatedUnion("role", [
   arrendatario_schema,
   propietario_schema,
 ]);
-
 export type client_union_t = z.infer<typeof client_union_schema>;
 
 export const client_list_schema = z.array(client_union_schema);

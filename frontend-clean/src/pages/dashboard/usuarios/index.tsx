@@ -1,18 +1,22 @@
 'use client';
 
 import { OkPacket, response_schema, update_response_schema, user_form_data_t, user_union_t, UserRoleEnum } from "@/backend/types";
-import ErrorAlerts from "@/components/TimedAlerts";
-import NavigationBar from "@/components/Navbar";
-import UserModal from "@/components/UserModal";
-import UserTable from "@/components/UserTable";
+
 import { useAuth } from "@/context/AuthContext";
-import { useTimedAlerts } from "@/hooks/useErrorQueue";
-import { useUserList } from "@/hooks/useUserList";
+
+import ErrorAlerts from "@/features/common/components/TimedAlerts";
+import NavigationBar from "@/features/common/components/NavigationBar";
+import UserModal from "@/features/common/components/UserModal";
+import UserTable from "@/features/common/components/UserTable";
+import ConfirmDeleteModal from "@/features/common/components/ConfirmDeleteModal";
+
+import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
+import { useUserList } from "@/features/dashboard/usuarios/hooks/useUserList";
+
 // import { Head } from "next/document";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
-import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
 import { createUser, editUser } from "@/services/user";
 import  { AppError } from "@/utils/errors"
 
@@ -182,7 +186,7 @@ const confirmDelete = async () => {
     }
 
     addSuccess("Usuario eliminado correctamente.");
-    await searchUsers();
+    await searchUsers(token, {});
   } catch (error) {
     console.error("Error al eliminar el usuario:", error);
     addError(`Error desconocido al eliminar: ${error instanceof Error ? error.message : "Error desconocido"}`);

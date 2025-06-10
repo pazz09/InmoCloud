@@ -1,7 +1,5 @@
 import { 
-  payment_schema, 
   payment_search_params_t,
-  payment_t, 
   payment_view_schema, 
   payment_view_t, 
   response_schema} from "@/types";
@@ -34,6 +32,7 @@ export async function fetchPayments(
       throw new AppError(
         "FAILED_PARSE", -1, "Respuesta inválida del servidor (FAILED_TO_PARSE)"
       );
+    throw new AppError("UNKNOWN_ERROR", -1, "Error desconocido");
   }
 }
 

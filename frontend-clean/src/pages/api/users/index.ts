@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import { addUser, } from "@/backend/users"
-import  { Roles, user_add_schema, user_safe_schema, user_safe_t, user_t } from "@/backend/types"
+import  { Roles, user_add_schema, user_safe_schema, user_safe_t, user_t } from "@/types"
 import { getToken, verifyToken, withAuth } from "@/backend/auth";
 import { AppErrorResponse, handleZodError } from "@/backend/messages";
 import z from "zod";

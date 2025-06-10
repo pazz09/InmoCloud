@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { login } from '@/backend/users';
-import { login_schema, login_t, response_login_t } from "@/backend/types";
+import { login_schema, login_t, response_login_t } from "@/types";
 import { handleZodError, AppErrorResponse } from "@/backend/messages";
 import { AppError, convertZodError, UnexpectedError } from "@/backend/errors";
 import z from "zod";

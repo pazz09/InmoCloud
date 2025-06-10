@@ -1,6 +1,6 @@
 // components/UserSearchBar.tsx
 import { Form, Row, Col, Button } from "react-bootstrap";
-import { rolePriority, UserRoleEnum } from "@/backend/types";
+import { rolePriority, UserRoleEnum } from "@/types";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 

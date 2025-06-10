@@ -1,7 +1,8 @@
-import { login_schema, error_response_schema, OkPacket } from "@/backend/types";
+import { login_schema, error_response_schema, OkPacket } from "@/types";
+import { login_t } from "@/types";
 import { AppError } from "@/utils/errors";
 
-export const loginUser = async (body: { rut: string; password: string }) => {
+export const loginUser = async (body: login_t) => {
   login_schema.parse(body); // validate before sending
 
   const res = await fetch(`${process.env.NEXT_URL || ''}/api/users/login`, {
