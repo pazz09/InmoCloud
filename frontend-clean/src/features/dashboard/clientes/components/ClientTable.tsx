@@ -6,20 +6,25 @@ import {
   user_union_t,
   UserRoleEnum,
 } from "@/backend/types";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
 interface ClientTableProps {
   users: client_union_t[];
   onEdit: (user: client_union_t) => void;
   onDelete: (user: client_union_t) => void;
+  onView: (user: client_union_t) => void;
   onAdd: () => void;
 }
+
 
 type SortKey = "id" | "nombre" | "role" | "canon" | "ficha_propiedad";
 type SortDirection = "asc" | "desc";
 
-export default function ClientTable({ users, onEdit, onDelete, onAdd }: ClientTableProps) {
+export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: ClientTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [searchText, setSearchText] = useState("");
+  const [searchRole, setSearchRole] = useState<"" | "A" | "P">("");
 
   const isArrendatario = (role: UserRoleEnum) => role === UserRoleEnum.ARRENDATARIO;
 
@@ -31,6 +36,15 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd }: ClientTa
       setSortDirection("asc");
     }
   };
+
+  const filteredUsers = users.filter((user) => {
+    const fullName = `${user.nombre} ${user.apellidos}`.toLowerCase();
+    const role = isArrendatario(user.role) ? "A" : "P";
+    return (
+      fullName.includes(searchText.toLowerCase()) &&
+      (searchRole === "" || role === searchRole)
+    );
+  });
 
   const sortedUsers = [...users].sort((a, b) => {
     const getValue = (user: client_union_t) => {
@@ -68,6 +82,8 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd }: ClientTa
 
   return (
     <>
+
+      
       <Table striped bordered hover responsive>
         <thead>
           <tr>
@@ -87,6 +103,7 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd }: ClientTa
               Canon {sortIcon("canon")}
             </th>
             <th>Deuda/Saldo</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -113,6 +130,31 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd }: ClientTa
                     : "No asignado") || "N/A"}
                 </td>
                 <td>{/* TODO: Mostrar deuda/saldo */}</td>
+                <td className="text-center">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="me-1"
+                    onClick={() => onView(user)}
+                  >
+                    <FaEye />
+                  </Button>
+                  <Button
+                    variant="outline-success"
+                    size="sm"
+                    className="me-1"
+                    onClick={() => onEdit(user)}
+                  >
+                    <FaEdit />
+                  </Button>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => onDelete(user)}
+                  >
+                    <FaTrash />
+                  </Button>
+                </td>
               </tr>
             ))
           )}

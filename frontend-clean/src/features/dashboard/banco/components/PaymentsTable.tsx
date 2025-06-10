@@ -10,6 +10,7 @@ export type PaymentsTableProps = {
   onView: (payment: payment_view_t) => void;
   onEdit: (payment: payment_view_t) => void;
   onDelete: (payment: payment_view_t) => void;
+  onAdd: () => void;
 };
 
 const format = new Intl.DateTimeFormat("es-CL");
@@ -23,6 +24,7 @@ export const PaymentsTable = ({
   onView,
   onEdit,
   onDelete,
+  onAdd,
 }: PaymentsTableProps) => {
   const fields = [
     "Fecha",
@@ -41,14 +43,14 @@ export const PaymentsTable = ({
     doc.text("Listado de Pagos", 14, 15);
 
     const data = payments.map((p) => [
-      formatDate(p.timestamp),
-      p.id,
-      p.categoria,
-      p.cliente,
-      p.propiedad,
-      p.detalle,
-      p.deposito,
-      p.giro,
+      formatDate(p.timestamp) ?? "",
+      p.id ?? "",
+      p.categoria ?? "",
+      p.cliente ?? "",
+      p.propiedad ?? "",
+      p.detalle ?? "",
+      p.deposito ?? "",
+      p.giro ?? "",
     ]);
 
     autoTable(doc, {
@@ -59,6 +61,7 @@ export const PaymentsTable = ({
 
     doc.save("pagos.pdf");
   };
+
 
   return (
     <>
@@ -117,6 +120,12 @@ export const PaymentsTable = ({
             ))}
           </tbody>
         </Table>
+        <div className="text-end mb-3">
+          <Button variant="success" onClick={onAdd}>
+            + Agregar Pago
+          </Button>
+        </div>
+
       </div>
     </>
   );
