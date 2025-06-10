@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
-import { login_schema, response_login } from '@/backend/types';
+import { login_schema, response_login } from '@/types';
 import { loginUser } from '@/services/login';
 import { rut_schema } from '@/types';
 import z from 'zod';
