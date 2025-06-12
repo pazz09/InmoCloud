@@ -83,12 +83,12 @@ export async function checkIfRolExists(rol: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-export async function updateProperty(property: property_form_edit_t): Promise<property_view_t> 
+export async function updateProperty(id: number, property: property_form_edit_t): Promise<property_view_t> 
 {
   console.log("@/backend/properties/ updateProperty")
 
   const result = await searchProperties({rol: property.rol});
-  if (result.length > 0 && result[0].id != property.id) {
+  if (result.length > 0 && result[0].id != id) {
     console.log(property.rol)
     console.log(result[0].rol)
     throw RolAlreadyExistsError();
@@ -100,10 +100,10 @@ export async function updateProperty(property: property_form_edit_t): Promise<pr
   const q = `UPDATE properties_t SET ${keys.map(k => `${k} = ?`).join(', ')} 
               WHERE id = ?`;
 
-  const res = await db.query(q, [...values, property.id]);
+  const res = await db.query(q, [...values, id]);
   const okpacket = OkPacket.parse(res);
   if (okpacket.affectedRows == 1) {
-    const prop = await searchProperties({id: property.id});
+    const prop = await searchProperties({id});
     return prop[0];
   }
   throw UnexpectedError();
@@ -114,7 +114,7 @@ export async function deleteProperty(targetId: number): Promise<void>
   try {
     const res = await db.query(`DELETE FROM properties_t WHERE id = ?`, [targetId]);
     const okpacket = OkPacket.parse(res);
-    
+
     if (okpacket.affectedRows === 1) {
       return;
     }
@@ -131,7 +131,7 @@ export async function deleteProperty(targetId: number): Promise<void>
   }
 }
 
-export async function asignarArrendatario(prop_arrendatario: property_form_arrendatario_t): Promise<property_view_t>
+export async function asignarArrendatario(targetId: number, prop_arrendatario: property_form_arrendatario_t): Promise<property_view_t>
 {
   const keys = Object.keys(prop_arrendatario);
   const values = Object.values(prop_arrendatario) as SQLParam[];
@@ -139,10 +139,10 @@ export async function asignarArrendatario(prop_arrendatario: property_form_arren
   const q = `UPDATE properties_t SET ${keys.map(k => `${k} = ?`).join(', ')} 
               WHERE id = ?`;
 
-  const res = await db.query(q, [...values, prop_arrendatario.id]);
+  const res = await db.query(q, [...values, targetId]);
   const okpacket = OkPacket.parse(res);
   if (okpacket.affectedRows == 1) {
-    const prop = await searchProperties({id: prop_arrendatario.id});
+    const prop = await searchProperties({id: targetId});
     return prop[0];
   }
   throw UnexpectedError();

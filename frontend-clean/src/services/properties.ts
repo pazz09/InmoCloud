@@ -60,7 +60,7 @@ export async function createProperty(values: property_form_add_t, token: string)
 }
 
 export async function editProperty(id: number, values: property_form_edit_t, token: string) {
-  const res = await fetch(`/api/properties/`, {
+  const res = await fetch(`/api/properties/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export async function viewProperty(id: number, token: string) {
 }
 
 export async function asignarArrendatario(id: number, values: property_form_arrendatario_t, token: string) {
-  const res = await fetch(`/api/properties/arrendatario/`, {
+  const res = await fetch(`/api/properties/${id}/arrendatario`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

@@ -18,16 +18,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 function put(req: NextApiRequest, res: NextApiResponse) {
     withAuth(
         async (req: NextApiRequest, Res: NextApiResponse) => {
+            console.log(req.body)
+            console.log("XXXXXXXX")
             const parsedBody = property_form_arrendatario_schema.safeParse(req.body);
 
             if (!parsedBody.success) {
                 console.log(parsedBody.error);
                 return AppErrorResponse(res, PropertyParsingError());
-            } 
+            }
+
+            const id = parseInt(req.query.id as string);
 
             let property = null;
             try {
-                property = await asignarArrendatario(parsedBody.data);
+                property = await asignarArrendatario(id, parsedBody.data);
             } catch (err) {
                 console.log(err);
                 if (err instanceof z.ZodError) {

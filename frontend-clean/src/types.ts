@@ -365,7 +365,7 @@ export const property_form_delete_schema = z.object({
 });
 export type property_form_delete_t = z.infer<typeof property_form_delete_schema>;
 
-export const property_form_arrendatario_schema = property_schema.pick({id: true, arrendatario_id: true, fecha_arriendo: true});
+export const property_form_arrendatario_schema = property_schema.pick({arrendatario_id: true, fecha_arriendo: true});
 export type property_form_arrendatario_t = z.infer<typeof property_form_arrendatario_schema>;
 
 

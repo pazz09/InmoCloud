@@ -9,7 +9,7 @@ interface PropertyModalProps {
   onSubmit: (values: property_form_add_t | property_form_edit_t) => void;
   editing: boolean;
   initialFormValues?: property_form_edit_t;
-  mode?: "view" | "edit" | "delete" | null;
+  mode?: "view" | "edit" | "delete" | "arrendatario" | null;
 }
 
 export default function PropertyModal({

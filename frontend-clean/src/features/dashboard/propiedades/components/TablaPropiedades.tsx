@@ -17,6 +17,7 @@ type TablaPropiedadesProps = {
   onView: (property: property_view_t) => void;
   onEdit: (property: property_view_t) => void;
   onDelete: (property: property_view_t) => void;
+  onArrendatario: (property: property_view_t) => void;
 };
 
 export const TablaPropiedades = ({
@@ -24,7 +25,8 @@ export const TablaPropiedades = ({
   onAdd,
   onView,
   onEdit,
-  onDelete
+  onDelete,
+  onArrendatario
 }: TablaPropiedadesProps) => {
   return (
     <>
@@ -73,6 +75,13 @@ export const TablaPropiedades = ({
                     title="Eliminar propiedad"
                   >
                     Eliminar
+                  </Button>
+                  <Button 
+                    variant="outline-info" 
+                    onClick={() => onArrendatario(propiedad)}
+                    title="Asignar arrendatario"
+                  >
+                    Arriendo
                   </Button>
                 </ButtonGroup>
               </td>
