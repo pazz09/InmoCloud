@@ -6,9 +6,13 @@ import { useEffect, useState } from "react";
 import { payment_form_data_schema, payment_form_data_t, payment_view_t } from "@/types";
 import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import PaymentModal from "@/features/dashboard/banco/components/PaymentModal";
-import { createPayment } from "@/services/payments";
+import { createPayment, editPayment } from "@/services/payments";
 import { AppError } from "@/utils/errors";
 import TimedAlerts from "@/features/common/components/TimedAlerts";
+import z from "zod";
+
+const payment_form_data_input_schema = payment_form_data_schema.extend({fecha: z.string()});
+type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
 
 export default function DashboardBancoPage() {
   const banco = useBanco();
@@ -16,8 +20,8 @@ export default function DashboardBancoPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setIsEditing] = useState(false);
 
-  const [modalMode, setModalMode] = useState<"view" | "edit" | "delete" | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<payment_view_t | null>(null);
+  const [modalMode, setModalMode] = useState<"create" | "view" | "edit" | "delete" | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState(-1);
 
   const [toastMsg, setToastMsg] = useState("");
   const [showToast, setShowToast] = useState(false);
@@ -25,7 +29,7 @@ export default function DashboardBancoPage() {
   const [newMonto, setNewMonto] = useState("");
 
 
-  const { visibleAlerts, addError, addSuccess } = useTimedAlerts(5);
+  const { visibleAlerts, addError, addSuccess } = useTimedAlerts();
 
   useEffect(() => {
     console.log("xd")
@@ -36,21 +40,39 @@ export default function DashboardBancoPage() {
     console.log("On Submit 2");
     const token = localStorage.getItem("token")
     try {
-      const res = await createPayment(pago, token!);
+      if (!editing) {
+        const res = await createPayment(pago, token!);
+        addSuccess("Los datos se ingresaron exitosamente");
       console.log("2: res", res)
-      addSuccess("Los datos de ingresaron exitosamente");
+      } else {
+        const res = await editPayment(selectedPayment, pago, token!);
+        addSuccess("Los datos se editaron exitosamente");
+      console.log("2: res", res)
+
+      }
       setShowModal(false);
       banco.refresh();
     } catch (err) {
+      console.log(err)
       addError((err as AppError).message);
     }
   }
 
   
 
-  const handleAction = (mode: "view" | "edit" | "delete", payment: payment_view_t) => {
-    setSelectedPayment(payment);
-    setModalMode(mode);
+  const handleAction = (mode: "create" | "view" | "edit" | "delete", payment: payment_view_t) => {
+    console.log("payment handle", payment)
+    setSelectedPayment(payment.id);
+    const convert = payment_form_data_input_schema.parse({
+      ...payment,
+      fecha: `${payment.fecha.getFullYear()}-${String(payment.fecha.getMonth() + 1).padStart(2, '0')}-${String(payment.fecha.getDate()).padStart(2, '0')}`
+    });    setModalMode(mode);
+
+    resetForm();
+    if (mode === "edit"){
+      setIsEditing(true);
+      setFormValues(convert);
+    } 
     //setNewMonto(payment.deposito?.toString() || "");
     setShowModal(true);
   };
@@ -60,6 +82,29 @@ export default function DashboardBancoPage() {
       setShowModal(true);
     }
 
+
+  const [formValues, setFormValues] = useState<payment_form_data_input_t>({
+            fecha: "",
+            tipo: false,
+            monto: 0,
+            pagado: false,
+            categoria: "CAT_A",
+            detalle: "",
+            usuario_id: -1,
+            propiedad_id: -1,
+  });
+
+  const resetForm = () => setFormValues({
+            fecha: "",
+            tipo: false,
+            monto: 0,
+            pagado: false,
+            categoria: "CAT_A",
+            detalle: "",
+            usuario_id: -1,
+            propiedad_id: -1,
+  })
+
   return (<>
     <NavigationBar/>
     <Container className="mt-5">
@@ -67,20 +112,21 @@ export default function DashboardBancoPage() {
         <PaymentsTable
           payments={banco.pagos}
 
-          onAdd={()=> {setShowModal(true)}}
+          onAdd={()=> {resetForm(); setShowModal(true)}}
           onView={(p) => handleAction("view", p)}
           onEdit={(p) => handleAction("edit", p)}
           onDelete={(p) => handleAction("delete", p)}
         />
 
-    </Container>
+    <TimedAlerts alerts= {visibleAlerts} onDismiss={()=>{}}/>
     <PaymentModal 
           show = {showModal} 
           onClose = { () => {setShowModal(false)}}
           onSubmit={onSubmit}
           editing = {editing}
+          initialFormValues={formValues}
     /> 
-    <TimedAlerts alerts= {visibleAlerts} onDismiss={()=>{}}/>
+    </Container>
 
 
   </>)

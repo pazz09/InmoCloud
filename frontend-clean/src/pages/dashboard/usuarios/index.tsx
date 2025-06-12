@@ -4,7 +4,7 @@ import { OkPacket, response_schema, update_response_schema, user_form_data_t, us
 
 import { useAuth } from "@/context/AuthContext";
 
-import ErrorAlerts from "@/features/common/components/TimedAlerts";
+import TimedAlerts from "@/features/common/components/TimedAlerts";
 import NavigationBar from "@/features/common/components/NavigationBar";
 import UserModal from "@/features/common/components/UserModal";
 import UserTable from "@/features/common/components/UserTable";
@@ -214,7 +214,7 @@ const confirmDelete = async () => {
     <h2 className="mb-4 text-left">Lista de Usuarios</h2>
     {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
     </Container>
-    <ErrorAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>
+    <TimedAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>
     <UserModal
       show={showModal} 
       editing={selectedId !== -1}

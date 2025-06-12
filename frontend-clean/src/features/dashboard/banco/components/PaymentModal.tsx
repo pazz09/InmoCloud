@@ -103,7 +103,12 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
 
   async function handleSubmit(): Promise<void> {
     console.log("handleSubmit");
-    const converted = {...formValues, fecha: new Date(formValues.fecha), propiedad_id: (formValues.propiedad_id === -1) ? undefined: formValues.propiedad_id};
+    const converted = {...formValues,
+      fecha: new Date(formValues.fecha),
+    propiedad_id: (formValues.propiedad_id === -1) ? undefined: formValues.propiedad_id,
+    tipo: tipo === "true",
+    }
+    ;
     if (converted.propiedad_id === undefined)
       delete converted.propiedad_id;
     
@@ -126,7 +131,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
   }
 
   return (<>
-    <Modal show={show} onHide={onClose}>
+    <Modal show={show} onHide={() => {onClose(); setFormValues(initialFormValues!);}}>
       <Modal.Header closeButton>
         <Modal.Title>{editing ? "Editar Pago" : "Nuevo Pago"}</Modal.Title>
       </Modal.Header>
@@ -155,8 +160,8 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
               onChange={(e) => {setTipo(e.target.value);}}
               isInvalid={!!formErrors.tipo}
             >
-              <option value="true">Giro</option>
-              <option value="false">Depósito</option>
+              <option value="false">Giro</option>
+              <option value="true">Depósito</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               {formErrors.fecha}

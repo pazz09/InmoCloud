@@ -1,4 +1,5 @@
 import { 
+    error_response_schema,
   error_response_t,
   payment_form_data_t,
   payment_search_params_t,
@@ -32,11 +33,18 @@ export async function fetchPayments(
     };
 
 
+    if (!res.ok) {
+      const error_data = error_response_schema(z.null()).parse(json);
+      throw new AppError(error_data.code, res.status, error_data.message);
+    }
+
     console.log(transformed);
     const parsed_res = response_schema(z.array(payment_view_schema)).parse(transformed);
 
 
     return parsed_res.data!;
+
+
   } catch (e) {
     console.log(e);
     if (e instanceof z.ZodError)
@@ -85,14 +93,16 @@ export async function editPayment(id: number, values: payment_form_data_t, token
   });
 
   const json = await res.json();
+  const withFecha = {...json, data: {...json.data, fecha: new Date(json.data.fecha)}};
   
   try {
-    const response = response_schema(payment_view_schema).parse(json);
+    const response = response_schema(payment_view_schema).parse(withFecha);
     if (res.ok) return response.data;
 
     const error = response as error_response_t<z.ZodNull>;
     throw new AppError(error.code, res.status, error.message)
   } catch(e) {
+    console.log(e)
     throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
   }
 }
