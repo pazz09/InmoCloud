@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 type BancoProvides = {
   pagos: payment_view_t[];
+  refresh: () => {};
   onView: (payment: payment_view_t) => void;
   onEdit: (payment: payment_view_t) => void;
   onDelete: (payment: payment_view_t) => void;
@@ -17,13 +18,7 @@ export function useBanco(): BancoProvides {
   const [searchParams] = useState<payment_search_params_t>({});
 
   useEffect(() => {
-    const method = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return router.push("/login");
-      const result = await fetchPayments(token, searchParams);
-      setPagos(result);
-    };
-    method();
+    refresh();
   }, []);
 
   const onView = (payment: payment_view_t) => {
@@ -41,9 +36,16 @@ export function useBanco(): BancoProvides {
       // Aquí podrías llamar a un servicio de eliminación en el backend.
     }
   };
+  const refresh = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return router.push("/login");
+    const result = await fetchPayments(token, searchParams);
+    setPagos(result);
+  };
 
   return {
     pagos,
+    refresh,
     onView,
     onEdit,
     onDelete,
