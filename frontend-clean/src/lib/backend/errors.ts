@@ -50,6 +50,9 @@ export const SessionExpiredError = () =>
 export const RutAlreadyExistsError = () =>
     new AppError("RUT_ALREADY_EXISTS", 409, "El RUT ya está en uso por otro usuario");
 
+export const RolAlreadyExistsError = () =>
+    new AppError("ROL_ALREADY_EXISTS", 409, "El ROL ya está en uso por otra propiedad");
+
 export const MissingTokenError = () =>
     new AppError("MISSING_TOKEN", 401, "Token de autenticación faltante o inválido");
 

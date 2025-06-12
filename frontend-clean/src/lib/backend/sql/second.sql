@@ -22,7 +22,7 @@ CREATE TABLE users_t (
   mail VARCHAR(100),
   role ENUM('Corredor', 'Propietario', 'Arrendatario', 'Administrador') NOT NULL,
   passwordHash TEXT, 
-  rut VARCHAR(15) NOT NULL
+  rut VARCHAR(15) UNIQUE NOT NULL
 );
 
 INSERT INTO users_t (nombre, apellidos, telefono, mail, role, passwordHash, rut) VALUES
@@ -34,12 +34,13 @@ INSERT INTO users_t (nombre, apellidos, telefono, mail, role, passwordHash, rut)
 
 -- PROPERTIES
 CREATE TABLE properties_t (
-  id INT AUTO_INCREMENT PRIMARY KEY, -- rol
+  id INT AUTO_INCREMENT PRIMARY KEY,
   direccion TEXT NOT NULL,
   activa BOOLEAN DEFAULT TRUE, -- estado 
   valor DECIMAL(12, 2) NOT NULL, -- valor arriendo?
   propietario_id INT NOT NULL,
   arrendatario_id INT DEFAULT NULL,
+  rol VARCHAR(15) UNIQUE NOT NULL
   FOREIGN KEY (propietario_id) REFERENCES users_t(id),
   FOREIGN KEY (arrendatario_id) REFERENCES users_t(id)
 );

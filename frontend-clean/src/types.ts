@@ -321,6 +321,7 @@ export const db_user_schema = user_union_schema.transform((data) => {
 
 export const property_schema = z.object({
   id: z.number(),
+  rol: z.string().max(15),
   direccion: z.string().min(1, { message: "La dirección es obligatoria" }),
   activa: z
     .union([z.boolean(), z.number()])
@@ -339,6 +340,10 @@ export const property_schema = z.object({
   arrendatario_id: z.number().optional().nullable()
 });
 export type property_t = z.infer<typeof property_schema>;
+
+export const property_form_data_schema = property_schema.omit({id: true});
+export type property_form_data_t = z.infer<typeof property_form_data_schema>;
+
 
 export const property_view_schema = property_schema.extend({
   "propietario": z.string(),
