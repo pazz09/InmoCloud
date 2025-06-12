@@ -62,6 +62,8 @@ export const error_response_schema = <T extends z.ZodTypeAny>
       code: z.string(), // e.g., "VALIDATION_ERROR", "USER_NOT_FOUND"
       data: dataSchema.nullable().optional(), // optional even on error
 });
+export type error_response_t<T extends z.ZodTypeAny> = 
+  z.infer<ReturnType<typeof error_response_schema<T>>>;
 
 export const success_response_schema = <T extends z.ZodTypeAny>
 (dataSchema: T) => z.object({
