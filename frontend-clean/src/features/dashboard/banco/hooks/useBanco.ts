@@ -1,5 +1,6 @@
 import { fetchPayments } from "@/services/payments";
 import { payment_search_params_t, payment_view_t } from "@/types";
+import { AppError } from "@/utils/errors";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -39,8 +40,17 @@ export function useBanco(): BancoProvides {
   const refresh = async () => {
     const token = localStorage.getItem("token");
     if (!token) return router.push("/login");
-    const result = await fetchPayments(token, searchParams);
-    setPagos(result);
+    try {
+      const result = await fetchPayments(token, searchParams);
+      setPagos(result);
+
+    } catch (e) {
+        console.log(e)
+      if (e instanceof AppError) {
+        if (e.statusCode === 401)
+          router.push('/login')
+      }
+    }
   };
 
   return {

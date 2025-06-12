@@ -91,19 +91,19 @@ export async function addPayment(
   throw UnexpectedError();
 }
 
-export async function updatePayment(payment: payment_form_data_t) {
+export async function updatePayment(id: number, payment: payment_form_data_t) {
   if (payment.id === undefined) throw InvalidFormDataError();
   const keys = zodKeys(payment_form_data_schema);
   const values = keys.map((k: string) => payment[k as keyof payment_form_data_t]) as SQLParam[];
 
-  const q = `UPDATE users_t SET ${keys.map((k: string) => `${k} = ?`).join(', ')}
+  const q = `UPDATE pagos_t SET ${keys.map((k: string) => `${k} = ?`).join(', ')}
               WHERE id = ?`;
 
-  const res = await db.query(q, [...values, payment.id!]);
+  const res = await db.query(q, [...values, id]);
   const okpacket = OkPacket.parse(res);
 
-  if (okpacket.affectedRows == 1) {
-    const payment = await searchPayments({id: okpacket.insertId});
+  if (okpacket.affectedRows === 1) {
+    const payment = await searchPayments({ id });
     return payment[0];
   }
 }
