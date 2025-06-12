@@ -76,7 +76,7 @@ export const useLogin = () => {
 
       addSuccess('Inicio de sesión exitoso');
       setRedirecting(true);
-      router.push('/dashboard/principal');
+      router.push('/');
     } catch (err) {
       console.log(err);
       if (err instanceof z.ZodError) {

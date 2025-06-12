@@ -10,13 +10,13 @@ export default function HomeRedirect() {
   useEffect(() => {
     if (isAuthenticated)
       switch (role) {
-        case UserRoleEnum.ADMINISTRADOR:
-        case UserRoleEnum.CORREDOR:
-          router.push("/dashboard/principal");
-          return;
         case UserRoleEnum.ARRENDATARIO:
         case UserRoleEnum.PROPIETARIO:
           router.push("/clientes");
+          return;
+        case UserRoleEnum.ADMINISTRADOR:
+        case UserRoleEnum.CORREDOR:
+          router.push("/dashboard/principal");
           return;
         default:
           router.push("/login");
