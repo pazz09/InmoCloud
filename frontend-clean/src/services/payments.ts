@@ -118,11 +118,13 @@ export async function deletePayment(id: number, token: string) {
   const json = await res.json();
   
   try {
-    if (json.ok) return;
+    if (res.ok) return;
 
     const error = json as error_response_t<z.ZodNull>;
+
     throw new AppError(error.code, res.status, error.message)
   } catch(e) {
+    console.log(e)
     throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
   }
 }
