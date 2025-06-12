@@ -57,6 +57,9 @@ export const PropertyParsingError = () =>
 export const RolAlreadyExistsError = () =>
     new AppError("ROL_ALREADY_EXISTS", 409, "El ROL ya está en uso por otra propiedad");
 
+export const PropertyHasPayments = () =>
+    new AppError("PROPERTY_HAS_PAYMENTS", 409, "La propiedad tiene pagos asociados");
+
 export const MissingTokenError = () =>
     new AppError("MISSING_TOKEN", 401, "Token de autenticación faltante o inválido");
 

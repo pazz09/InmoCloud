@@ -1,26 +1,31 @@
-import { OkPacket, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
+import { OkPacket, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_schema, property_search_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
 import db from "./db";
-import { RolAlreadyExistsError, UnexpectedError } from "./errors";
+import { PropertyHasPayments, RolAlreadyExistsError, UnexpectedError } from "./errors";
 
 
 /// GET PROPERTIES
 export async function searchProperties(searchParams: property_search_t)
 : Promise<property_view_t[]> {
-  searchParams;
-  const fields = zodKeys(payment_search_params);
+
+  const key_map: Record<string, string> = {
+    id: "p.id",
+    rol: "p.rol"
+  };
+
+  const fields = zodKeys(property_search_schema);
   const whereClauses: string[] = []
   const values: SQLParam[] = [];
   fields.forEach((key: string) => {
     const value = searchParams[key as keyof property_search_t];
     if (value !== undefined && value !== null) {
-      //remapping? not needed
-      whereClauses.push(`${key} = ?`)
+      let final_key = key in key_map ? key_map[key] : key;
+      whereClauses.push(`${final_key} = ?`)
       values.push(value);
     }
   });
   const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
   const sql = `
-  SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol,
+  SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol, p.fecha_arriendo,
 
   propietario.nombre AS propietario_nombre,
   propietario.apellidos AS propietario_apellidos,
@@ -83,8 +88,11 @@ export async function updateProperty(property: property_form_edit_t): Promise<pr
   console.log("@/backend/properties/ updateProperty")
 
   const result = await searchProperties({rol: property.rol});
-  if (result.length > 0)
+  if (result.length > 0 && result[0].id != property.id) {
+    console.log(property.rol)
+    console.log(result[0].rol)
     throw RolAlreadyExistsError();
+  }
 
   const keys = Object.keys(property);
   const values = Object.values(property) as SQLParam[];
@@ -95,21 +103,32 @@ export async function updateProperty(property: property_form_edit_t): Promise<pr
   const res = await db.query(q, [...values, property.id]);
   const okpacket = OkPacket.parse(res);
   if (okpacket.affectedRows == 1) {
-    const property = await searchProperties({id: okpacket.insertId});
-    return property[0];
+    const prop = await searchProperties({id: property.id});
+    return prop[0];
   }
   throw UnexpectedError();
 }
 
 export async function deleteProperty(targetId: number): Promise<void>
 {
-  const res = await db.query(`DELETE FROM properties_t WHERE id = ?`, [targetId]);
-  const okpacket = OkPacket.parse(res);
+  try {
+    const res = await db.query(`DELETE FROM properties_t WHERE id = ?`, [targetId]);
+    const okpacket = OkPacket.parse(res);
 
-  if (okpacket.affectedRows === 1) {
-    return;
+    if (okpacket.affectedRows === 1) {
+      return;
+    }
+    throw UnexpectedError();
+  } catch (error: any) {
+    // Verifica si es error de restricción FK
+    if (
+      error.code === "ER_ROW_IS_REFERENCED" || // error code 1451
+      (error.errno === 1451 && error.sqlState === "23000")
+    ) {
+      throw PropertyHasPayments();
+    }
+    throw error;
   }
-  throw UnexpectedError();
 }
 
 export async function asignarArrendatario(prop_arrendatario: property_form_arrendatario_t): Promise<property_view_t>
@@ -123,8 +142,8 @@ export async function asignarArrendatario(prop_arrendatario: property_form_arren
   const res = await db.query(q, [...values, prop_arrendatario.id]);
   const okpacket = OkPacket.parse(res);
   if (okpacket.affectedRows == 1) {
-    const property = await searchProperties({id: okpacket.insertId});
-    return property[0];
+    const prop = await searchProperties({id: prop_arrendatario.id});
+    return prop[0];
   }
   throw UnexpectedError();
 }
