@@ -33,7 +33,7 @@ export async function searchPayments(
     const sql = `
 
     SELECT p.id, p.fecha, p.monto, p.tipo, p.categoria, p.usuario_id, p.propiedad_id,
-      p.detalle, u.nombre as cliente, pr.direccion as propiedad
+      p.detalle, u.nombre as cliente, pr.direccion as propiedad, p.pagado
       
     FROM pagos_t p
 
@@ -43,11 +43,13 @@ export async function searchPayments(
 
 
     const results = await db.query(sql, values);
+    console.log("RESULTS", results);
     const transformed = results.map((row: payment_view_t) => ({
       ...row,
       fecha: row.fecha ? new Date(row.fecha) : undefined,
       monto: row.monto !== null ? Number(row.monto) : null,
       tipo: row.tipo !== null ? Boolean(row.tipo) : null,
+      pagado: row.tipo !== null ? Boolean(row.pagado) : null,
     }));
     return z.array(payment_view_schema).parse(transformed);
   } catch (err) {

@@ -3,10 +3,10 @@ import { convertZodError, MethodNotAllowedError, UnexpectedError } from "@/lib/b
 import { AppErrorResponse, SuccessTemplate } from "@/lib/backend/messages";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken, verifyToken, withAuth } from "@/lib/backend/auth";
-import { payment_search_params, Roles, user_search_schema } from "@/types";
-import { searchClients } from "@/lib/backend/users";
+import { payment_search_params, property_search_schema, Roles, user_search_schema } from "@/types";
+//import { searchClients } from "@/lib/backend/users";
 import z from "zod";
-import { searchPayments } from "@/lib/backend/payments";
+import { searchProperties } from "@/lib/backend/properties";
 
 // POST /users/clients/search
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -14,11 +14,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return withAuth(async (req, res) => {
     try {
-      const filters = payment_search_params.parse(req.body || {});
+      const filters = property_search_schema.parse(req.body || {});
       const token = getToken(req);
       const user = verifyToken(token);
-      const payments = await searchPayments(filters);
-      return res.status(200).json(SuccessTemplate(payments, "Lista de pagos filtrada correctamente"));
+      const properties = await searchProperties(filters);
+      return res.status(200).json(SuccessTemplate(properties, "Lista de propiedades filtrada correctamente"));
     } catch (err) {
       console.error("Error in /clients/search", err);
       if (err instanceof z.ZodError) return AppErrorResponse(res, convertZodError(err));

@@ -1,4 +1,4 @@
-import { db_user_schema, OkPacket, OkPacket_t, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_t, property_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
+import { OkPacket, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
 import db from "./db";
 import { RolAlreadyExistsError, UnexpectedError } from "./errors";
 
@@ -20,10 +20,13 @@ export async function searchProperties(searchParams: property_search_t)
   });
   const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
   const sql = `
-  SELECT p.id, p.direccion, p.activa, p.valor, 
+  SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol,
 
   propietario.nombre AS propietario_nombre,
-  propietario.apellidos AS propietario_apellidos
+  propietario.apellidos AS propietario_apellidos,
+
+  arrendatario.nombre AS arrendatario_nombre,
+  arrendatario.apellidos AS arrendatario_apellidos
   
   FROM properties_t p
   JOIN 
@@ -35,9 +38,12 @@ export async function searchProperties(searchParams: property_search_t)
   `
 
   const results = await db.query(sql, values);
-  const transformed = results.map((row: property_view_t)=> ({
+  console.log("Results:", results);
+  const transformed = results.map((row: { valor: number; arrendatario_id: number,  propietario_nombre: string; propietario_apellidos: string; arrendatario_nombre: string; arrendatario_apellidos: string; })=> ({
     ...row,
     valor: row.valor ? Number(row.valor) : null,
+    propietario: `${row.propietario_nombre} ${row.propietario_apellidos}`,
+    arrendatario: row.arrendatario_id ? `${row.arrendatario_nombre} ${row.arrendatario_apellidos}` : ""
   }));
 
   return property_view_schema.array().parse(transformed);

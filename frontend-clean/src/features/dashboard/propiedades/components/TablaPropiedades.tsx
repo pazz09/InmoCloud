@@ -8,7 +8,6 @@ const fields = [
   "Arrendatario",
   "Canon",
   "Deuda Saldo",
-  "Pagado",
 ]
 
 type TablaPropiedadesProps = {
@@ -24,6 +23,16 @@ export const TablaPropiedades = (props: TablaPropiedadesProps) => {
     </tr>
   </thead>
   <tbody>
+    {props.propiedades.map( (propiedad) => (
+      <tr>
+        <td>{propiedad.id}</td>
+        <td>{propiedad.direccion}</td>
+        <td>{propiedad.propietario}</td>
+        <td>{propiedad.arrendatario}</td>
+        <td>${propiedad.valor}</td>
+        <td></td>
+      </tr>
+    ))}
   </tbody>
 </Table>
 

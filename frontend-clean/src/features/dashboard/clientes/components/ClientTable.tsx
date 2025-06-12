@@ -3,7 +3,6 @@ import { Table, Button } from "react-bootstrap";
 import {
   arrendatario_t,
   client_union_t,
-  user_union_t,
   UserRoleEnum,
 } from "@/types";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";

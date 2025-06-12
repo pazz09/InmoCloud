@@ -23,7 +23,6 @@ export async function fetchPayments(
     });
 
     const json = await res.json();
-    console.log("res", json);
     const parsed_res = response_schema(z.array(payment_view_schema)).parse(json);
     return parsed_res.data!;
   } catch (e) {
