@@ -4,7 +4,6 @@ import { AppErrorResponse, SuccessTemplate } from "@/lib/backend/messages";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getToken, verifyToken, withAuth } from "@/lib/backend/auth";
 import { payment_search_params, Roles, user_search_schema } from "@/types";
-import { searchClients } from "@/lib/backend/users";
 import z from "zod";
 import { searchPayments } from "@/lib/backend/payments";
 

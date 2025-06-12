@@ -1,4 +1,6 @@
 import { 
+  error_response_t,
+  payment_form_data_t,
   payment_search_params_t,
   payment_view_schema, 
   payment_view_t, 
@@ -38,3 +40,74 @@ export async function fetchPayments(
   }
 }
 
+export async function createPayment(values: payment_form_data_t, token: string) {
+  const res = await fetch("/api/payments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(values),
+  });
+
+  const json = await res.json();
+  
+  try {
+    const response = response_schema(payment_view_schema).parse(json);
+    if (res.ok) return response.data;
+
+    const error = response as error_response_t<z.ZodNull>;
+    throw new AppError(error.code, res.status, error.message)
+  } catch(e) {
+    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
+  }
+}
+
+export async function editPayment(id: number, values: payment_form_data_t, token: string) {
+  const res = await fetch(`/api/payments/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(values),
+  });
+
+  const json = await res.json();
+  
+  try {
+    const response = response_schema(payment_view_schema).parse(json);
+    if (res.ok) return response.data;
+
+    const error = response as error_response_t<z.ZodNull>;
+    throw new AppError(error.code, res.status, error.message)
+  } catch(e) {
+    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
+  }
+}
+
+export async function deletePayment(id: number, token: string) {
+  const res = await fetch(`/api/payments/${id}`, {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  const json = await res.json();
+  
+  try {
+    if (json.ok) return;
+
+    const error = json as error_response_t<z.ZodNull>;
+    throw new AppError(error.code, res.status, error.message)
+  } catch(e) {
+    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
+  }
+}
+
+export async function viewPayment(id: number, token: string) {
+  const searchParams = {id}
+  const payment = await fetchPayments(token, searchParams);
+  return payment[0];
+}
