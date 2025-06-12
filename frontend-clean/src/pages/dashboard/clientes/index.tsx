@@ -75,6 +75,7 @@ export default function ClientesDashboard() {
               onEdit={() => { }}
               onAdd={() => setShowAddModal(true)}
               onDelete={() => { }}
+              onView= {()=>{}}
             ></ClientTable>
           </>
         )}

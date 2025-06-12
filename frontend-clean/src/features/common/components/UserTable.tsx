@@ -22,6 +22,7 @@ export default function UserTable({ users, onEdit, onDelete, onAdd }: UserTableP
           <tr>
             <th>ID</th>
             <th>Nombre</th>
+            <th>RUT</th>
             <th>Rol</th>
             <th>Acciones</th>
           </tr>
@@ -38,6 +39,7 @@ export default function UserTable({ users, onEdit, onDelete, onAdd }: UserTableP
               <tr key={user.id}>
                 <td>{user.id}</td>
                 <td>{`${user.nombre} ${user.apellidos}`}</td>
+                <td>{user.rut}</td>
                 <td>{user.role}</td>
                 <td>
                   <Button

@@ -10,12 +10,14 @@ import { createPayment, deletePayment, editPayment } from "@/services/payments";
 import { AppError } from "@/utils/errors";
 import TimedAlerts from "@/features/common/components/TimedAlerts";
 import z from "zod";
+import { useRouter } from "next/router";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({ fecha: z.string() });
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
 
 export default function DashboardBancoPage() {
   const banco = useBanco();
+  const router = useRouter();
 
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -93,6 +95,7 @@ export default function DashboardBancoPage() {
     const token = localStorage.getItem("token");
     if (!token) {
       addError("No estás autenticado. Por favor, inicia sesión.");
+      router.push("/login")
       return;
     }
 

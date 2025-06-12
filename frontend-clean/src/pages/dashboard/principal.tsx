@@ -31,7 +31,7 @@ export default function Dashboard() {
         }
         setData(parsed.data.data);
       });
-  }, []);
+  }, [router]);
 
   if (!data) return       <Container className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
         <Spinner animation="border" role="status">

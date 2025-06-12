@@ -27,7 +27,7 @@ export function useUserList() {
         setUsers(users);
       } catch(e) {
         console.log(e)
-        if (e instanceof AppError && e.code === "UNAUTHORIZED_ERROR")
+        if (e instanceof AppError && e.code === "UNAUTHORIZED")
           router.push("/login");
       }
     },
@@ -45,7 +45,7 @@ export function useUserList() {
     users,
     loading,
     error,
-    refresh: () => fetchUsers(token!, {}),         // No search params
+    refresh: async () => setUsers(await fetchUsers(token!, {})),         // No search params
     searchUsers: fetchUsers,             // Accepts { name, email, etc. }
     setUsers,
   };

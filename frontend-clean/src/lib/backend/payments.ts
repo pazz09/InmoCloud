@@ -21,7 +21,7 @@ export async function searchPayments(
     const fields = zodKeys(payment_search_params); 
 
     const whereClauses: string[] = [];
-    const values: any[] = [];
+    const values: SQLParam[] = [];
 
     fields.forEach((key) => {
       const value = searchParams[key as keyof payment_search_params_t];

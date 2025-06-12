@@ -23,12 +23,12 @@ export function objectToSqlUpdate(obj: Record<string, SQLParam>) {
 }
 
 export function extractFromRow<T>(
-  row: Record<string, any>,
+  row: Record<string, SQLParam>,
   prefix: string,
   schema: z.ZodType<T>,
   allowNull = false
 ): T | null {
-  const data: Record<string, any> = {};
+  const data: Record<string, SQLParam> = {};
 
   for (const key of Object.keys(row)) {
     if (key.startsWith(`${prefix}_`)) {

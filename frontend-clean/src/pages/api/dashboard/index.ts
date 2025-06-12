@@ -3,8 +3,9 @@ import { dashboard_metrics_t, response_t, Roles } from "@/types";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getDashboardMetrics } from "@/backend/dashboard";
 import { withAuth } from "@/backend/auth";
-import { ErrorTemplate } from "@/backend/messages";
+import { AppErrorResponse, ErrorTemplate } from "@/backend/messages";
 import z from "zod";
+import { MethodNotAllowedError } from "@/lib/backend/errors";
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,7 +19,7 @@ export default async function handler(
         }, [Roles.ADMINISTRADOR, Roles.CORREDOR])(req, res);
       break;
     default:
-      return res.status(400).json(ErrorTemplate("method_not_allowed"))
+      return AppErrorResponse(res, MethodNotAllowedError());
       
   }
 

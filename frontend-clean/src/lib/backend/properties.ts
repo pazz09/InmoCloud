@@ -1,6 +1,7 @@
 import { OkPacket, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_schema, property_search_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
 import db from "./db";
 import { PropertyHasPayments, RolAlreadyExistsError, TenantAlreadyAssigned, UnexpectedError } from "./errors";
+import { SqlError } from "mariadb";
 
 
 /// GET PROPERTIES
@@ -18,7 +19,7 @@ export async function searchProperties(searchParams: property_search_t)
   fields.forEach((key: string) => {
     const value = searchParams[key as keyof property_search_t];
     if (value !== undefined && value !== null) {
-      let final_key = key in key_map ? key_map[key] : key;
+      const final_key = key in key_map ? key_map[key] : key;
       whereClauses.push(`${final_key} = ?`)
       values.push(value);
     }
@@ -119,11 +120,13 @@ export async function deleteProperty(targetId: number): Promise<void>
       return;
     }
     throw UnexpectedError();
-  } catch (error: any) {
+  } catch (error) {
     // Verifica si es error de restricción FK
     if (
+      error instanceof SqlError && (
       error.code === "ER_ROW_IS_REFERENCED" || // error code 1451
       (error.errno === 1451 && error.sqlState === "23000")
+      )
     ) {
       throw PropertyHasPayments();
     }
@@ -151,8 +154,8 @@ export async function asignarArrendatario(
     }
 
     throw UnexpectedError(); // no se modificó nada
-  } catch (err: any) {
-    if (err.code === 'ER_DUP_ENTRY') {
+  } catch (err) {
+    if (err instanceof SqlError && err.code === 'ER_DUP_ENTRY') {
       throw TenantAlreadyAssigned();
     }
 

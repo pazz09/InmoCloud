@@ -83,9 +83,9 @@ export async function updateUser(user: user_t): Promise<OkPacket_t>
   console.log("@/backend/users/ updateUser")
 
   const ids = await getUserIdsByRut(user.rut);
-  if (ids.some(id => id !== user.id))
+  if (ids.length > 0 && !ids.includes(user.id)) {
     throw RutAlreadyExistsError();
-
+  }
   const noType = db_user_schema.parse(user);
   const keys = Object.keys(noType);
   const values = Object.values(noType) as SQLParam[];
@@ -239,7 +239,7 @@ export async function searchUsers(params: user_search_t): Promise<user_t[]> {
 
   // Parsear con schema completo (agregar "type" manualmente)
   const parsed = z.array(user_schema).parse(
-    rows.map((row: any) => ({ ...row, type: "full" }))
+    rows.map((row: user_t) => ({ ...row, type: "full" }))
   );
 
   return parsed;

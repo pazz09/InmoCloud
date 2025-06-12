@@ -26,8 +26,10 @@ export default function UsersDashboard() {
   const [showModal, setShowModal] = useState(false);
   const auth = useAuth();
   const router = useRouter();
-  const { users, loading, error, searchUsers } = useUserList();
+  const { users, loading, error, searchUsers, refresh } = useUserList();
+
   const { visibleAlerts, addError, addSuccess, dismissAlert } = useTimedAlerts();
+
   const [selectedId, setSelectedUser] = useState(-1)
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -69,13 +71,24 @@ export default function UsersDashboard() {
     const token = localStorage.getItem("token");
     if (!token) {
       addError("No estás autenticado. Por favor, inicia sesión.");
+      router.push("/login");
       return;
     }
     try {
-      const result = await createUser(formValues, token);
+      const result = await createUser(values, token);
       addSuccess("Usuario creado correctamente");
     } catch (e) {
+      if (e instanceof AppError) {
+        if (e.code === "INVALID_TOKEN")
+        addError(
+          `Error al crear el usuario: ${
+            e.message
+          }`
+        );
+      }
       console.log("Error al crear usuario:", e);
+      if (e instanceof AppError && (e.code === "TOKEN_EXPIRED" || e.code === "UNAUTHORIZED" || e.code === "SESSION_EXPIRED" || e.code === "MISSING_TOKEN"))
+        router.push("/login")
       addError(
         `Error al crear el usuario: ${
         (e instanceof Error) ? e.message : "Error desconocido"
@@ -97,10 +110,10 @@ export default function UsersDashboard() {
       addSuccess("Usuario editado correctamente");
       setShowModal(false);
       setFormValues(initialValues);
-      await searchUsers(token, {});
+      await refresh();
     } catch (e) {
        console.error("Error al editar al usuario:", error);
-       if (e instanceof AppError && (e.code === "TOKEN_EXPIRED" || e.code === "UNAUTHORIZED" || e.code === "SESSION_EXPIRED"))
+       if (e instanceof AppError && (e.code === "TOKEN_EXPIRED" || e.code === "UNAUTHORIZED" || e.code === "SESSION_EXPIRED" || e.code === "MISSING_TOKEN"))
            router.push("/login")
       addError(
         `Error al editar el usuario: ${e instanceof Error ? e.message : "Error desconocido"
@@ -186,7 +199,7 @@ const confirmDelete = async () => {
     }
 
     addSuccess("Usuario eliminado correctamente.");
-    await searchUsers(token, {});
+    await refresh();
   } catch (error) {
     console.error("Error al eliminar el usuario:", error);
     addError(`Error desconocido al eliminar: ${error instanceof Error ? error.message : "Error desconocido"}`);
@@ -214,7 +227,9 @@ const confirmDelete = async () => {
     <h2 className="mb-4 text-left">Lista de Usuarios</h2>
     {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
     </Container>
+
     <TimedAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>
+
     <UserModal
       show={showModal} 
       editing={selectedId !== -1}
@@ -228,7 +243,7 @@ const confirmDelete = async () => {
       show={showDeleteModal}
       onClose={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
       onConfirm={confirmDelete}
-      itemName={deleteTarget?.nombre! + deleteTarget?.apellidos}
+      itemName={deleteTarget?.nombre ? deleteTarget?.nombre + deleteTarget?.apellidos : ""}
     />
 
     </>

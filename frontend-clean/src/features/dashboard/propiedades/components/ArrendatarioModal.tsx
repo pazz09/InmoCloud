@@ -43,7 +43,7 @@ export default function PropertyModal({
         }
     }
     setFormErrors({});
-  }, [show]);
+  }, [show, initialFormValues]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

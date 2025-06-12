@@ -5,6 +5,7 @@ import {
   success_response_schema,
   update_response_schema,
   user_form_data_t,
+  user_schema,
   users_list_schema
 } from "@/types";
 import { AppError } from "@/utils/errors";
@@ -19,12 +20,12 @@ export async function createUser(values: user_form_data_t, token: string) {
       authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(values),
-  });
+  })
 
   const json = await res.json();
 
   if (!res.ok) {
-    const parsed = error_response_schema(OkPacket).parse(json);
+    const parsed = error_response_schema(user_schema).parse(json);
     throw new AppError(parsed.code, res.status, parsed.message);
   }
 

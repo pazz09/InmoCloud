@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 type BancoProvides = {
   pagos: payment_view_t[];
-  refresh: () => {};
+  refresh: () => object;
   onView: (payment: payment_view_t) => void;
   onEdit: (payment: payment_view_t) => void;
   onDelete: (payment: payment_view_t) => void;

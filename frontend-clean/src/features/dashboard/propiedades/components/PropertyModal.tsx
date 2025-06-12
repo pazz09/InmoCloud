@@ -66,7 +66,7 @@ export default function PropertyModal({
         const target = e.target as HTMLInputElement;
         return { ...prev, [name]: target.checked };
       } else if (name === "valor") {
-        return { ...prev, [name]: value === "" ? "" : Number(value) };
+        return { ...prev, [name]: Number(value) };
       } else if (name === "propietario_id") {
         return { ...prev, [name]: Number(value) };
       } else {

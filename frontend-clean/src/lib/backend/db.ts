@@ -1,9 +1,7 @@
 import * as mariadb from 'mariadb';
 import { SQLParam } from '@/types';
 
-declare global {
-  var mariadbPool: mariadb.Pool | undefined;
-}
+
 
 const logDb = true;
 
@@ -25,9 +23,9 @@ const pool =
 if (process.env.NODE_ENV !== 'production') globalThis.mariadbPool = pool;
 
 const query = async (sql: string, params?: SQLParam[]) => {
-  let conn: mariadb.PoolConnection | undefined;
+  let conn: mariadb.PoolConnection | undefined = undefined;
 
-  logDb && console.log(
+  if (logDb) console.log(
     '[DB] Pool status - total:',
     pool.totalConnections(),
     'in use:',
@@ -38,20 +36,20 @@ const query = async (sql: string, params?: SQLParam[]) => {
 
   try {
 
-    logDb && console.log('[DB] Acquiring connection..');
+    if (logDb) console.log('[DB] Acquiring connection..');
     conn = await pool.getConnection();
-    logDb && console.log('[DB] Connection acquired');
+    if (logDb) console.log('[DB] Connection acquired');
 
-    const result = await conn.query(sql, params || []);
+    const result = await conn?.query(sql, params || []);
     return result;
   } catch (err) {
-    logDb && console.error('[DB] Query error:', err);
+    if (logDb) console.error('[DB] Query error:', err);
     throw err;
   } finally {
     if (conn) {
       conn.release();
-      logDb && console.log('[DB] Connection released');
-      logDb && console.log(
+      if (logDb) console.log('[DB] Connection released');
+      if (logDb) console.log(
         '[DB] Pool status after release - total:',
         pool.totalConnections(),
         'in use:',

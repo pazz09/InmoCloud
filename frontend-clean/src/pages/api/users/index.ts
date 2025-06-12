@@ -74,6 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             try {
               user = await addUser(user_add_schema.parse(newUser)); // You should implement this
             } catch (err) {
+              console.log(err)
               if (err instanceof z.ZodError) {
                 return AppErrorResponse(res, convertZodError(err));
               }
@@ -94,6 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         }, [Roles.CORREDOR, Roles.ADMINISTRADOR])(req, res);
     }
+    break;
 
 
     default:

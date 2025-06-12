@@ -54,18 +54,6 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
 
   useEffect(() => {
     console.log(formValues);
-
-    //const parse = payment_form_data_schema.safeParse(formValues);
-    //if (!parse.success) {
-    //  const errors: Partial<Record<keyof payment_form_data_input_t, string>> = {}
-    //
-    //  parse.error.errors.forEach((err) => {
-    //    const field = err.path[0] as keyof payment_form_data_input_t;
-    //    errors[field] = err.message;
-    //    console.log(err.message);
-    //  })
-    //  setFormErrors(errors);
-    //}
   }, [formValues])
 
 
@@ -237,7 +225,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
             <Form.Label>Propiedad</Form.Label>
             <Form.Select
               name="propiedad_id"
-              value={formValues.propiedad_id}
+              value={formValues.propiedad_id!}
               onChange={handleChange}
               isInvalid={!!formErrors.propiedad_id}
             >

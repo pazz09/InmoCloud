@@ -49,6 +49,11 @@ export default function UserModal({
 );
 
   useEffect(() => {
+    console.log(formValues)
+  }, [formValues])
+
+
+  useEffect(() => {
     // console.log("Show trigger", formValues);
     // console.log("availableRoles", availableRoles);
     if (show && initialFormValues) {
