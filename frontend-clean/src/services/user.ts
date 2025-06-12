@@ -29,16 +29,11 @@ export async function createUser(values: user_form_data_t, token: string) {
     throw new AppError(parsed.code, res.status, parsed.message);
   }
 
-  const parsed = update_response_schema.parse(json);
+  const parsed = response_schema(user_schema).parse(json);
 
   if (parsed.status !== "success") {
     throw new AppError("UNKNOWN_RESPONSE", res.status, parsed.message || "Error desconocido");
   }
-
-  if (parsed.data.affectedRows === 0) {
-    throw new AppError("NO_USER_CREATED", 400, "No se creó ningún usuario. Verifica que los datos sean correctos.");
-  }
-
   return parsed;
 }
 

@@ -77,6 +77,7 @@ export default function UsersDashboard() {
     try {
       const result = await createUser(values, token);
       addSuccess("Usuario creado correctamente");
+      refresh();
     } catch (e) {
       if (e instanceof AppError) {
         if (e.code === "INVALID_TOKEN")
@@ -112,7 +113,7 @@ export default function UsersDashboard() {
       setFormValues(initialValues);
       await refresh();
     } catch (e) {
-       console.error("Error al editar al usuario:", error);
+       console.error("Error al editar al usuario:", e);
        if (e instanceof AppError && (e.code === "TOKEN_EXPIRED" || e.code === "UNAUTHORIZED" || e.code === "SESSION_EXPIRED" || e.code === "MISSING_TOKEN"))
            router.push("/login")
       addError(
@@ -121,26 +122,6 @@ export default function UsersDashboard() {
       );
     }
   }
-  //     if (parsed.status !== "success") {
-  //       addError(`Error al editar el usuario: ${parsed.message}`);
-  //       return;
-  //     }
-  //     if (parsed.data.affectedRows === 0) {
-  //       addError("No se modificó ningún usuario. Verifica que los datos sean correctos.");
-  //       return;
-  //     } else {
-  //       addSuccess("Usuario editado correctamente.");
-  //       setShowModal(false);
-  //       setSelectedUser(-1);
-  //       setFormValues(initialValues);
-  //       // Refresh the user list
-  //       await searchUsers();
-  //     }
-  //   } catch (error) {
-  //     console.error("Error al editar el usuario:", error);
-  //     addError(`Error al editar el usuario: ${error instanceof Error ? error.message : "Error desconocido"}`);
-  //   }
-  // }
 
   const onSubmit = async (values: user_form_data_t, id?: number) => {
     const editing = id !== undefined && id !== -1;
