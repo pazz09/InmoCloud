@@ -69,7 +69,7 @@ export async function addProperty(property: property_form_data_t): Promise<prope
 }
 
 export async function checkIfRolExists(rol: string): Promise<boolean> {
-  const rows = await db.query("SELECT id FROM users_t WHERE rol = ?", [rol]);
+  const rows = await db.query("SELECT id FROM properties_t WHERE rol = ?", [rol]);
   return rows.length > 0;
 }
 
@@ -84,7 +84,7 @@ export async function updateProperty(property: property_t): Promise<property_t>
   const keys = Object.keys(property);
   const values = Object.values(property) as SQLParam[];
 
-  const q = `UPDATE users_t SET ${keys.map(k => `${k} = ?`).join(', ')} 
+  const q = `UPDATE properties_t SET ${keys.map(k => `${k} = ?`).join(', ')} 
               WHERE id = ?`;
 
   const res = await db.query(q, [...values, property.id]);
@@ -92,6 +92,17 @@ export async function updateProperty(property: property_t): Promise<property_t>
   if (okpacket.affectedRows == 1) {
     const property = await searchProperties({id: okpacket.insertId});
     return property[0];
+  }
+  throw UnexpectedError();
+}
+
+export async function deleteProperty(targetId: number): Promise<void>
+{
+  const res = await db.query(`DELETE FROM properties_t WHERE id = ?`, [targetId]);
+  const okpacket = OkPacket.parse(res);
+
+  if (okpacket.affectedRows === 1) {
+    return;
   }
   throw UnexpectedError();
 }
