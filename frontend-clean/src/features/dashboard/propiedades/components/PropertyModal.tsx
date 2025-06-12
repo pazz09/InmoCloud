@@ -52,25 +52,9 @@ export default function PropertyModal({
           propietario_id: -1,
         });
       }
-      setFormErrors({});
     }
+    setFormErrors({});
   }, [show, editing, initialFormValues]);
-
-  useEffect(() => {
-      console.log(formValues);
-  
-      const parse = property_form_add_schema.safeParse(formValues);
-      if (!parse.success) {
-        const errors: Partial<Record<keyof property_form_add_t, string>> = {}
-  
-        parse.error.errors.forEach((err) => {
-          const field = err.path[0] as keyof property_form_add_t;
-          errors[field] = err.message;
-          console.log(err.message);
-        })
-        setFormErrors(errors);
-      }
-    }, [formValues])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

@@ -100,6 +100,7 @@ function put(req: NextApiRequest, res: NextApiResponse) {
 function del(req: NextApiRequest, res: NextApiResponse) {
     withAuth(
         async (req: NextApiRequest, Res: NextApiResponse) => {
+            console.log(req.body)
             const parsedBody = property_form_delete_schema.safeParse(req.body);
 
             if (!parsedBody.success) {

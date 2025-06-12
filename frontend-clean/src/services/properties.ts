@@ -1,4 +1,4 @@
-import { error_response_schema, error_response_t, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_t, property_view_schema, property_view_t, response_schema } from "@/types";
+import { error_response_schema, error_response_t, property_form_add_t, property_form_arrendatario_t, property_form_delete_t, property_form_edit_t, property_search_t, property_view_schema, property_view_t, response_schema } from "@/types";
 import { AppError } from "@/utils/errors";
 import z from "zod";
 
@@ -60,7 +60,7 @@ export async function createProperty(values: property_form_add_t, token: string)
 }
 
 export async function editProperty(id: number, values: property_form_edit_t, token: string) {
-  const res = await fetch(`/api/properties/${id}`, {
+  const res = await fetch(`/api/properties/`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -83,11 +83,12 @@ export async function editProperty(id: number, values: property_form_edit_t, tok
 }
 
 export async function deleteProperty(id: number, token: string) {
-  const res = await fetch(`/api/properties/${id}`, {
+  const res = await fetch(`/api/properties/`, {
     method: "DELETE",
     headers: {
       authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({id}),
   });
 
   const json = await res.json();
@@ -109,7 +110,7 @@ export async function viewProperty(id: number, token: string) {
 }
 
 export async function asignarArrendatario(id: number, values: property_form_arrendatario_t, token: string) {
-  const res = await fetch(`/api/properties/arrendatario/${id}`, {
+  const res = await fetch(`/api/properties/arrendatario/`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

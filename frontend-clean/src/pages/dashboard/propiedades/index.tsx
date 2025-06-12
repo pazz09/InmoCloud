@@ -5,13 +5,17 @@ import { usePropiedadesPage } from "@/features/dashboard/propiedades/hooks/usePr
 import PropertyModal from "@/features/dashboard/propiedades/components/PropertyModal";
 import { useState } from "react";
 import { property_view_t, property_form_add_t, property_form_edit_t } from "@/types";
+import { createProperty, deleteProperty } from "@/services/properties";
+import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
+import { createUser } from "@/services/user";
 
 export default function PropiedadesPage() {
-  const { propiedades } = usePropiedadesPage();
+  const { propiedades, refresh } = usePropiedadesPage();
   
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<"view" | "edit" | "delete" | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<property_view_t | null>(null);
+  const { visibleAlerts, addError, addSuccess, dismissAlert } = useTimedAlerts();
 
   const handleAction = (mode: "view" | "edit" | "delete", property: property_view_t) => {
     setSelectedProperty(property);
@@ -30,15 +34,31 @@ export default function PropiedadesPage() {
     console.log("Submitted values:", values);
     console.log("Mode:", modalMode);
     
+    const token = localStorage.getItem("token");
+    if (!token) {
+      addError("No estás autenticado. Por favor, inicia sesión.");
+      return;
+    }
+    
     if (modalMode === null) {
       // Lógica para agregar nueva propiedad
+      try {
+        const result = createProperty(values, token);
+        addSuccess("Propiedad creada correctamente");
+        refresh();
+      } catch (e) {
+        console.log("Error al crear propiedad:", e);
+        addError(
+          `Error al crear la propiedad: ${
+          (e instanceof Error) ? e.message : "Error desconocido"
+          }`
+        )
+      }
+
       console.log("Adding new property:", values);
     } else if (modalMode === "edit") {
       // Lógica para editar propiedad existente
       console.log("Editing property:", selectedProperty?.id, values);
-    } else if (modalMode === "delete") {
-      // Lógica para eliminar propiedad
-      console.log("Deleting property:", selectedProperty?.id);
     }
     
     setShowModal(false);
@@ -50,7 +70,27 @@ export default function PropiedadesPage() {
   };
 
   function handleConfirm(): void {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      addError("No estás autenticado. Por favor, inicia sesión.");
+      return;
+    }
+
     // Lógica de confirmación aquí
+    try {
+      const result = deleteProperty(selectedProperty!.id, token);
+      addSuccess("Propiedad eliminada con éxito");
+      refresh();
+    } catch (e) {
+      console.log("Error al eliminar propiedad:", e);
+      addError(
+        `Error al eliminar propiedad: ${
+        (e instanceof Error) ? e.message : "Error desconocido"
+        }`
+      )
+    }
+
+    console.log("Deleting property:", selectedProperty?.id);
     setShowModal(false);
   }
 
