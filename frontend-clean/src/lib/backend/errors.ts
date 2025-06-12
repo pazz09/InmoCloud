@@ -50,6 +50,10 @@ export const SessionExpiredError = () =>
 export const RutAlreadyExistsError = () =>
     new AppError("RUT_ALREADY_EXISTS", 409, "El RUT ya está en uso por otro usuario");
 
+
+export const PropertyParsingError = () =>
+  new AppError("INVALID_PROPERTY_DATA", 500, "Error al procesar datos de la propiedad");
+
 export const RolAlreadyExistsError = () =>
     new AppError("ROL_ALREADY_EXISTS", 409, "El ROL ya está en uso por otra propiedad");
 
