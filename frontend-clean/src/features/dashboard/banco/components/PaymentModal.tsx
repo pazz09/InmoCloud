@@ -2,6 +2,8 @@ import { payment_form_data_schema, payment_form_data_t, property_form_add_t, pro
 import { useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import z from "zod";
+import { useUserList } from "../../usuarios/hooks/useUserList";
+import { usePropiedadesPage } from "../../propiedades/hooks/usePropiedadesPage";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({fecha: z.string()});
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
@@ -23,7 +25,6 @@ interface PaymentModalProps {
 
 export default function PaymentModal({show, onClose, onSubmit, editing, initialFormValues, propertyId}: PaymentModalProps) {
 
-
   const [formValues, setFormValues] = useState<payment_form_data_input_t>({
       fecha: "",
       tipo: false,
@@ -36,22 +37,57 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
   });
 
   const [formErrors, setFormErrors] =  useState<Partial<Record<keyof payment_form_data_t, string>>>({});
+
   
+  const { users } = useUserList();
+  const { propiedades } = usePropiedadesPage();
+
+
+  const [tipo, setTipo] = useState("false");
 
   useEffect(() => {
-    if (show && initialFormValues)
+    if (show && initialFormValues) {
       setFormValues(initialFormValues);
-    setFormErrors({});
+      setFormErrors({});
+    }
   }, [show, initialFormValues])
+
+  useEffect(() => {
+    console.log(formValues);
+  }, [formValues])
+
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormValues((prev: payment_form_data_input_t) => ({ ...prev, [name]: value }));
-     
-  }
+    console.log(name, value)
 
+    if (name === "tipo") {
+      setFormValues((prev: payment_form_data_input_t) => ({
+        ...prev,
+        [name]: value === "true",
+      }));
+
+      return;
+    } else if (name === "usuario_id" || name === "propiedad_id") {
+      setFormValues((prev: payment_form_data_input_t) => ({
+        ...prev,
+        [name]: Number(value),
+      }));
+
+
+      return;
+
+    }
+
+    setFormValues((prev: payment_form_data_input_t) => ({
+      ...prev,
+      [name]: value
+    }));
+    console.log(formValues);
+  };
   return (<>
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
@@ -78,12 +114,12 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
             <Form.Label>Tipo</Form.Label>
             <Form.Select
               name="tipo"
-              value={!formValues.tipo ? "Giro" : "Depósito"}
-              onChange={handleChange}
+              value={tipo}
+              onChange={(e) => {setTipo(e.target.value);}}
               isInvalid={!!formErrors.fecha}
             >
-              <option>Giro</option>
-              <option>Depósito</option>
+              <option value="true">Giro</option>
+              <option value="false">Depósito</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               {formErrors.fecha}
@@ -100,7 +136,77 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Check type = "checkbox">Pagado</Form.Check>
+            <Form.Label >Pagado</Form.Label>
+            <Form.Check type = "checkbox"
+            name = "pagado"
+            onChange={(e) => {setFormValues({...formValues, pagado: e.target.checked})}}
+            >
+            </Form.Check>
+
+          </Form.Group>
+
+
+          <Form.Group className="mb-3">
+            <Form.Label>Categoría</Form.Label>
+            <Form.Select
+              name="categoria"
+              value={formValues.categoria}
+              onChange={handleChange}
+              isInvalid={!!formErrors.categoria}
+            >
+              <option value="CAT_A">CAT_A</option>
+              <option value="CAT_B">CAT_B</option>
+              <option value="CAT_C">CAT_C</option>
+              <option value="CAT_D">CAT_D</option>
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {formErrors.categoria}
+            </Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Detalle</Form.Label>
+            <Form.Control name="detalle" type="text" value={formValues.detalle && formValues.detalle || ""}
+            onChange={handleChange}
+            isInvalid={!!formErrors.monto}
+            >
+            </Form.Control>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Usuario</Form.Label>
+            <Form.Select
+              name="usuario_id"
+              value={formValues.usuario_id}
+              onChange={handleChange}
+              isInvalid={!!formErrors.usuario_id}
+            >
+              <option> Seleccione un usuario</option>
+              {users?.map((user) => (
+                <option key={user.id} value = {user.id}>{user.nombre + " " + user.apellidos}</option>
+              ))}
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {formErrors.categoria}
+            </Form.Control.Feedback>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Propiedad</Form.Label>
+            <Form.Select
+              name="propiedad_id"
+              value={formValues.propiedad_id}
+              onChange={handleChange}
+              isInvalid={!!formErrors.propiedad_id}
+            >
+              <option> Seleccione una propiedad</option>
+              {propiedades?.map((property) => (
+                <option key={property.id} value = {property.id}>{property.direccion}</option>
+              ))}
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {formErrors.categoria}
+            </Form.Control.Feedback>
           </Form.Group>
 
 
