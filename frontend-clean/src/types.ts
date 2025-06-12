@@ -349,11 +349,6 @@ export const property_schema = z.object({
 });
 
 
-export const property_form_data_schema = property_schema.omit({id: true});
-export type property_form_data_t = z.infer<typeof property_form_data_schema>;
-
-
-
 export type property_t = z.infer<typeof property_schema>;
 
 export const property_form_data_schema = property_schema.omit({id: true});

@@ -40,7 +40,7 @@ CREATE TABLE properties_t (
   valor DECIMAL(12, 2) NOT NULL, -- valor arriendo?
   propietario_id INT NOT NULL,
   arrendatario_id INT DEFAULT NULL,
-  rol VARCHAR(15) UNIQUE NOT NULL
+  rol VARCHAR(15) UNIQUE NOT NULL,
   FOREIGN KEY (propietario_id) REFERENCES users_t(id),
   FOREIGN KEY (arrendatario_id) REFERENCES users_t(id)
 );
@@ -50,10 +50,10 @@ ALTER TABLE properties_t
 ADD CONSTRAINT unique_arrendatario UNIQUE (arrendatario_id);
 
 -- Seed properties
-INSERT INTO properties_t (direccion, activa, propietario_id, arrendatario_id, valor) VALUES
-('Calle 123, Santiago', TRUE, 2, 3, 300000),
-('Avenida 456, Viña', TRUE, 2, NULL, 380000),
-('Camino 789, La Serena', FALSE, 2, NULL, 250000);
+INSERT INTO properties_t (direccion, activa, propietario_id, arrendatario_id, valor, rol) VALUES
+('Calle 123, Santiago', TRUE, 2, 3, 300000, "111"),
+('Avenida 456, Viña', TRUE, 2, NULL, 380000, "222"),
+('Camino 789, La Serena', FALSE, 2, NULL, 250000, "332");
 
 CREATE TABLE pagos_t (
   id INT AUTO_INCREMENT PRIMARY KEY,

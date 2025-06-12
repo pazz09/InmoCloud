@@ -9,7 +9,7 @@ export default function PropiedadesPage() {
 <NavigationBar/>
 <Container className="mt-5">
   <h2>Tabla Propiedades</h2>
-  <TablaPropiedades/>
+  <TablaPropiedades propiedades={propiedades}/>
 </Container>
 
 
