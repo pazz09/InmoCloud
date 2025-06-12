@@ -41,6 +41,7 @@ CREATE TABLE properties_t (
   propietario_id INT NOT NULL,
   arrendatario_id INT DEFAULT NULL,
   rol VARCHAR(15) UNIQUE NOT NULL,
+  fecha_arriendo DATE DEFAULT NULL,
   FOREIGN KEY (propietario_id) REFERENCES users_t(id),
   FOREIGN KEY (arrendatario_id) REFERENCES users_t(id)
 );

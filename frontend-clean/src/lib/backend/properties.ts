@@ -1,6 +1,5 @@
-import { db_user_schema, OkPacket, OkPacket_t, payment_search_params, property_form_data_t, property_search_t, property_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
+import { db_user_schema, OkPacket, OkPacket_t, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_t, property_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
 import db from "./db";
-import { SuccessTemplate } from "./messages";
 import { RolAlreadyExistsError, UnexpectedError } from "./errors";
 
 
@@ -45,7 +44,7 @@ export async function searchProperties(searchParams: property_search_t)
 }
 
 
-export async function addProperty(property: property_form_data_t): Promise<property_t> 
+export async function addProperty(property: property_form_add_t): Promise<property_view_t> 
 {
   if (await checkIfRolExists(property.rol!))
     throw RolAlreadyExistsError();
@@ -73,7 +72,7 @@ export async function checkIfRolExists(rol: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-export async function updateProperty(property: property_t): Promise<property_t> 
+export async function updateProperty(property: property_form_edit_t): Promise<property_view_t> 
 {
   console.log("@/backend/properties/ updateProperty")
 
@@ -103,6 +102,23 @@ export async function deleteProperty(targetId: number): Promise<void>
 
   if (okpacket.affectedRows === 1) {
     return;
+  }
+  throw UnexpectedError();
+}
+
+export async function asignarArrendatario(prop_arrendatario: property_form_arrendatario_t): Promise<property_view_t>
+{
+  const keys = Object.keys(prop_arrendatario);
+  const values = Object.values(prop_arrendatario) as SQLParam[];
+
+  const q = `UPDATE properties_t SET ${keys.map(k => `${k} = ?`).join(', ')} 
+              WHERE id = ?`;
+
+  const res = await db.query(q, [...values, prop_arrendatario.id]);
+  const okpacket = OkPacket.parse(res);
+  if (okpacket.affectedRows == 1) {
+    const property = await searchProperties({id: okpacket.insertId});
+    return property[0];
   }
   throw UnexpectedError();
 }
