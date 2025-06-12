@@ -11,7 +11,7 @@ type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
 interface PaymentModalProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: (values: payment_form_data_input_t, id?: number) => void;
+  onSubmit: (values: payment_form_data_t, id?: number) => Promise<void>;
   editing: boolean;
   initialFormValues?: payment_form_data_input_t;
   propertyId?: number;
@@ -49,22 +49,23 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
     if (show && initialFormValues) {
       setFormValues(initialFormValues);
     }
+    setFormErrors({});
   }, [show, initialFormValues])
 
   useEffect(() => {
     console.log(formValues);
 
-    const parse = payment_form_data_schema.safeParse(formValues);
-    if (!parse.success) {
-      const errors: Partial<Record<keyof payment_form_data_input_t, string>> = {}
-
-      parse.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof payment_form_data_input_t;
-        errors[field] = err.message;
-        console.log(err.message);
-      })
-      setFormErrors(errors);
-    }
+    //const parse = payment_form_data_schema.safeParse(formValues);
+    //if (!parse.success) {
+    //  const errors: Partial<Record<keyof payment_form_data_input_t, string>> = {}
+    //
+    //  parse.error.errors.forEach((err) => {
+    //    const field = err.path[0] as keyof payment_form_data_input_t;
+    //    errors[field] = err.message;
+    //    console.log(err.message);
+    //  })
+    //  setFormErrors(errors);
+    //}
   }, [formValues])
 
 
@@ -76,6 +77,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
     console.log(name, value)
 
     if (name === "tipo") {
+
       setFormValues((prev: payment_form_data_input_t) => ({
         ...prev,
         [name]: value === "true",
@@ -83,15 +85,14 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
 
       return;
     } else if (name === "usuario_id" || name === "propiedad_id" || name === "monto") {
+
       setFormValues((prev: payment_form_data_input_t) => ({
         ...prev,
         [name]: Number(value),
       }));
-
-
       return;
 
-    }
+    } else if (name === "fecha") {}
 
     setFormValues((prev: payment_form_data_input_t) => ({
       ...prev,
@@ -99,6 +100,31 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
     }));
     console.log(formValues);
   };
+
+  async function handleSubmit(): Promise<void> {
+    console.log("handleSubmit");
+    const converted = {...formValues, fecha: new Date(formValues.fecha), propiedad_id: (formValues.propiedad_id === -1) ? undefined: formValues.propiedad_id};
+    if (converted.propiedad_id === undefined)
+      delete converted.propiedad_id;
+    
+    const parse = payment_form_data_schema.safeParse(converted);
+    if (!parse.success) {
+      console.log("error :(");
+      const errors: Partial<Record<keyof payment_form_data_input_t, string>> = {}
+
+      parse.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof payment_form_data_input_t;
+        errors[field] = err.message;
+        console.log(err.message);
+      })
+      setFormErrors(errors);
+    } else {
+      setFormErrors({});
+      console.log("Submitting")
+      await onSubmit(converted);
+    }
+  }
+
   return (<>
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
@@ -127,7 +153,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
               name="tipo"
               value={tipo}
               onChange={(e) => {setTipo(e.target.value);}}
-              isInvalid={!!formErrors.fecha}
+              isInvalid={!!formErrors.tipo}
             >
               <option value="true">Giro</option>
               <option value="false">Depósito</option>
@@ -139,7 +165,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
 
           <Form.Group className="mb-3">
             <Form.Label>Monto</Form.Label>
-            <Form.Control name="monto" type="number" value={formValues.monto}
+            <Form.Control name="monto"  value={formValues.monto}
             onChange={handleChange}
             isInvalid={!!formErrors.monto}
             >
@@ -229,7 +255,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
         <Button variant="secondary" onClick={() => {}}>
           Cancelar
         </Button>
-        <Button variant="primary" onClick={() => {}}>
+        <Button variant="primary" onClick={handleSubmit}>
           Guardar
         </Button>
       </Modal.Footer>

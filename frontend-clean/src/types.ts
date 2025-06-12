@@ -231,20 +231,18 @@ export type response_login_t = z.infer<typeof response_login>;
 
 export const payment_schema = z.object({
   id: z.number(),
-  fecha: z.union([z.string(), z.date()]).transform((val) =>
-    typeof val === 'string' ? new Date(val) : val
-  ),
+  fecha: z.date(),// z.date({required_error: "La fecha es obligatoria", message: "La fecha es obligatoria"}),
   //fecha: z.date(),
 
   tipo: z.boolean(), // 0: Giro 1: Depósito
-  monto: z.number(),
+  monto: z.number().gt(0, {message: "Ingrese un monto"}),
   pagado: z.boolean(),
 
   categoria: z.string(),
   detalle: z.string().optional().nullable(),
 
-  usuario_id: z.number(),
-  propiedad_id: z.number().optional() ,
+  usuario_id: z.number().gte(0, {message: "Seleccione un usuario"}),
+  propiedad_id: z.number().optional().nullable(),
 
 });
 
@@ -254,7 +252,7 @@ export type payment_t = z.infer<typeof payment_schema>;
 
 export const payment_view_schema = payment_schema.extend({
   cliente: z.string(),
-  propiedad: z.string()
+  propiedad: z.string().optional().nullable(),
 });
 
 export type payment_view_t = z.infer<typeof payment_view_schema>;
