@@ -48,12 +48,23 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
   useEffect(() => {
     if (show && initialFormValues) {
       setFormValues(initialFormValues);
-      setFormErrors({});
     }
   }, [show, initialFormValues])
 
   useEffect(() => {
     console.log(formValues);
+
+    const parse = payment_form_data_schema.safeParse(formValues);
+    if (!parse.success) {
+      const errors: Partial<Record<keyof payment_form_data_input_t, string>> = {}
+
+      parse.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof payment_form_data_input_t;
+        errors[field] = err.message;
+        console.log(err.message);
+      })
+      setFormErrors(errors);
+    }
   }, [formValues])
 
 
@@ -71,7 +82,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
       }));
 
       return;
-    } else if (name === "usuario_id" || name === "propiedad_id") {
+    } else if (name === "usuario_id" || name === "propiedad_id" || name === "monto") {
       setFormValues((prev: payment_form_data_input_t) => ({
         ...prev,
         [name]: Number(value),
