@@ -67,7 +67,7 @@ CREATE TABLE pagos_t (
   categoria ENUM('CAT_A', 'CAT_B', 'CAT_C', 'CAT_D') NOT NULL,
   detalle TEXT,
 
-  propiedad_id INT NOT NULL,
+  propiedad_id INT,
   usuario_id INT NOT NULL,
 
   FOREIGN KEY (propiedad_id) REFERENCES properties_t(id),

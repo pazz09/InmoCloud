@@ -7,6 +7,10 @@ import  db from "@/backend/db";
 import { convertZodError, InvalidFormDataError, NotModifiedError, UnexpectedError } from "./errors";
 
 //import { AppError } from "@/utils/errors"; // Assuming you use this
+//
+const key_map: Record<string, string> = {
+  id: "p.id",
+}
 
 export async function searchPayments(
   searchParams: payment_search_params_t
@@ -22,9 +26,10 @@ export async function searchPayments(
     fields.forEach((key) => {
       const value = searchParams[key as keyof payment_search_params_t];
       if (value !== undefined && value !== null) {
-          whereClauses.push(`${key} = ?`);
+        const final_key = key in key_map ? key_map[key] : key;
+        whereClauses.push(`${final_key} = ?`);
+        values.push(value); // ONLY PUSH when it's valid
       }
-        values.push(value);
     });
 
     const whereSQL = whereClauses.length > 0 ?
@@ -37,9 +42,11 @@ export async function searchPayments(
       
     FROM pagos_t p
 
-    JOIN users_t u ON u.id = p.usuario_id
-    JOIN properties_t pr ON pr.id = p.propiedad_id
+    LEFT JOIN users_t u ON u.id = p.usuario_id
+    LEFT JOIN properties_t pr ON pr.id = p.propiedad_id
     ${whereSQL}`;
+
+    console.log(sql, values);
 
 
     const results = await db.query(sql, values);
@@ -51,8 +58,10 @@ export async function searchPayments(
       tipo: row.tipo !== null ? Boolean(row.tipo) : null,
       pagado: row.tipo !== null ? Boolean(row.pagado) : null,
     }));
+    console.log("TRNAFORMED", transformed)
     return z.array(payment_view_schema).parse(transformed);
   } catch (err) {
+    console.log(err)
     throw err;
     //throw new AppError("Error searching for payments", 500, err.me);
   }
@@ -61,21 +70,22 @@ export async function searchPayments(
 
 export async function addPayment(
   payment: payment_form_data_t,
-) : Promise<payment_t> {
+) : Promise<payment_view_t> {
 
   const keys = Object.keys(payment).filter(k => k !== 'type');
   const values = Object.values(payment);
 
-  const q = `INSERT INTO users_t (${keys.join(', ')}) 
+  const q = `INSERT INTO pagos_t (${keys.join(', ')}) 
               VALUES (${keys.map(() => '?').join(', ')})`;
 
   const res = await db.query(q, values);
 
 
-  console.log("addUser:res", res);
+  console.log("addPayment:res", res);
   const okpacket = OkPacket.parse(res);
-  if (okpacket.affectedRows == 1) {
+  if (okpacket.affectedRows === 1) {
     const payment = await searchPayments({id: okpacket.insertId});
+    console.log(payment);
     return payment[0];
   }
   throw UnexpectedError();

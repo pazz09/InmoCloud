@@ -5,7 +5,7 @@ declare global {
   var mariadbPool: mariadb.Pool | undefined;
 }
 
-const logDb = false;
+const logDb = true;
 
 const pool =
   globalThis.mariadbPool ??

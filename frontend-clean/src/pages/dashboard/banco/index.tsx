@@ -3,9 +3,12 @@ import { Container, Modal, Button, Toast, Form } from "react-bootstrap";
 import { PaymentsTable } from "@/features/dashboard/banco/components/PaymentsTable"
 import { useBanco } from "@/features/dashboard/banco/hooks/useBanco"
 import { useEffect, useState } from "react";
-import { payment_view_t } from "@/types";
+import { payment_form_data_schema, payment_form_data_t, payment_view_t } from "@/types";
 import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import PaymentModal from "@/features/dashboard/banco/components/PaymentModal";
+import { createPayment } from "@/services/payments";
+import { AppError } from "@/utils/errors";
+import TimedAlerts from "@/features/common/components/TimedAlerts";
 
 export default function DashboardBancoPage() {
   const banco = useBanco();
@@ -21,12 +24,27 @@ export default function DashboardBancoPage() {
 
   const [newMonto, setNewMonto] = useState("");
 
-  const { addError, addSuccess } = useTimedAlerts(5);
+
+  const { visibleAlerts, addError, addSuccess } = useTimedAlerts(5);
 
   useEffect(() => {
     console.log("xd")
 
   }, [showModal]);
+
+  const onSubmit = async (pago: payment_form_data_t) => {
+    console.log("On Submit 2");
+    const token = localStorage.getItem("token")
+    try {
+      const res = await createPayment(pago, token!);
+      console.log("2: res", res)
+      addSuccess("Los datos de ingresaron exitosamente");
+      setShowModal(false);
+      banco.refresh();
+    } catch (err) {
+      addError((err as AppError).message);
+    }
+  }
 
   
 
@@ -59,59 +77,11 @@ export default function DashboardBancoPage() {
     <PaymentModal 
           show = {showModal} 
           onClose = { () => {setShowModal(false)}}
-          onSubmit={()=> {}}
+          onSubmit={onSubmit}
           editing = {editing}
     /> 
+    <TimedAlerts alerts= {visibleAlerts} onDismiss={()=>{}}/>
 
-    {/* 
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalMode === "view" && "Detalles del Pago"}
-            {modalMode === "edit" && "Editar Monto del Pago"}
-            {modalMode === "delete" && "Eliminar Pago"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {modalMode === "view" && selectedPayment && (
-            <>
-              <p><strong>ID:</strong> {selectedPayment.id}</p>
-              <p><strong>Cliente:</strong> {selectedPayment.cliente}</p>
-              <p><strong>Monto:</strong> {selectedPayment.deposito}</p>
-              <p><strong>Detalle:</strong> {selectedPayment.detalle}</p>
-            </>
-          )}
-
-          {modalMode === "edit" && (
-            <Form.Group controlId="montoEdit">
-              <Form.Label>Nuevo monto</Form.Label>
-              <Form.Control
-                type="number"
-                value={newMonto}
-                onChange={(e) => setNewMonto(e.target.value)}
-              />
-            </Form.Group>
-          )}
-
-          {modalMode === "delete" && (
-            <p>¿Estás seguro de eliminar este pago? Esta acción no se puede deshacer.</p>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancelar
-          </Button>
-          {modalMode !== "view" && (
-            <Button
-              variant={modalMode === "delete" ? "danger" : "primary"}
-              onClick={handleConfirm}
-            >
-              Confirmar
-            </Button>
-          )}
-        </Modal.Footer>
-      </Modal>
-    */}
 
   </>)
 

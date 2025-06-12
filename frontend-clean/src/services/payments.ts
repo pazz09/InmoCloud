@@ -26,7 +26,14 @@ export async function fetchPayments(
 
     const json  = await res.json();
 
-    const parsed_res = response_schema(z.array(payment_view_schema)).parse(json);
+    const transformed = {
+      ...json,
+      data: json.data.map((item: payment_view_t) => ({...item, fecha: new Date(item.fecha)}))
+    };
+
+
+    console.log(transformed);
+    const parsed_res = response_schema(z.array(payment_view_schema)).parse(transformed);
 
 
     return parsed_res.data!;
@@ -53,12 +60,16 @@ export async function createPayment(values: payment_form_data_t, token: string) 
   const json = await res.json();
   
   try {
-    const response = response_schema(payment_view_schema).parse(json);
+    const json_corrected = {...json, data: {...json.data, fecha: new Date(json.data.fecha)}};
+    const response = response_schema(payment_view_schema).parse(json_corrected);
+    console.log(response.data)
     if (res.ok) return response.data;
 
-    const error = response as error_response_t<z.ZodNull>;
+    const error = response as error_response_t<z.ZodAny>;
+    console.log(error)
     throw new AppError(error.code, res.status, error.message)
   } catch(e) {
+    console.log("invalid:C", e)
     throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
   }
 }
