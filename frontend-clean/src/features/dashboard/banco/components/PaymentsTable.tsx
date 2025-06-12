@@ -43,14 +43,14 @@ export const PaymentsTable = ({
     doc.text("Listado de Pagos", 14, 15);
 
     const data = payments.map((p) => [
-      formatDate(p.timestamp) ?? "",
+      formatDate(p.fecha) ?? "",
       p.id ?? "",
       p.categoria ?? "",
       p.cliente ?? "",
       p.propiedad ?? "",
       p.detalle ?? "",
-      p.deposito ?? "",
-      p.giro ?? "",
+      p.tipo && p.monto || "",
+      p.tipo && "" || p.monto,
     ]);
 
     autoTable(doc, {
@@ -83,14 +83,14 @@ export const PaymentsTable = ({
           <tbody>
             {payments.map((payment) => (
               <tr key={payment.id}>
-                <td>{formatDate(payment.timestamp)}</td>
+                <td>{formatDate(payment.fecha)}</td>
                 <td>{payment.id}</td>
                 <td>{payment.categoria}</td>
                 <td>{payment.cliente}</td>
                 <td>{payment.propiedad}</td>
                 <td>{payment.detalle}</td>
-                <td>{payment.deposito}</td>
-                <td>{payment.giro}</td>
+                <td>{payment.tipo && payment.monto}</td>
+                <td>{payment.tipo || payment.monto}</td>
                 <td className="text-center">
                   <Button
                     variant="outline-primary"

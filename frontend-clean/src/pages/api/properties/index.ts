@@ -10,7 +10,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     switch (req.method) {
         case 'GET':
             return get(req, res);
-        case 'ADD':
+        case 'POST':
             return add(req, res);
         case 'PUT':
             // return put(req, res);
