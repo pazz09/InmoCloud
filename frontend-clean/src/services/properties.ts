@@ -83,18 +83,17 @@ export async function editProperty(id: number, values: property_form_edit_t, tok
 }
 
 export async function deleteProperty(id: number, token: string) {
-  const res = await fetch(`/api/properties/`, {
+  const res = await fetch(`/api/properties/${id}`, {
     method: "DELETE",
     headers: {
       authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({id}),
+    }
   });
 
   const json = await res.json();
   
   try {
-    if (json.ok) return;
+    if (res.ok) return;
 
     const error = json as error_response_t<z.ZodNull>;
     throw new AppError(error.code, res.status, error.message)

@@ -14,8 +14,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
             return add(req, res);
         case 'PUT':
             return put(req, res);
-        case 'DELETE':
-            return del(req, res);
         default:
             return AppErrorResponse(res, MethodNotAllowedError());
     }
@@ -90,40 +88,6 @@ function put(req: NextApiRequest, res: NextApiResponse) {
             return res.status(200).json({
                 status: 'success',
                 message: 'Propiedad actualizada correctamente.',
-                data: property,
-            });
-        },
-        [Roles.ADMINISTRADOR, Roles.CORREDOR]
-    )(req, res);
-}
-
-function del(req: NextApiRequest, res: NextApiResponse) {
-    withAuth(
-        async (req: NextApiRequest, Res: NextApiResponse) => {
-            console.log(req.body)
-            const parsedBody = property_form_delete_schema.safeParse(req.body);
-
-            if (!parsedBody.success) {
-                console.log(parsedBody.error);
-                return AppErrorResponse(res, PropertyParsingError());
-            } 
-
-            let property = null;
-            try {
-                await deleteProperty(parsedBody.data.id);
-            } catch (err) {
-                console.log(err);
-                if (err instanceof z.ZodError) {
-                    return AppErrorResponse(res, convertZodError(err));
-                } else if (err instanceof AppError) {
-                    return AppErrorResponse(res, err);
-                }
-                return AppErrorResponse(res, UnexpectedError());
-            }
-
-            return res.status(200).json({
-                status: 'success',
-                message: 'Propiedad eliminada con éxito.',
                 data: property,
             });
         },

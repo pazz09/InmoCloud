@@ -29,7 +29,7 @@ export default function PropiedadesPage() {
     setShowModal(true);
   };
 
-  const handleModalSubmit = (values: property_form_add_t | property_form_edit_t) => {
+  const handleModalSubmit = async (values: property_form_add_t | property_form_edit_t) => {
     // Aquí implementarías la lógica para guardar/actualizar/eliminar la propiedad
     console.log("Submitted values:", values);
     console.log("Mode:", modalMode);
@@ -43,7 +43,7 @@ export default function PropiedadesPage() {
     if (modalMode === null) {
       // Lógica para agregar nueva propiedad
       try {
-        const result = createProperty(values, token);
+        await createProperty(values, token);
         addSuccess("Propiedad creada correctamente");
         refresh();
       } catch (e) {
@@ -53,15 +53,16 @@ export default function PropiedadesPage() {
           (e instanceof Error) ? e.message : "Error desconocido"
           }`
         )
+      } finally {
+        console.log("Adding new property:", values);
+        setShowModal(false);
       }
 
-      console.log("Adding new property:", values);
     } else if (modalMode === "edit") {
       // Lógica para editar propiedad existente
       console.log("Editing property:", selectedProperty?.id, values);
     }
     
-    setShowModal(false);
   };
 
   const handleModalClose = () => {
@@ -69,7 +70,7 @@ export default function PropiedadesPage() {
     setSelectedProperty(null);
   };
 
-  function handleConfirm(): void {
+  async function handleConfirm(): Promise<void> {
     const token = localStorage.getItem("token");
     if (!token) {
       addError("No estás autenticado. Por favor, inicia sesión.");
@@ -78,7 +79,7 @@ export default function PropiedadesPage() {
 
     // Lógica de confirmación aquí
     try {
-      const result = deleteProperty(selectedProperty!.id, token);
+      await deleteProperty(selectedProperty!.id, token);
       addSuccess("Propiedad eliminada con éxito");
       refresh();
     } catch (e) {
@@ -88,10 +89,10 @@ export default function PropiedadesPage() {
         (e instanceof Error) ? e.message : "Error desconocido"
         }`
       )
+    } finally {
+      console.log("Deleting property:", selectedProperty?.id);
+      setShowModal(false);
     }
-
-    console.log("Deleting property:", selectedProperty?.id);
-    setShowModal(false);
   }
 
   return (

@@ -114,7 +114,7 @@ export async function deleteProperty(targetId: number): Promise<void>
   try {
     const res = await db.query(`DELETE FROM properties_t WHERE id = ?`, [targetId]);
     const okpacket = OkPacket.parse(res);
-
+    
     if (okpacket.affectedRows === 1) {
       return;
     }
