@@ -60,6 +60,9 @@ export const RolAlreadyExistsError = () =>
 export const PropertyHasPayments = () =>
     new AppError("PROPERTY_HAS_PAYMENTS", 409, "La propiedad tiene pagos asociados");
 
+export const TenantAlreadyAssigned = () =>
+    new AppError("TENANT_ALREADY_ASSIGNED", 409, "El arrendatario ya está asociado a otra propiedad");
+
 export const MissingTokenError = () =>
     new AppError("MISSING_TOKEN", 401, "Token de autenticación faltante o inválido");
 

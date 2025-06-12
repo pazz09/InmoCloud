@@ -18,8 +18,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 function put(req: NextApiRequest, res: NextApiResponse) {
     withAuth(
         async (req: NextApiRequest, Res: NextApiResponse) => {
-            console.log(req.body)
-            console.log("XXXXXXXX")
             const parsedBody = property_form_arrendatario_schema.safeParse(req.body);
 
             if (!parsedBody.success) {

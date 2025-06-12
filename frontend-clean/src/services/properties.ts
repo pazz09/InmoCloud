@@ -96,8 +96,9 @@ export async function deleteProperty(id: number, token: string) {
     if (res.ok) return;
 
     const error = json as error_response_t<z.ZodNull>;
-    throw new AppError(error.code, res.status, error.message)
-  } catch(e) {
+    throw new AppError(error.code, res.status, error.message);
+  } catch (e) {
+    if (e instanceof AppError) throw e;
     throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
   }
 }
@@ -125,8 +126,9 @@ export async function asignarArrendatario(id: number, values: property_form_arre
     if (res.ok) return response.data;
 
     const error = response as error_response_t<z.ZodNull>;
-    throw new AppError(error.code, res.status, error.message)
-  } catch(e) {
+    throw new AppError(error.code, res.status, error.message);
+  } catch (e) {
+    if (e instanceof AppError) throw e;
     throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
   }
 }

@@ -9,6 +9,7 @@ import { asignarArrendatario, createProperty, deleteProperty, editProperty } fro
 import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import { createUser } from "@/services/user";
 import ArrendatarioModal from "@/features/dashboard/propiedades/components/ArrendatarioModal";
+import TimedAlerts from "@/features/common/components/TimedAlerts";
 
 export default function PropiedadesPage() {
   const { propiedades, refresh } = usePropiedadesPage();
@@ -47,6 +48,7 @@ export default function PropiedadesPage() {
         await createProperty(values, token);
         addSuccess("Propiedad creada correctamente");
         refresh();
+        setShowModal(false);
       } catch (e) {
         console.log("Error al crear propiedad:", e);
         addError(
@@ -56,7 +58,6 @@ export default function PropiedadesPage() {
         )
       } finally {
         console.log("Adding new property:", values);
-        setShowModal(false);
       }
 
     } else if (modalMode === "edit") {
@@ -65,6 +66,7 @@ export default function PropiedadesPage() {
         await editProperty(selectedProperty!.id, {id: selectedProperty!.id, ...values}, token);
         addSuccess("Propiedad actualizada correctamente");
         refresh();
+        setShowModal(false);
       } catch (e) {
         console.log("Error al actualizar propiedad:", e);
         addError(
@@ -74,7 +76,6 @@ export default function PropiedadesPage() {
         )
       } finally {
         console.log("Editing property:", selectedProperty?.id, values);
-        setShowModal(false);
       }
 
     }
@@ -98,6 +99,7 @@ export default function PropiedadesPage() {
       await asignarArrendatario(selectedProperty!.id, values, token);
       addSuccess("Arrendatario asignado con éxito");
       refresh();
+      setShowModal(false);
     } catch (e) {
       console.log("Error al actualizar arrendatario:", e);
       addError(
@@ -107,7 +109,6 @@ export default function PropiedadesPage() {
       )
     } finally {
       console.log("Editando arrendatario:", selectedProperty?.id, values);
-      setShowModal(false);
     }
   }
 
@@ -139,6 +140,8 @@ export default function PropiedadesPage() {
   return (
     <>
       <NavigationBar />
+      <TimedAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>
+      
       <Container className="mt-5">
         <h2 className="mb-4">Tabla Propiedades</h2>
         <TablaPropiedades 

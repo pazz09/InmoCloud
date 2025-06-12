@@ -1,6 +1,6 @@
 import { OkPacket, payment_search_params, property_form_add_t, property_form_arrendatario_t, property_form_edit_t, property_search_schema, property_search_t, property_view_schema, property_view_t, SQLParam, zodKeys } from "@/types";
 import db from "./db";
-import { PropertyHasPayments, RolAlreadyExistsError, UnexpectedError } from "./errors";
+import { PropertyHasPayments, RolAlreadyExistsError, TenantAlreadyAssigned, UnexpectedError } from "./errors";
 
 
 /// GET PROPERTIES
@@ -131,19 +131,33 @@ export async function deleteProperty(targetId: number): Promise<void>
   }
 }
 
-export async function asignarArrendatario(targetId: number, prop_arrendatario: property_form_arrendatario_t): Promise<property_view_t>
-{
+export async function asignarArrendatario(
+  targetId: number,
+  prop_arrendatario: property_form_arrendatario_t
+): Promise<property_view_t> {
   const keys = Object.keys(prop_arrendatario);
   const values = Object.values(prop_arrendatario) as SQLParam[];
 
   const q = `UPDATE properties_t SET ${keys.map(k => `${k} = ?`).join(', ')} 
               WHERE id = ?`;
 
-  const res = await db.query(q, [...values, targetId]);
-  const okpacket = OkPacket.parse(res);
-  if (okpacket.affectedRows == 1) {
-    const prop = await searchProperties({id: targetId});
-    return prop[0];
+  try {
+    const res = await db.query(q, [...values, targetId]);
+    const okpacket = OkPacket.parse(res);
+
+    if (okpacket.affectedRows === 1) {
+      const prop = await searchProperties({ id: targetId });
+      return prop[0];
+    }
+
+    throw UnexpectedError(); // no se modificó nada
+  } catch (err: any) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      throw TenantAlreadyAssigned();
+    }
+
+    // puedes loguear otros errores si quieres
+    console.error('Error al asignar arrendatario:', err);
+    throw UnexpectedError(); // un error genérico
   }
-  throw UnexpectedError();
 }
