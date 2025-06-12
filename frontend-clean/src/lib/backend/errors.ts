@@ -59,3 +59,8 @@ export const MissingTokenError = () =>
 export const InvalidTokenError = () =>
     new AppError("INVALID_TOKEN", 401, "Token de autenticación inválido o expirado");
 
+export const NotModifiedError = () =>
+    new AppError("NOT_MODIFIED", 400, "Ocurrió un error, ningún dato ha sido modificado.");
+  
+export const InvalidFormDataError = () =>
+  new AppError("INVALID_FORM_DATA", 401, "El formulario enviado es inválido.");

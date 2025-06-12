@@ -14,7 +14,7 @@ import {  OkPacket, SQLParam, user_role_enum, user_safe_schema,
      user_form_data_t, 
 } from "@/types"
 
-import { InvalidPasswordError, MissingCredentialsError, RutAlreadyExistsError,
+import { InvalidPasswordError, MissingCredentialsError, NotModifiedError, RutAlreadyExistsError,
   UnauthorizedError, UnexpectedError, UserNotFoundError, UserParsingError 
 } from "./errors";
 
@@ -125,6 +125,8 @@ export async function deleteUser({
 
   if (okpacket.affectedRows === 1) {
     return okpacket;
+  } else {
+    throw NotModifiedError()
   }
 
   throw UserParsingError();
@@ -249,6 +251,7 @@ export async function searchUsers(params: user_search_t): Promise<user_t[]> {
  * Returns all users (unsafe) with or without filters.
  * Delegates to either getUsers() or searchUsers().
  */
+
 export async function getUsersFiltered(params?: user_search_t): Promise<user_t[]> {
   const safe_params = user_search_schema.safeParse(params);
   const hasFilters = safe_params.data;

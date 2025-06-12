@@ -1,8 +1,10 @@
 import z from "zod";
 
-import {payment_search_params, payment_search_params_t, 
-  payment_view_schema, payment_view_t, zodKeys } from "@/types"
+import {OkPacket, payment_form_data_schema, payment_form_data_t, payment_search_params, payment_search_params_t, 
+  payment_t, 
+  payment_view_schema, payment_view_t, SQLParam, zodKeys } from "@/types"
 import  db from "@/backend/db";
+import { convertZodError, InvalidFormDataError, NotModifiedError, UnexpectedError } from "./errors";
 
 //import { AppError } from "@/utils/errors"; // Assuming you use this
 
@@ -54,3 +56,60 @@ export async function searchPayments(
   }
 }
 
+
+export async function addPayment(
+  payment: payment_form_data_t,
+) : Promise<payment_t> {
+
+  const keys = Object.keys(payment).filter(k => k !== 'type');
+  const values = Object.values(payment);
+
+  const q = `INSERT INTO users_t (${keys.join(', ')}) 
+              VALUES (${keys.map(() => '?').join(', ')})`;
+
+  const res = await db.query(q, values);
+
+
+  console.log("addUser:res", res);
+  const okpacket = OkPacket.parse(res);
+  if (okpacket.affectedRows == 1) {
+    const payment = await searchPayments({id: okpacket.insertId});
+    return payment[0];
+  }
+  throw UnexpectedError();
+}
+
+export async function updatePayment(payment: payment_form_data_t) {
+  if (payment.id === undefined) throw InvalidFormDataError();
+  const keys = zodKeys(payment_form_data_schema);
+  const values = keys.map((k: string) => payment[k as keyof payment_form_data_t]) as SQLParam[];
+
+  const q = `UPDATE users_t SET ${keys.map((k: string) => `${k} = ?`).join(', ')}
+              WHERE id = ?`;
+
+  const res = await db.query(q, [...values, payment.id!]);
+  const okpacket = OkPacket.parse(res);
+
+  if (okpacket.affectedRows == 1) {
+    const payment = await searchPayments({id: okpacket.insertId});
+    return payment[0];
+  }
+}
+
+export async function deletePayment(pId: number): Promise<void> {
+  const q = `
+    DELETE FROM pagos_t WHERE id = ?   
+  `
+  try {
+    const res = await db.query(q, [pId]);
+    const okpacket = OkPacket.parse(res);
+    if (okpacket.affectedRows === 1) {
+      return
+    } else
+      throw NotModifiedError();
+  } catch(e) {
+    if (e instanceof z.ZodError) {
+      throw convertZodError(e);
+    }
+  }
+}

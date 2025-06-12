@@ -1,5 +1,5 @@
 import z  from "zod";
-import { response_t } from "./types";
+import { response_t } from "@/types";
 import { NextApiResponse } from "next";
 
 // export const NotAllowedMethodResponse: response_t<z.ZodNull> = {

@@ -229,15 +229,16 @@ export type response_login_t = z.infer<typeof response_login>;
 
 export const payment_schema = z.object({
   id: z.number(),
-  fecha: z.union([z.string(), z.date()]).transform((val) =>
-    typeof val === 'string' ? new Date(val) : val
-  ),
+  //fecha: z.union([z.string(), z.date()]).transform((val) =>
+  //  typeof val === 'string' ? new Date(val) : val
+  //),
+  fecha: z.date(),
 
   tipo: z.boolean(), // 0: Giro 1: Depósito
   monto: z.number(),
+  pagado: z.boolean(),
 
   categoria: z.string(),
-
   detalle: z.string().optional().nullable(),
 
   usuario_id: z.number(),
@@ -258,6 +259,9 @@ export type payment_view_t = z.infer<typeof payment_view_schema>;
 
 export const payment_search_params = payment_view_schema.partial();
 export type payment_search_params_t = z.infer<typeof payment_search_params>;
+
+export const payment_form_data_schema = payment_schema.partial({id: true});
+export type payment_form_data_t = z.infer<typeof payment_form_data_schema>;
 
 
 
@@ -319,6 +323,10 @@ export const db_user_schema = user_union_schema.transform((data) => {
   return rest;
 });
 
+
+// PROPIEDADES
+//
+
 export const property_schema = z.object({
   id: z.number(),
   rol: z.string().max(15),
@@ -339,6 +347,13 @@ export const property_schema = z.object({
   propietario_id: z.number(),
   arrendatario_id: z.number().optional().nullable()
 });
+
+
+export const property_form_data_schema = property_schema.omit({id: true});
+export type property_form_data_t = z.infer<typeof property_form_data_schema>;
+
+
+
 export type property_t = z.infer<typeof property_schema>;
 
 export const property_form_data_schema = property_schema.omit({id: true});
