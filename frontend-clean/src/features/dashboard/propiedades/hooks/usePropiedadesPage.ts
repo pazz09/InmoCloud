@@ -4,17 +4,21 @@ import { useEffect, useState } from "react"
 
 type PropiedadesPageProvides = {
   propiedades: property_view_t[],
+  refresh: () => {},
 }
 export function usePropiedadesPage(): PropiedadesPageProvides {
+
+  const refresh = async () => {
+     const token = localStorage.getItem("token");
+    if (!token) return;
+    setProperties(await fetchProperties(token, {}));
+  }
+
+
   const [properties, setProperties] = useState<property_view_t[]>([]);
   useEffect(() => {
-    const fn = async () => {
-       const token = localStorage.getItem("token");
-      if (!token) return;
-      setProperties(await fetchProperties(token, {}));
-    }
-    fn();
+    refresh();
   },[])
 
-  return { propiedades: properties }
+  return { propiedades: properties, refresh }
 }
