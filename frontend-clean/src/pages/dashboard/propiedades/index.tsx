@@ -11,7 +11,5 @@ export default function PropiedadesPage() {
   <h2>Tabla Propiedades</h2>
   <TablaPropiedades propiedades={propiedades}/>
 </Container>
-
-
 </>)
 }

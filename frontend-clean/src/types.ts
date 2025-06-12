@@ -229,10 +229,10 @@ export type response_login_t = z.infer<typeof response_login>;
 
 export const payment_schema = z.object({
   id: z.number(),
-  //fecha: z.union([z.string(), z.date()]).transform((val) =>
-  //  typeof val === 'string' ? new Date(val) : val
-  //),
-  fecha: z.date(),
+  fecha: z.union([z.string(), z.date()]).transform((val) =>
+    typeof val === 'string' ? new Date(val) : val
+  ),
+  //fecha: z.date(),
 
   tipo: z.boolean(), // 0: Giro 1: Depósito
   monto: z.number(),
