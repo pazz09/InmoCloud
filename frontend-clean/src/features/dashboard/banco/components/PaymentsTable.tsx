@@ -35,6 +35,7 @@ export const PaymentsTable = ({
     "Detalle",
     "Depósito",
     "Giro",
+    "Pagado",
     "Acciones",
   ];
 
@@ -91,6 +92,7 @@ export const PaymentsTable = ({
                 <td>{payment.detalle}</td>
                 <td>{payment.tipo && payment.monto}</td>
                 <td>{payment.tipo || payment.monto}</td>
+                <td>{payment.pagado ? "Sí" : "No"}</td>
                 <td className="text-center">
                   <Button
                     variant="outline-primary"

@@ -14,7 +14,7 @@ const pool =
     user: process.env.MARIADB_USER_SERVER,
     password: process.env.MARIADB_USER_SERVER_PASSWORD,
     connectionLimit: 5,
-    acquireTimeout: 30000,
+    acquireTimeout: 5000,
     idleTimeout: 60000,
     supportBigNumbers: true,
     bigNumberStrings: true,

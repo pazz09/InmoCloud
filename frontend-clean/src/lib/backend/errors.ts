@@ -74,3 +74,6 @@ export const NotModifiedError = () =>
   
 export const InvalidFormDataError = () =>
   new AppError("INVALID_FORM_DATA", 401, "El formulario enviado es inválido.");
+
+export const DatabaseError = () =>
+  new AppError("DATABASE_ERROR", 500, "No se pudo contactar a la base de datos");

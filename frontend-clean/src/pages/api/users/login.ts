@@ -2,8 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { login } from '@/backend/users';
 import { login_schema, login_t, response_login_t } from "@/types";
 import { handleZodError, AppErrorResponse } from "@/backend/messages";
-import { AppError, convertZodError, UnexpectedError } from "@/backend/errors";
+import { AppError, convertZodError, DatabaseError, UnexpectedError } from "@/backend/errors";
 import z from "zod";
+import { SqlError } from "mariadb";
 
 export default async function handler(
   req: NextApiRequest,
@@ -36,12 +37,9 @@ export default async function handler(
         } else if (e instanceof AppError) {
           return AppErrorResponse(res, e);
 
+        } else if (e instanceof SqlError) {
+          return AppErrorResponse(res, DatabaseError());
         }
-        return res.status(500).json({
-          status: "error",
-          message: "Error interno del servidor",
-          code: "INTERNAL_SERVER_ERROR",
-        });
       }
 
     default:

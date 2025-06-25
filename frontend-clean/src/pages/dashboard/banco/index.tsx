@@ -11,6 +11,7 @@ import { AppError } from "@/utils/errors";
 import TimedAlerts from "@/features/common/components/TimedAlerts";
 import z from "zod";
 import { useRouter } from "next/router";
+import PaymentsSearchBar from "@/features/dashboard/banco/components/PaymentsSearchBar";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({ fecha: z.string() });
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
@@ -146,11 +147,12 @@ export default function DashboardBancoPage() {
     <NavigationBar />
     <Container className="mt-5">
       <h2 className="mb-4">Lista de Pagos</h2>
+      <PaymentsSearchBar/>
       <PaymentsTable
         payments={banco.pagos}
 
         onAdd={() => { resetForm(); setIsEditing(false); setShowModal(true) }}
-        onView={(p) => handleAction("view", p)}
+        onView={(p) => router.push(`/dashboard/banco/${p.id}`)}
         onEdit={(p) => handleAction("edit", p)}
         onDelete={(p) => handleAction("delete", p)}
       />

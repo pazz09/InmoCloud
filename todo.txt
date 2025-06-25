@@ -1,0 +1,14 @@
+DISEÑO:
+- Unificar botones ver/editar/eliminar
+- Unificar display de montos ($,)
+PAGOS:
+- Filtrar pagos (exportar filtro)
+- Mostrar si el pago está pagado
+- Ver detalle pago
+PROPIEDADES:
+- Filtrar Propiedades
+- Ver detalle propiedad
+- Mostrar "Total" de una propiedad (Arrendatario)
+- [Low Prio] Ir al propietario 
+- [Low Prio] Ir al arrendatario
+
