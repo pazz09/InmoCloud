@@ -90,7 +90,7 @@ export type empty_response_t = z.infer<typeof empty_response_schema>;
 
 
 
-export type SQLParam = string | number | boolean | Date | number | null;
+export type SQLParam = string | number | boolean | Date | number | Buffer | null;
 
 export const OkPacket = z.object({
   insertId: z.union([z.string(), z.number()]).transform((val) =>
@@ -425,4 +425,6 @@ export const zodKeys = <T extends z.ZodTypeAny>(schema: T): string[] => {
 	// return empty array
 	return [];
 };
+
+
 

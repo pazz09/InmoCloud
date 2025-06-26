@@ -84,6 +84,16 @@ INSERT INTO pagos_t (fecha, monto, tipo, categoria, detalle, pagado, propiedad_i
 ('2025-05-30', 120000, TRUE, 'CAT_C', 'Honorarios corredor', TRUE, 2, 1),
 ('2025-05-15', 300000, TRUE, 'CAT_A', 'Pago arriendo parcial', FALSE, 3, 3);-- Seed transactions
 
+-- Reportes
+
+CREATE TABLE reports_t (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  pdf_blob MEDIUMBLOB NOT NULL, -- Up to 16MB
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users_t(id)
+);
+
 
 GRANT ALL PRIVILEGES ON inmocloud.* TO corredor;
 GRANT ALL PRIVILEGES ON inmocloud.* TO server;

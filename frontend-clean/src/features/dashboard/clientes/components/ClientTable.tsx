@@ -101,7 +101,7 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
             <th onClick={() => handleSort("canon")} style={{ cursor: "pointer" }}>
               Canon {sortIcon("canon")}
             </th>
-            <th>Deuda/Saldo</th>
+            <th>Deuda/Saldo</th> {/* TODO: Mostrar Deuda del arrendatario */}
             <th>Acciones</th>
           </tr>
         </thead>
@@ -121,7 +121,8 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
                 <td>
                   {isArrendatario(user.role) && ((user as arrendatario_t).propiedad
                     ? `FP${(user as arrendatario_t).propiedad!.id} ${(user as arrendatario_t).propiedad!.direccion}`
-                    : "No asignado") || "N/A"}
+                    : "No asignado")
+                  || "N/A"}
                 </td>
                 <td>
                   {isArrendatario(user.role) && ((user as arrendatario_t).propiedad
