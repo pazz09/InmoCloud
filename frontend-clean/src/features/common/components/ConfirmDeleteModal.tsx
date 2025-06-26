@@ -32,8 +32,8 @@ export default function ConfirmDeleteModal({
           <p>{message}</p>
         ) : (
           <p>
-            ¿Estás seguro que deseas eliminar
-            {itemName ? ` "${itemName}"` : " este elemento"}? Esta acción no se puede deshacer.
+            ¿Estás seguro que deseas eliminar al usuario
+            <b>{itemName ? ` ${itemName}` : ""}</b>? Esta acción no se puede deshacer.
           </p>
         )}
       </Modal.Body>

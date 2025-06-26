@@ -266,7 +266,7 @@ const handleExportPDF = async () => {
     <Container className="mt-5">
       <h2 className="mb-4">Lista de Pagos</h2>
 
-      <div className="d-flex flex-row mb-3 align-items-end justify-content-end  gap-2">
+      <div className="d-flex flex-row mb-3 align-items-end justify-content-between">
         <PaymentsSearchBar onSearch = {(params) => {banco.handleSearch(params)}}/>
         <Button variant="primary" className="h-50 align-self-end" onClick={() => setShowReportModal(true)} >
           Generar Reporte

@@ -43,10 +43,10 @@ export async function createProperty(values: property_form_add_t, token: string)
 
   const json = await res.json();
   
-    const response = response_schema(property_view_schema).parse(json);
-    if (res.ok) return response.data;
-    const error = error_response_schema(property_view_schema).parse(json)
-    throw new AppError(error.code, res.status, error.message)
+  const response = response_schema(property_view_schema).parse(json);
+  if (res.ok) return response.data;
+  const error = error_response_schema(property_view_schema).parse(json)
+  throw new AppError(error.code, res.status, error.message)
 }
 
 export async function editProperty(id: number, values: property_form_edit_t, token: string) {

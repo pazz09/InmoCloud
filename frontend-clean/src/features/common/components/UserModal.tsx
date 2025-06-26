@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import bcrypt from 'bcryptjs';
 import { useAuth } from "@/context/AuthContext";
+import { formatRutInput } from "@/utils/rut";
 
 const generateHash = async (plain: string) => {
   const salt = await bcrypt.genSalt(10);
@@ -112,7 +113,12 @@ export default function UserModal({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormValues((prev: user_form_data_t) => ({ ...prev, [name]: value }));
+
+    if (name === "rut") {
+      setFormValues((prev: user_form_data_t) => ({ ...prev, [name]: formatRutInput(value) }));
+    } else {
+      setFormValues((prev: user_form_data_t) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = () => {

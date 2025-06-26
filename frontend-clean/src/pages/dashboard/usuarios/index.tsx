@@ -244,7 +244,7 @@ const confirmDelete = async () => {
       show={showDeleteModal}
       onClose={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
       onConfirm={confirmDelete}
-      itemName={deleteTarget?.nombre ? deleteTarget?.nombre + deleteTarget?.apellidos : ""}
+      itemName={deleteTarget?.nombre ? deleteTarget?.nombre + " " + deleteTarget?.apellidos : ""}
     />
 
     </>
