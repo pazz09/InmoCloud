@@ -27,16 +27,17 @@ export async function fetchPayments(
 
     const json  = await res.json();
 
-    const transformed = {
-      ...json,
-      data: json.data.map((item: payment_view_t) => ({...item, fecha: new Date(item.fecha)}))
-    };
 
 
     if (!res.ok) {
       const error_data = error_response_schema(z.null()).parse(json);
       throw new AppError(error_data.code, res.status, error_data.message);
     }
+
+    const transformed = {
+      ...json,
+      data: json.data.map((item: payment_view_t) => ({...item, fecha: new Date(item.fecha)}))
+    };
 
     console.log(transformed);
     const parsed_res = response_schema(z.array(payment_view_schema)).parse(transformed);

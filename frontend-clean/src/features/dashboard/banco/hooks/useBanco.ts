@@ -6,21 +6,26 @@ import { useEffect, useState } from "react";
 
 type BancoProvides = {
   pagos: payment_view_t[];
-  refresh: () => object;
-  onView: (payment: payment_view_t) => void;
-  onEdit: (payment: payment_view_t) => void;
-  onDelete: (payment: payment_view_t) => void;
+
+  refresh:      () => object;
+  onView:       (payment: payment_view_t) => void;
+  onEdit:       (payment: payment_view_t) => void;
+  onDelete:     (payment: payment_view_t) => void;
+  handleSearch: (props: payment_search_params_t) => void,
 };
 
 export function useBanco(): BancoProvides {
   const router = useRouter();
 
   const [pagos, setPagos] = useState<payment_view_t[]>([]);
-  const [searchParams] = useState<payment_search_params_t>({});
+  const [searchParams, setSearchParams] = useState<payment_search_params_t>({});
+  const handleSearch = (params: payment_search_params_t) => {
+    setSearchParams(params);
+  }
 
   useEffect(() => {
     refresh();
-  }, []);
+  }, [searchParams]);
 
   const onView = (payment: payment_view_t) => {
     router.push(`/dashboard/pagos/${payment.id}`);
@@ -59,5 +64,6 @@ export function useBanco(): BancoProvides {
     onView,
     onEdit,
     onDelete,
+    handleSearch,
   };
 }

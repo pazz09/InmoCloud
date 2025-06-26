@@ -1,7 +1,6 @@
 import { payment_view_t } from "@/types";
+import { formatDate } from "@/utils";
 import { Table, Button } from "react-bootstrap";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
 
@@ -13,11 +12,6 @@ export type PaymentsTableProps = {
   onAdd: () => void;
 };
 
-const format = new Intl.DateTimeFormat("es-CL");
-
-const formatDate = (date: Date) => {
-  return format.format(date);
-};
 
 export const PaymentsTable = ({
   payments,
@@ -39,39 +33,8 @@ export const PaymentsTable = ({
     "Acciones",
   ];
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Listado de Pagos", 14, 15);
-
-    const data = payments.map((p) => [
-      formatDate(p.fecha) ?? "",
-      p.id ?? "",
-      p.categoria ?? "",
-      p.cliente ?? "",
-      p.propiedad ?? "",
-      p.detalle ?? "",
-      p.tipo && p.monto || "",
-      p.tipo && "" || p.monto,
-    ]);
-
-    autoTable(doc, {
-      head: [fields.slice(0, -1)], // sin "Acciones"
-      body: data,
-      startY: 20,
-    });
-
-    doc.save("pagos.pdf");
-  };
-
-
   return (
     <>
-      <div className="mb-3 text-end">
-        <Button variant="outline-danger" onClick={handleExportPDF}>
-          Exportar a PDF
-        </Button>
-      </div>
-
       <div className="table-responsive">
         <Table striped bordered hover className="align-middle shadow-sm">
           <thead className="table-light">
@@ -90,6 +53,7 @@ export const PaymentsTable = ({
                 <td>{payment.cliente}</td>
                 <td>{payment.propiedad}</td>
                 <td>{payment.detalle}</td>
+                {/*TODO: Formatear monto (añadir función a src/utils.ts)*/}
                 <td>{payment.tipo && payment.monto}</td>
                 <td>{payment.tipo || payment.monto}</td>
                 <td>{payment.pagado ? "Sí" : "No"}</td>

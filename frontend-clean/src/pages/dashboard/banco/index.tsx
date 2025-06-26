@@ -12,6 +12,12 @@ import TimedAlerts from "@/features/common/components/TimedAlerts";
 import z from "zod";
 import { useRouter } from "next/router";
 import PaymentsSearchBar from "@/features/dashboard/banco/components/PaymentsSearchBar";
+import DeletePaymentPopup from "@/features/dashboard/banco/components/DeletePaymentPopup";
+
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { formatDate } from "@/utils";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({ fecha: z.string() });
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
@@ -35,10 +41,12 @@ export default function DashboardBancoPage() {
 
   const { visibleAlerts, addError, addSuccess } = useTimedAlerts();
 
+  /*
   useEffect(() => {
     console.log("xd")
 
   }, [showModal]);
+  */
 
   const onSubmit = async (pago: payment_form_data_t) => {
     console.log("On Submit 2");
@@ -119,6 +127,44 @@ export default function DashboardBancoPage() {
     }
   }
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Listado de Pagos", 14, 15);
+
+    const data = banco.pagos.map((p) => [
+      formatDate(p.fecha) ?? "",
+      p.id        ?? "",
+      p.categoria ?? "",
+      p.cliente   ?? "",
+      p.propiedad ?? "",
+      p.detalle   ?? "",
+      p.tipo      && p.monto || "",
+      p.tipo      && ""      || p.monto,
+      p.pagado     ? "Sí" : "No"
+    ]);
+
+    const fields = [
+      "Fecha",
+      "ID",
+      "Categoría",
+      "Cliente",
+      "Propiedad",
+      "Detalle",
+      "Depósito",
+      "Giro",
+      "Pagado",
+      "Acciones",
+    ];
+
+    autoTable(doc, {
+      head: [fields.slice(0, -1)], // sin "Acciones"
+      body: data,
+      startY: 20,
+    });
+
+    doc.save("pagos.pdf");
+  };
+
 
 
   const [formValues, setFormValues] = useState<payment_form_data_input_t>({
@@ -147,7 +193,14 @@ export default function DashboardBancoPage() {
     <NavigationBar />
     <Container className="mt-5">
       <h2 className="mb-4">Lista de Pagos</h2>
-      <PaymentsSearchBar/>
+
+      <div className="d-flex flex-row mb-3 align-items-end justify-content-end  gap-2">
+        <PaymentsSearchBar onSearch = {(params) => {banco.handleSearch(params)}}/>
+        <Button variant="outline-danger" className="h-50 align-self-end" onClick={handleExportPDF}>
+          Exportar a PDF
+        </Button>
+      </div>
+
       <PaymentsTable
         payments={banco.pagos}
 
@@ -166,32 +219,12 @@ export default function DashboardBancoPage() {
         initialFormValues={formValues}
       />
 
-      { showConfirm && (
-      <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Eliminar Pago</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>¿Estás seguro de eliminar este pago? Esta acción no se puede deshacer.</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirm(false)}>
-            Cancelar
-          </Button>
-          <Button
-            variant="danger"
-            onClick={handleConfirm}
-          >
-            Confirmar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      )}
-
+      <DeletePaymentPopup 
+          showConfirm = {showConfirm}
+          setShowConfirm={setShowConfirm}
+          handleConfirm={handleConfirm}
+      />
     </Container>
-
-
   </>)
 
 }
