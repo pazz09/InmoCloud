@@ -82,7 +82,7 @@ export default function PaymentsSearchbar({onSearch}: Props) {
         </Col>
 
         <Col  className="d-flex align-items-end">
-          <Button onClick={() => onSearch(searchParams)}>🔎 Buscar</Button>
+          <Button variant="secondary" onClick={() => onSearch(searchParams)}>🔎 Buscar</Button>
         </Col>
 
       </Row>
