@@ -48,6 +48,17 @@ export async function searchPayments(
       delete searchParams.propiedad;
     }
 
+    if (searchParams.monto_min !== undefined) {
+      whereClauses.push(`monto >= ?`);
+      values.push(searchParams.monto_min);
+      delete searchParams.monto_min;
+    }
+
+    if (searchParams.monto_max !== undefined) {
+      whereClauses.push(`monto <= ?`);
+      values.push(searchParams.monto_max);
+      delete searchParams.monto_max;
+    }
     
     
 

@@ -257,7 +257,10 @@ export const payment_view_schema = payment_schema.extend({
 
 export type payment_view_t = z.infer<typeof payment_view_schema>;
 
-export const payment_search_params = payment_view_schema.partial();
+export const payment_search_params = payment_view_schema.partial().extend({
+  monto_min: z.number().optional(),
+  monto_max: z.number().optional(),
+});
 
 export type payment_search_params_t = z.infer<typeof payment_search_params>;
 

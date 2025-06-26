@@ -15,7 +15,7 @@ export default function PaymentsSearchbar({onSearch}: Props) {
     <Form className="">
       <Row className="justify-content-end align-items-end g-2">
 
-        <Col xs="auto">
+        <Col >
           <Form.Group controlId = "property_name">
             <Form.Label>Dirección</Form.Label>
             <Form.Control 
@@ -27,7 +27,7 @@ export default function PaymentsSearchbar({onSearch}: Props) {
           </Form.Group>
         </Col>
 
-        <Col xs="auto">
+        <Col>
             <Form.Group controlId = "user_name">
               <Form.Label>Nombre cliente</Form.Label>
               <Form.Control 
@@ -39,7 +39,49 @@ export default function PaymentsSearchbar({onSearch}: Props) {
             </Form.Group>
         </Col>
 
-        <Col xs="auto" className="d-flex align-items-end">
+        <Col >
+            <Form.Group controlId = "monto_min">
+              <Form.Label>Monto mín.</Form.Label>
+              <Form.Control 
+              onChange={(e) => {
+                const value = e.target.value;
+                const num = Number.parseInt(value);
+
+                if (value !== "" && !Number.isNaN(num)) {
+                  setSearchParams({ ...searchParams, monto_min: num });
+                } else {
+                  const { monto_min, ...rest } = searchParams;
+                  setSearchParams(rest);
+                }
+              }}            
+              >
+              </Form.Control>
+
+            </Form.Group>
+        </Col>
+
+        <Col >
+            <Form.Group controlId = "monto_max">
+              <Form.Label>Monto máx.</Form.Label>
+              <Form.Control 
+              onChange={(e) => {
+                const value = e.target.value;
+                const num = Number.parseInt(value);
+
+                if (value !== "" && !Number.isNaN(num)) {
+                  setSearchParams({ ...searchParams, monto_max: num });
+                } else {
+                  const { monto_max, ...rest } = searchParams;
+                  setSearchParams(rest);
+                }
+              }}             
+              >
+              </Form.Control>
+
+            </Form.Group>
+        </Col>
+
+        <Col  className="d-flex align-items-end">
           <Button onClick={() => onSearch(searchParams)}>🔎 Buscar</Button>
         </Col>
 

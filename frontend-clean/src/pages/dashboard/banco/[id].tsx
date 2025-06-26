@@ -11,12 +11,11 @@ import { FaArrowLeft } from "react-icons/fa";
 export default function () {
 
   const router = useRouter();
-  const auth = useAuth();
   const payment_id = router.query.id;
   const [paymentData, setPaymentData] = useState<payment_view_t| null>(null);
 
+  const auth = useAuth();
   useEffect(()=> {
-    const auth = useAuth();
     const fn = async () => {
       const parsed_payment_id = Number.parseInt(payment_id as string);
       if (!parsed_payment_id) return;

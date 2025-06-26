@@ -211,6 +211,7 @@ export default function DashboardBancoPage() {
       />
 
       <TimedAlerts alerts={visibleAlerts} onDismiss={() => { }} />
+
       <PaymentModal
         show={showModal}
         onClose={() => { setShowModal(false) }}

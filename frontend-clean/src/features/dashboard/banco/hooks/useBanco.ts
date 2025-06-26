@@ -42,6 +42,7 @@ export function useBanco(): BancoProvides {
       // Aquí podrías llamar a un servicio de eliminación en el backend.
     }
   };
+
   const refresh = async () => {
     const token = localStorage.getItem("token");
     if (!token) return router.push("/login");
@@ -50,7 +51,7 @@ export function useBanco(): BancoProvides {
       setPagos(result);
 
     } catch (e) {
-        console.log(e)
+      console.log(e)
       if (e instanceof AppError) {
         if (e.statusCode === 401)
           router.push('/login')
