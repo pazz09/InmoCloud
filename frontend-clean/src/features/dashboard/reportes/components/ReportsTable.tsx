@@ -9,13 +9,15 @@ export type ReportsTableProps = {
   onView: (report: report_view_t) => void;
   onDelete: (report: report_view_t) => void;
   setSelId: Dispatch<SetStateAction<number>>;
+  privileges?: boolean,
 };
 
 export const ReportsTable = ({
   reports,
   onView,
   onDelete,
-  setSelId
+  setSelId,
+  privileges
 }: ReportsTableProps) => {
   const fields = [
     "ID",
@@ -49,13 +51,13 @@ export const ReportsTable = ({
                 >
                   <FaEye />
                 </Button>
-                <Button
+                { privileges && (<Button
                   variant="outline-danger"
                   size="sm"
                   onClick={() => {setSelId(report.id); onDelete(report)}}
                 >
                   <FaTrash />
-                </Button>
+                </Button>)}
               </td>
             </tr>
           ))}

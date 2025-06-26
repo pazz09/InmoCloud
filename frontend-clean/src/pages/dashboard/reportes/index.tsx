@@ -46,6 +46,10 @@ export default function DashboardReportesPage() {
     }
   };
 
+  useState(()=> {
+    reportes.refresh();
+  })
+
   // Handler: perform upload/creation after modal closes
   // const handleUploadReport = async (userId, file) => { /* ... */ };
 
@@ -69,6 +73,7 @@ export default function DashboardReportesPage() {
           onView={handleViewReport}
           onDelete={() => setShowReportModal(true)}
           setSelId={setSelId}
+          privileges={true}
         />
 
         <TimedAlerts alerts={visibleAlerts} onDismiss={() => {}} />

@@ -45,7 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Get all reports, optionally filter by user_id
       try {
         const user_id = req.query.user_id ? Number(req.query.user_id) : undefined;
+        console.log(user_id)
         const reports = await getReports(user_id);
+        console.log(reports)
         return res.status(200).json(SuccessTemplate(reports, "Report list"));
       } catch (err) {
         if (err instanceof AppError)
@@ -75,7 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const buffer = fs.readFileSync(file.filepath);
-        fs.rm(file.filepath, ()=>{});
 
         const result = await addReport({
           user_id: Number(user_id),
@@ -83,6 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           filename: file.originalFilename || file.newFilename,
           mimetype: file.mimetype!,
         });
+
+        fs.rm(file.filepath, ()=>{});
 
         return res.status(200).json(SuccessTemplate(result, "El reporte fue subido correctamente"));
       } catch (err) {

@@ -7,7 +7,7 @@ import { AppError } from "@/utils/errors";
 // return type
 type ReportProvides = {
   reports: report_view_t[];
-  refresh: () => void;
+  refresh: (user_id?: number) => void;
   onView: (report: report_view_t) => Promise<void>;
   onDelete: (report: report_view_t) => Promise<void>;
 };
@@ -16,12 +16,17 @@ export function useReport(): ReportProvides {
   const [reports, setReports] = useState<report_view_t[]>([]);
   const router = useRouter();
 
-  const refresh = async () => {
+  const refresh = async (user_id?: number) => {
     const token = localStorage.getItem("token");
     if (!token) return router.push("/login");
     try {
-      const result = await getReports(token);
-      setReports(result);
+      if (user_id !== undefined) {
+        const result = await getReports(token, user_id);
+        setReports(result);
+      } else {
+        const result = await getReports(token);
+        setReports(result);
+      }
     } catch (e) {
       console.error(e);
       if (e instanceof AppError) {
@@ -32,9 +37,9 @@ export function useReport(): ReportProvides {
     }
   };
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  // useEffect(() => {
+  //   refresh();
+  // }, []);
 
   const onView = async (report: report_view_t) => {
     router.push(`/dashboard/reportes/${report.id}`);

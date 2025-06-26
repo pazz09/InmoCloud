@@ -1,3 +1,4 @@
+import { SQLParam } from "@/types";
 import db from "./db";
 
 interface AddReportInput {
@@ -46,7 +47,7 @@ export async function getReports(user_id?: number) {
     FROM reports_t r
     JOIN users_t u ON r.user_id = u.id
   `;
-  const params: any[] = [];
+  const params: SQLParam[] = [];
 
   if (user_id !== undefined) {
     query += " WHERE r.user_id = ?";
@@ -55,6 +56,7 @@ export async function getReports(user_id?: number) {
 
   query += " ORDER BY r.created_at DESC";
 
+  console.log(query)
   const rows = await db.query(query, params);
 
   return rows;
