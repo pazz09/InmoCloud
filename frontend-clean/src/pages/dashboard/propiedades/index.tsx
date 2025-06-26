@@ -11,6 +11,7 @@ import ArrendatarioModal from "@/features/dashboard/propiedades/components/Arren
 import TimedAlerts from "@/features/common/components/TimedAlerts";
 import PropertySearchBar from "@/features/dashboard/propiedades/components/PropertySearchBar";
 import { usePropertyList } from "@/features/dashboard/propiedades/hooks/usePropertyList";
+import router from "next/router";
 
 export default function PropiedadesPage() {
   const { propiedades, searchProperties, refresh } = usePropertyList();
@@ -152,7 +153,7 @@ export default function PropiedadesPage() {
         <PropertySearchBar onSearch={handleSearch} />
         <TablaPropiedades 
           propiedades={propiedades ? propiedades : []}
-          onView={(p) => handleAction("view", p)}
+          onView={(p) => router.push(`/dashboard/propiedades/${p.id}`)}
           onEdit={(p) => handleAction("edit", p)}
           onDelete={(p) => handleAction("delete", p)}
           onArrendatario={(p) => handleAction("arrendatario", p)}

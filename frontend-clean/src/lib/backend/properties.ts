@@ -32,6 +32,12 @@ export async function searchProperties(searchParams: property_search_t)
     where.push(`p.direccion LIKE ?`);
   }
 
+  // Filtro dirección
+  if (searchParams.id) {
+    params.push(searchParams.id);
+    where.push(`p.id = ?`);
+  }
+
   const sql = `
   SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol, p.fecha_arriendo,
 

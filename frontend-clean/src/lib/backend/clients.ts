@@ -48,6 +48,11 @@ export async function searchClients(params: user_search_t): Promise<client_union
     values.push(search.rut);
   }
 
+  if (search.id) {
+    clauses.push(`u.id = ?`);
+    values.push(search.id);
+  }
+
 
   const where = clauses.length ? `AND ${clauses.join(" AND ")}` : "";
 

@@ -212,6 +212,12 @@ export async function searchUsers(searchParams: user_search_t): Promise<user_t[]
     where.push(`u.role = ?`);
   }
 
+  // Filtro id
+  if (searchParams.id) {
+    params.push(searchParams.id);
+    where.push(`u.id = ?`);
+  }
+
   // Obtener columnas válidas para SELECT (sin "type")
   const keys = zodKeys(user_schema).filter(k => k !== "type");
   // console.log("Valid keys for user schema:", keys);
