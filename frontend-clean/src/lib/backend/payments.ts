@@ -131,13 +131,15 @@ export async function addPayment(
 }
 
 export async function updatePayment(id: number, payment: payment_form_data_t) {
-  if (payment.id === undefined) throw InvalidFormDataError();
+  if (id === undefined) throw InvalidFormDataError();
+  console.log(payment)
+  console.log(id)
   const keys = zodKeys(payment_form_data_schema);
   const values = keys.map((k: string) => payment[k as keyof payment_form_data_t]) as SQLParam[];
 
   const q = `UPDATE pagos_t SET ${keys.map((k: string) => `${k} = ?`).join(', ')}
               WHERE id = ?`;
-
+  console.log(q)
   const res = await db.query(q, [...values, id]);
   const okpacket = OkPacket.parse(res);
 

@@ -4,6 +4,7 @@ import { Button, Form, Modal } from "react-bootstrap";
 import z from "zod";
 import { useUserList } from "../../usuarios/hooks/useUserList";
 import { usePropertyList } from "../../propiedades/hooks/usePropertyList";
+import { fechaToString } from "@/utils/fecha";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({fecha: z.string()});
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
@@ -21,19 +22,17 @@ interface PaymentModalProps {
 // const property_form_add_partial_schema = property_search_schema.partial();
 // type property_form_add_partial_t = z.infer<typeof property_search_schema>;
 
-
-
 export default function PaymentModal({show, onClose, onSubmit, editing, initialFormValues, propertyId}: PaymentModalProps) {
 
-  const [formValues, setFormValues] = useState<payment_form_data_input_t>({
+  const [formValues, setFormValues] = useState({
       fecha: "",
-      tipo: false,
-      monto: 0,
+      tipo: "false",
+      monto: "",
       pagado: false,
       categoria: "CAT_A",
       detalle: "",
-      usuario_id: -1,
-      propiedad_id: -1,
+      usuario_id: "",
+      propiedad_id: "",
   });
 
   const [formErrors, setFormErrors] =  useState<Partial<Record<keyof payment_form_data_t, string>>>({});
@@ -42,65 +41,41 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
   const { users } = useUserList();
   const { propiedades } = usePropertyList();
 
-
-  const [tipo, setTipo] = useState("false");
-
   useEffect(() => {
     if (show && initialFormValues) {
-      setFormValues(initialFormValues);
+      const newValues = {
+        fecha: initialFormValues.fecha || "",
+        tipo: initialFormValues.tipo?.toString() ?? "false",
+        monto: initialFormValues.monto?.toString() ?? "",
+        pagado: initialFormValues.pagado ?? false,
+        categoria: initialFormValues.categoria || "CAT_A",
+        detalle: initialFormValues.detalle || "",
+        usuario_id: initialFormValues.usuario_id != null ? initialFormValues.usuario_id.toString() : "-1",
+        propiedad_id: initialFormValues.propiedad_id != null ? initialFormValues.propiedad_id.toString() : "-1"
+      };
+      setFormValues(newValues);
     }
     setFormErrors({});
-  }, [show, initialFormValues])
+  }, [show, initialFormValues]);
 
   useEffect(() => {
     console.log(formValues);
   }, [formValues])
 
-
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    console.log(name, value)
-
-    if (name === "tipo") {
-
-      setFormValues((prev: payment_form_data_input_t) => ({
-        ...prev,
-        [name]: value === "true",
-      }));
-
-      return;
-    } else if (name === "usuario_id" || name === "propiedad_id" || name === "monto") {
-
-      setFormValues((prev: payment_form_data_input_t) => ({
-        ...prev,
-        [name]: Number(value),
-      }));
-      return;
-
-    } else if (name === "fecha") {}
-
-    setFormValues((prev: payment_form_data_input_t) => ({
-      ...prev,
-      [name]: value
-    }));
-    console.log(formValues);
-  };
-
   async function handleSubmit(): Promise<void> {
-    console.log("handleSubmit");
-    const converted = {...formValues,
+    const parsedValues = {
       fecha: new Date(formValues.fecha),
-    propiedad_id: (formValues.propiedad_id === -1) ? undefined: formValues.propiedad_id,
-    tipo: tipo === "true",
-    }
-    ;
-    if (converted.propiedad_id === undefined)
-      delete converted.propiedad_id;
-    
-    const parse = payment_form_data_schema.safeParse(converted);
+      tipo: formValues.tipo === "true",
+      monto: Number(formValues.monto),
+      pagado: formValues.pagado,
+      categoria: formValues.categoria,
+      detalle: formValues.detalle,
+      usuario_id: formValues.usuario_id == "-1" ? null : Number(formValues.usuario_id),
+      propiedad_id: formValues.propiedad_id == "-1" ? null : Number(formValues.propiedad_id),
+      id: initialFormValues?.id
+    };
+
+    const parse = payment_form_data_schema.safeParse(parsedValues);
     if (!parse.success) {
       console.log("error :(");
       const errors: Partial<Record<keyof payment_form_data_input_t, string>> = {}
@@ -114,12 +89,12 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
     } else {
       setFormErrors({});
       console.log("Submitting")
-      await onSubmit(converted);
+      await onSubmit(parse.data);
     }
   }
 
   return (<>
-    <Modal show={show} onHide={() => {onClose(); setFormValues(initialFormValues!);}}>
+    <Modal show={show} onHide={() => {onClose()}}>
       <Modal.Header closeButton>
         <Modal.Title>{editing ? "Editar Pago" : "Nuevo Pago"}</Modal.Title>
       </Modal.Header>
@@ -132,7 +107,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
               name="fecha"
               type="date"
               value={formValues.fecha}
-              onChange={handleChange}
+              onChange={(e) => setFormValues({...formValues, fecha: e.target.value})}
               isInvalid={!!formErrors.fecha}
             />
             <Form.Control.Feedback type="invalid">
@@ -144,32 +119,36 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
             <Form.Label>Tipo</Form.Label>
             <Form.Select
               name="tipo"
-              value={tipo}
-              onChange={(e) => {setTipo(e.target.value);}}
+              value={formValues.tipo}
+              onChange={(e) => setFormValues({...formValues, tipo: e.target.value})}
               isInvalid={!!formErrors.tipo}
             >
               <option value="false">Giro</option>
               <option value="true">Depósito</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">
-              {formErrors.fecha}
+              {formErrors.tipo}
             </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label>Monto</Form.Label>
             <Form.Control name="monto"  value={formValues.monto}
-            onChange={handleChange}
+            onChange={(e) => setFormValues({...formValues, monto: e.target.value})}
             isInvalid={!!formErrors.monto}
             >
             </Form.Control>
+            <Form.Control.Feedback type="invalid">
+              {formErrors.monto}
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label >Pagado</Form.Label>
             <Form.Check type = "checkbox"
             name = "pagado"
-            onChange={(e) => {setFormValues({...formValues, pagado: e.target.checked})}}
+            checked={formValues.pagado}
+            onChange={(e) => setFormValues({...formValues, pagado: e.target.checked})}
             >
             </Form.Check>
 
@@ -181,7 +160,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
             <Form.Select
               name="categoria"
               value={formValues.categoria}
-              onChange={handleChange}
+              onChange={(e) => setFormValues({...formValues, categoria: e.target.value})}
               isInvalid={!!formErrors.categoria}
             >
               <option value="CAT_A">CAT_A</option>
@@ -196,9 +175,9 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
 
           <Form.Group className="mb-3">
             <Form.Label>Detalle</Form.Label>
-            <Form.Control name="detalle" type="text" value={formValues.detalle && formValues.detalle || ""}
-            onChange={handleChange}
-            isInvalid={!!formErrors.monto}
+            <Form.Control name="detalle" type="text" value={formValues.detalle}
+            onChange={(e) => setFormValues({...formValues, detalle: e.target.value})}
+            isInvalid={!!formErrors.detalle}
             >
             </Form.Control>
           </Form.Group>
@@ -208,16 +187,16 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
             <Form.Select
               name="usuario_id"
               value={formValues.usuario_id}
-              onChange={handleChange}
+              onChange={(e) => setFormValues({...formValues, usuario_id: e.target.value})}
               isInvalid={!!formErrors.usuario_id}
             >
-              <option> Seleccione un usuario</option>
+              <option value="-1"> Seleccione un usuario</option>
               {users?.map((user) => (
                 <option key={user.id} value = {user.id}>{user.nombre + " " + user.apellidos}</option>
               ))}
             </Form.Select>
             <Form.Control.Feedback type="invalid">
-              {formErrors.categoria}
+              {formErrors.usuario_id}
             </Form.Control.Feedback>
           </Form.Group>
 
@@ -226,16 +205,16 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
             <Form.Select
               name="propiedad_id"
               value={formValues.propiedad_id!}
-              onChange={handleChange}
+              onChange={(e) => setFormValues({...formValues, propiedad_id: e.target.value})}
               isInvalid={!!formErrors.propiedad_id}
             >
-              <option> Seleccione una propiedad</option>
+              <option value="-1"> Seleccione una propiedad</option>
               {propiedades?.map((property) => (
                 <option key={property.id} value = {property.id}>{property.direccion}</option>
               ))}
             </Form.Select>
             <Form.Control.Feedback type="invalid">
-              {formErrors.categoria}
+              {formErrors.propiedad_id}
             </Form.Control.Feedback>
           </Form.Group>
 
@@ -245,7 +224,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
         </Form>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={() => {}}>
+        <Button variant="secondary" onClick={onClose}>
           Cancelar
         </Button>
         <Button variant="primary" onClick={handleSubmit}>
