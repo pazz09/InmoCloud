@@ -38,6 +38,12 @@ export async function searchProperties(searchParams: property_search_t)
     where.push(`p.id = ?`);
   }
 
+  // Filtro rol
+  if (searchParams.rol) {
+    params.push(searchParams.rol);
+    where.push(`p.rol = ?`);
+  }
+
   const sql = `
   SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol, p.fecha_arriendo,
 
@@ -54,6 +60,8 @@ export async function searchProperties(searchParams: property_search_t)
     users_t arrendatario ON p.arrendatario_id = arrendatario.id
 
   ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+
+  ORDER BY p.id;
   `
 
   const results = await db.query(sql, params);

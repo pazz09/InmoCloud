@@ -12,6 +12,7 @@ import TimedAlerts from "@/features/common/components/TimedAlerts";
 import PropertySearchBar from "@/features/dashboard/propiedades/components/PropertySearchBar";
 import { usePropertyList } from "@/features/dashboard/propiedades/hooks/usePropertyList";
 import router from "next/router";
+import { AppError } from "@/utils/errors";
 
 export default function PropiedadesPage() {
   const { propiedades, searchProperties, refresh } = usePropertyList();
@@ -73,7 +74,7 @@ export default function PropiedadesPage() {
         console.log("Error al actualizar propiedad:", e);
         addError(
           `Error al actualizar la propiedad: ${
-          (e instanceof Error) ? e.message : "Error desconocido"
+          (e instanceof AppError) ? e.message : "Error desconocido"
           }`
         )
       } finally {

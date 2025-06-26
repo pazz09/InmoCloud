@@ -32,11 +32,13 @@ export async function fetchProperties(
     return parsedRes.data!;
 
   } catch (e) {
-    console.log(e);
     if (e instanceof z.ZodError) {
+      console.log(e)
       throw new AppError(
         "FAILED_PARSE", -1, "Respuesta inválida del servidor (FAILED_TO_PARSE)"
       )
+    } else if (e instanceof AppError) {
+      throw e;
     }
     throw new AppError("UNKNOWN_ERROR", -1, "Error desconocido");
   }
