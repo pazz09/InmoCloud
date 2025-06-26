@@ -3,7 +3,7 @@ import { Container, Modal, Button } from "react-bootstrap";
 import { TablaPropiedades } from "@/features/dashboard/propiedades/components/TablaPropiedades";
 import PropertyModal from "@/features/dashboard/propiedades/components/PropertyModal";
 import { useState } from "react";
-import { property_view_t, property_form_add_t, property_form_edit_t, property_form_arrendatario_t } from "@/types";
+import { property_view_t, property_form_add_t, property_form_edit_t, property_form_arrendatario_t, property_search_t } from "@/types";
 import { asignarArrendatario, createProperty, deleteProperty, editProperty, PropertySearchFilters } from "@/services/properties";
 import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import { createUser } from "@/services/user";
@@ -138,7 +138,7 @@ export default function PropiedadesPage() {
     }
   }
 
-  const handleSearch = (params: PropertySearchFilters) => {
+  const handleSearch = (params: property_search_t) => {
     searchProperties(params);
   };
 

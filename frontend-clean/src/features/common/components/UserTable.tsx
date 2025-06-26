@@ -5,18 +5,11 @@ interface UserTableProps {
   users: user_union_t[];
   onEdit: (user: user_union_t) => void;
   onDelete: (user: user_union_t) => void;
-  onAdd: () => void;
 }
 
-export default function UserTable({ users, onEdit, onDelete, onAdd }: UserTableProps) {
+export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
   return (
     <>
-      <div className="text-end mb-3">
-        <Button variant="success" onClick={onAdd}>
-          Agregar Usuario
-        </Button>
-      </div>
-
       <Table striped bordered hover responsive>
         <thead>
           <tr>
@@ -31,7 +24,7 @@ export default function UserTable({ users, onEdit, onDelete, onAdd }: UserTableP
           {users.length === 0 ? (
             <tr>
               <td colSpan={5} className="text-center">
-                No hay usuarios registrados
+                No hay usuarios para mostrar
               </td>
             </tr>
           ) : (

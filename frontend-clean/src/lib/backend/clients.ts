@@ -26,7 +26,7 @@ export async function searchClients(params: user_search_t): Promise<client_union
   const clauses: string[] = [];
   const values: SQLParam[] = [];
 
-  if (search.name) {
+  if (search.nombre) {
     clauses.push(`
       (
         LOWER(u.nombre) LIKE LOWER(?) OR
@@ -34,19 +34,20 @@ export async function searchClients(params: user_search_t): Promise<client_union
         LOWER(CONCAT(u.nombre, ' ', u.apellidos)) LIKE LOWER(?)
       )
     `);
-    const pattern = `%${search.name}%`;
+    const pattern = `%${search.nombre}%`;
     values.push(pattern, pattern, pattern);
-  }
-
-  if (search.property_name) {
-    clauses.push(`p.direccion LIKE ?`);
-    values.push(`%${search.property_name}%`);
   }
 
   if (search.role) {
     clauses.push(`u.role = ?`);
     values.push(search.role);
   }
+
+  if (search.rut) {
+    clauses.push(`u.rut = ?`);
+    values.push(search.rut);
+  }
+
 
   const where = clauses.length ? `AND ${clauses.join(" AND ")}` : "";
 

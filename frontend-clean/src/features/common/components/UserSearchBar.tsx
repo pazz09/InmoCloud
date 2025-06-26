@@ -1,22 +1,19 @@
 // components/UserSearchBar.tsx
 import { Form, Row, Col, Button } from "react-bootstrap";
-import { rolePriority, UserRoleEnum } from "@/types";
+import { rolePriority, user_search_t, UserRoleEnum } from "@/types";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { formatRutInput } from "@/utils/rut";
 
 type Props = {
-  onSearch: (params: {
-    name?: string;
-    role?: UserRoleEnum;
-    property_name?: string;
-  }) => void;
+  onSearch: (params: user_search_t) => void;
 };
 
 export default function UserSearchBar({ onSearch }: Props) {
   const [name, setName] = useState("");
   const [role, setRole] = useState<UserRoleEnum | "">("");
   const [availableRoles, setAvailableRoles] = useState<UserRoleEnum[]>([]);
-  const [property_name, setPropertyName] = useState("");
+  const [rut, setRUT] = useState("");
   const { role: userRole } = useAuth();
 
   useEffect(() => {
@@ -35,9 +32,9 @@ export default function UserSearchBar({ onSearch }: Props) {
 
   const handleSearch = () => {
     onSearch({
-      name: name.trim() || undefined,
+      nombre: name.trim() || undefined,
       role: role || undefined,
-      property_name: property_name.trim() || undefined,
+      rut: rut.trim() || undefined,
     });
   };
 
@@ -50,6 +47,15 @@ export default function UserSearchBar({ onSearch }: Props) {
         <Form.Control
           value={name}
           onChange={(e) => setName(e.target.value)}
+        />
+      </Form.Group>
+    </Col>
+    <Col xs="auto">
+      <Form.Group controlId="name">
+        <Form.Label>RUT</Form.Label>
+        <Form.Control
+          value={rut}
+          onChange={(e) => setRUT(formatRutInput(e.target.value))}
         />
       </Form.Group>
     </Col>
@@ -67,15 +73,6 @@ export default function UserSearchBar({ onSearch }: Props) {
             </option>
           ))}
         </Form.Select>
-      </Form.Group>
-    </Col>
-    <Col xs="auto">
-      <Form.Group controlId="property_name">
-        <Form.Label>Nombre de Propiedad</Form.Label>
-        <Form.Control
-          value={property_name}
-          onChange={(e) => setPropertyName(e.target.value)}
-        />
       </Form.Group>
     </Col>
     <Col xs="auto" className="d-flex align-items-end">

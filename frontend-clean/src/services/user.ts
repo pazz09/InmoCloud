@@ -6,6 +6,7 @@ import {
   update_response_schema,
   user_form_data_t,
   user_schema,
+  user_search_t,
   users_list_schema
 } from "@/types";
 import { AppError } from "@/utils/errors";
@@ -85,11 +86,10 @@ export async function deleteUser(id: number, token: string) {
   }
 }
 
-export async function fetchUsers(
+export async function fetchUserList(
   token: string,
-  searchParams: Record<string, string> = {}
+  searchParams: user_search_t = {}
 ) {
-
   const res = await fetch('/api/users/search', {
     method: 'POST',
     headers: {
