@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { AppErrorResponse, handleZodError, SuccessTemplate } from "@/lib/backend/messages";
 import { AppError } from "@/utils/errors";
-import { addReport } from "@/lib/backend/reports"; // <-- Implement this!
+import { addReport, getReports } from "@/lib/backend/reports"; // <-- Implement this!
 import { report_upload_schema } from "@/types"; // See previous answer's schema!
 import z from "zod";
 import formidable, { File as FormidableFile } from "formidable";
@@ -41,8 +41,21 @@ const parseForm = (req: NextApiRequest): Promise<{ fields: formidable.Fields; fi
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (req.method) {
-    case "POST":
+    case "GET": {
+      // Get all reports, optionally filter by user_id
+      try {
+        const user_id = req.query.user_id ? Number(req.query.user_id) : undefined;
+        const reports = await getReports(user_id);
+        return res.status(200).json(SuccessTemplate(reports, "Report list"));
+      } catch (err) {
+        if (err instanceof AppError)
+          return AppErrorResponse(res, err);
+        else
+          return res.status(500).json({ error: "Unexpected server error", detail: String(err) });
+      }
+    }
 
+    case "POST": {
       const contentType = req.headers["content-type"] || "";
 
       if (!contentType.includes("multipart/form-data")) {
@@ -53,16 +66,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, '0777');
 
-        // Formidable gives field values as arrays sometimes
         const user_id = Array.isArray(fields.user_id) ? fields.user_id[0] : fields.user_id;
         const pdfFile = files.pdf;
         const file = Array.isArray(pdfFile) ? pdfFile[0] : pdfFile;
-
-        // Validate with Zod
-        // const parseResult = report_upload_schema.safeParse({
-        //   user_id,
-        //   pdf: file, // We'll tweak the schema for formidable syntax below!
-        // });
 
         if (file === undefined) {
           return AppErrorResponse(res, new AppError("INVALID_FORM", 500, "Formulario inválido"));
@@ -71,7 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const buffer = fs.readFileSync(file.filepath);
         fs.rm(file.filepath, ()=>{});
 
-        // Save to DB (implement this function!)
         const result = await addReport({
           user_id: Number(user_id),
           pdfBuffer: buffer,
@@ -88,7 +93,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         else
           return res.status(500).json({ error: "Unexpected server error", detail: String(err) });
       }
+    }
+
     default:
       return res.status(405).json({ error: "Method Not Allowed" });
-  }
-}
+  }}
