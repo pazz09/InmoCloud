@@ -45,7 +45,14 @@ export const PaymentsTable = ({
             </tr>
           </thead>
           <tbody>
-            {payments.map((payment) => (
+            {payments.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="text-center">
+                  No hay pagos para mostrar
+                </td>
+              </tr>
+            ) :
+            payments.map((payment) => (
               <tr key={payment.id}>
                 <td>{formatDate(payment.fecha)}</td>
                 <td>{payment.id}</td>
@@ -88,7 +95,7 @@ export const PaymentsTable = ({
         </Table>
         <div className="text-end mb-3">
           <Button variant="success" onClick={onAdd}>
-            + Agregar Pago
+            Agregar Pago
           </Button>
         </div>
 

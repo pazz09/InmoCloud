@@ -106,11 +106,11 @@ export default function UserDetail() {
                         }}
                         onClick={() => router.back()}
                     />
-                    <h2>Ficha de usuario</h2>
+                    <h2>Ficha de cliente</h2>
                 </div>
 
                 {/* 1️⃣ Tabla Usuario */}
-                <h4>Información del usuario</h4>
+                <h4>Información del cliente</h4>
                 <Table striped bordered hover>
                     <tbody>
                         <tr>

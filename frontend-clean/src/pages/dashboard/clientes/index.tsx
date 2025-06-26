@@ -203,7 +203,7 @@ const confirmDelete = async () => {
         {users && (
           <>
           {users ? <ClientTable onView = {(c) => router.push(`/dashboard/clientes/${c.id}`)} 
-          users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
+          users={users} onEdit={onUserEdit} onDelete={onUserDelete} /> : null}
           </>
         )}
         <div className="text-end mb-3">

@@ -196,7 +196,7 @@ export default function DashboardBancoPage() {
 
       <div className="d-flex flex-row mb-3 align-items-end justify-content-end  gap-2">
         <PaymentsSearchBar onSearch = {(params) => {banco.handleSearch(params)}}/>
-        <Button variant="outline-danger" className="h-50 align-self-end" onClick={handleExportPDF}>
+        <Button variant="danger" className="h-50 align-self-end" onClick={handleExportPDF}>
           Exportar a PDF
         </Button>
       </div>
