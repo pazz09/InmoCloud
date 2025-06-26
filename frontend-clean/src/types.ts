@@ -398,20 +398,32 @@ export type property_search_t = z.infer<typeof property_search_schema>;
 
 export const arrendatario_schema = user_schema.omit({ role: true }).extend({
   propiedad: property_schema.optional().nullable(),
+  debe: z.number().min(0, "El monto debe ser positivo").optional(),
   role: z.literal(UserRoleEnum.ARRENDATARIO),
 });
 export type arrendatario_t = z.infer<typeof arrendatario_schema>;
 
-export const propietario_schema = user_schema.omit({ role: true }).extend({
+
+export const propietario_schema = user_schema.omit({role: true}).extend({
+  saldo: z.number().min(0, "El monto debe ser positivo").optional(),
   propiedades: z.array(property_schema).optional().nullable(),
   role: z.literal(UserRoleEnum.PROPIETARIO),
 });
 export type propietario_t = z.infer<typeof propietario_schema>;
 
+const user_safe_schema_others = user_safe_schema.extend({
+  role: z.enum([
+    UserRoleEnum.SIN_SESION,
+    UserRoleEnum.CORREDOR,
+    UserRoleEnum.ADMINISTRADOR,
+  ]),
+});
+
+
 export const client_union_schema = z.discriminatedUnion("role", [
   arrendatario_schema,
   propietario_schema,
-]);
+])
 export type client_union_t = z.infer<typeof client_union_schema>;
 
 export const client_list_schema = z.array(client_union_schema);

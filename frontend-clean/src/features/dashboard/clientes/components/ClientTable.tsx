@@ -3,6 +3,7 @@ import { Table, Button } from "react-bootstrap";
 import {
   arrendatario_t,
   client_union_t,
+  propietario_t,
   UserRoleEnum,
 } from "@/types";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
@@ -103,7 +104,7 @@ export default function ClientTable({ users, onEdit, onDelete, onView }: ClientT
             <th onClick={() => handleSort("canon")} style={{ cursor: "pointer" }}>
               Canon {sortIcon("canon")}
             </th>
-            <th>Deuda/Saldo</th> {/* TODO: Mostrar Deuda del arrendatario */}
+            <th>Deuda/Saldo</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -132,7 +133,7 @@ export default function ClientTable({ users, onEdit, onDelete, onView }: ClientT
                     ? `$${(user as arrendatario_t).propiedad!.valor.toLocaleString("es-CL")}`
                     : "No asignado") || "N/A"}
                 </td>
-                <td>{/* TODO: Mostrar deuda/saldo */}</td>
+                <td>{isArrendatario(user.role) && (user as arrendatario_t).debe || (user as propietario_t).saldo}</td>
                 <td className="text-center">
                   <Button
                     variant="outline-primary"

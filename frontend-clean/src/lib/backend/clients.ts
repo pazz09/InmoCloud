@@ -74,9 +74,12 @@ export async function searchClients(params: user_search_t): Promise<client_union
 
   const rows = [...propietarios, ...arrendatarios];
   const clientsMap: Record<number, propietario_t | arrendatario_t> = {};
+  console.log(rows)
 
   for (const row of rows) {
+    console.log("Iterating")
     const user = extractFromRow({...row, u_type: "full"}, "u", user_schema);
+    console.log(user)
     const prop = extractFromRow(row, "p", property_schema, true);
 
     let property = null;

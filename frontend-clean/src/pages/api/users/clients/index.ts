@@ -4,7 +4,6 @@ import { AppErrorResponse, SuccessTemplate } from '@/backend/messages';
 import { Roles } from '@/types';
 import { getClients } from '@/backend/users';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { de } from 'zod/v4/locales';
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     switch (req.method) {
         case 'GET':

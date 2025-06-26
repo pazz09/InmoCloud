@@ -1,6 +1,6 @@
 import { generateToken } from "./auth";
 import db from "./db";
-import { zodKeys } from "@/types";
+import { user_union_schema, zodKeys } from "@/types";
 
 import {  OkPacket, SQLParam, user_role_enum, user_safe_schema,
    user_safe_t, user_schema, user_search_schema, user_search_t, user_t,
@@ -298,44 +298,56 @@ export async function getUserIdsByRut(rut: string): Promise<number[]> {
 // }
 
 export async function getClients(): Promise<client_union_t[]> {
-  const userFields = zodKeys(user_schema).filter(k => k !== 'type').map(k => `u.${k} as u_${k}`).join(", ");
-  const propertyFields = zodKeys(property_schema).map(k => `p.${k} as p_${k}`).join(", ");
+  const userFields = zodKeys(user_schema)
+    .filter(k => k !== "type")
+    .map(k => `u.${k} as u_${k}`)
+    .join(", ");
+  const propertyFields = zodKeys(property_schema)
+    .map(k => `p.${k} as p_${k}`)
+    .join(", ");
 
-  const qp = `
+
+  const propietariosQuery = `
     SELECT ${userFields}, ${propertyFields}
     FROM users_t u
     LEFT JOIN properties_t p ON u.id = p.propietario_id
     WHERE u.role = ?
   `;
 
-  const qa = `
+  const arrendatariosQuery = `
     SELECT ${userFields}, ${propertyFields}
     FROM users_t u
     LEFT JOIN properties_t p ON u.id = p.arrendatario_id
     WHERE u.role = ?
   `;
 
-  const propietarios = await db.query(qp, [Roles.PROPIETARIO]);
-  const arrendatarios = await db.query(qa, [Roles.ARRENDATARIO]);
+  const propietarios = await db.query(propietariosQuery, [Roles.PROPIETARIO]);
+  const arrendatarios = await db.query(arrendatariosQuery, [Roles.ARRENDATARIO]);
   const rows = [...propietarios, ...arrendatarios];
 
   const clientsMap: Record<number, propietario_t | arrendatario_t> = {};
 
   for (const row of rows) {
-    const user = extractFromRow({...row, u_type: "full"}, "u", user_schema);
-
+    const user = extractFromRow({ ...row, u_type: "safe" }, "u", user_union_schema);
     const prop = extractFromRow(row, "p", property_schema, true);
-    let property = null;
     const property_parse = property_schema.safeParse(prop);
-    if (property_parse.success) 
-      property = property_parse.data;
-    if (!user)
-      continue; // Skip if user is null or invalid
+    const property = property_parse.success ? property_parse.data : null;
+
+    if (!user) continue;
 
     if (user.role === Roles.PROPIETARIO) {
       if (!clientsMap[user.id]) {
+        // Calculate saldo_a_pagar
+        const rows = await db.query(
+          `SELECT SUM(monto) as saldo FROM pagos_t 
+           WHERE usuario_id = ? AND tipo = TRUE AND pagado = FALSE`,
+          [user.id]
+        );
+        const saldo_a_pagar = Number(rows[0]?.saldo ?? 0);
+
         clientsMap[user.id] = {
           ...user,
+          saldo: saldo_a_pagar,
           propiedades: property ? [property] : [],
         } as propietario_t;
       } else if (property) {
@@ -345,8 +357,17 @@ export async function getClients(): Promise<client_union_t[]> {
 
     if (user.role === Roles.ARRENDATARIO) {
       if (!clientsMap[user.id]) {
+        // Calculate deuda
+        const rows = await db.query(
+          `SELECT SUM(monto) as deuda FROM pagos_t 
+           WHERE usuario_id = ? AND tipo = FALSE AND pagado = FALSE`,
+          [user.id]
+        );
+        const deuda = Number(rows[0]?.deuda ?? 0);
+
         clientsMap[user.id] = {
           ...user,
+          debe: deuda,
           propiedad: property ?? null,
         } as arrendatario_t;
       }
