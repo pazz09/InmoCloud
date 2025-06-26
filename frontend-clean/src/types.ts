@@ -228,9 +228,18 @@ export type response_login_t = z.infer<typeof response_login>;
 
 export const payment_schema = z.object({
   id: z.number(),
-  fecha: z.date(),// z.date({required_error: "La fecha es obligatoria", message: "La fecha es obligatoria"}),
-  //fecha: z.date(),
-
+  fecha:
+    z.date()
+      .transform((date) => {
+        // Ajuste horario: sumar 3 horas
+        date.setHours(date.getHours() + 3);
+        return date;
+      })
+      .refine(
+        (date) =>
+          !date || (date >= minDate && date <= maxDate), // permite null/undefined o fecha válida
+        { message: "La fecha no es válida" }
+      ),
   tipo: z.boolean(), // 0: Giro 1: Depósito
   monto: z.number().gt(0, { message: "Ingrese un monto" }),
   pagado: z.boolean(),
@@ -238,9 +247,14 @@ export const payment_schema = z.object({
   categoria: z.string(),
   detalle: z.string().optional().nullable(),
 
-  usuario_id: z.number().gte(0, { message: "Seleccione un usuario" }),
+  usuario_id: z
+    .number()
+    .optional()
+    .nullable()
+    .refine((val) => val !== null && val !== undefined && val >= 0, {
+      message: "Seleccione un usuario",
+    }),
   propiedad_id: z.number().optional().nullable(),
-
 });
 
 export type payment_t = z.infer<typeof payment_schema>;

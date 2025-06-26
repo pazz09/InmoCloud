@@ -61,7 +61,6 @@ export default function PropertyModal({
           arrendatario_id: arrendatarioId !== "-1" ? Number(arrendatarioId) : null,
           fecha_arriendo: new Date(fechaString)
         };
-        console.log(formValues.fecha_arriendo)
 
         const errors: Partial<Record<keyof property_form_arrendatario_t, string>> = {};
         setFormErrors(errors);
