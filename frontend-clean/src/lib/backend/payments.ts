@@ -4,7 +4,8 @@ import {OkPacket, payment_form_data_schema, payment_form_data_t, payment_search_
   payment_t, 
   payment_view_schema, payment_view_t, SQLParam, zodKeys } from "@/types"
 import  db from "@/backend/db";
-import { convertZodError, InvalidFormDataError, NotModifiedError, UnexpectedError } from "./errors";
+import { convertZodError, InvalidFormDataError, NotModifiedError,
+  UnexpectedError } from "./errors";
 
 //import { AppError } from "@/utils/errors"; // Assuming you use this
 //
@@ -23,6 +24,33 @@ export async function searchPayments(
     const whereClauses: string[] = [];
     const values: SQLParam[] = [];
 
+    if (searchParams.cliente) {
+      whereClauses.push(`
+        (
+          LOWER(u.nombre) LIKE LOWER(?) OR
+          LOWER(u.apellidos) LIKE LOWER(?)
+        )
+      `);
+      values.push(searchParams.cliente);
+      values.push(searchParams.cliente);
+      delete searchParams.cliente;
+    }
+
+    if (searchParams.propiedad) {
+      whereClauses.push(`
+      (
+        LOWER(pr.direccion) LIKE LOWER(?) 
+      )
+        
+      `);
+      values.push(`%${searchParams.propiedad}%`);
+      console.log("Q", values)
+      delete searchParams.propiedad;
+    }
+
+    
+    
+
     fields.forEach((key) => {
       const value = searchParams[key as keyof payment_search_params_t];
       if (value !== undefined && value !== null) {
@@ -36,8 +64,8 @@ export async function searchPayments(
       `WHERE ${whereClauses.join(" AND ")}` : "";
     
     const sql = `
-
-    SELECT p.id, p.fecha, p.monto, p.tipo, p.categoria, p.usuario_id, p.propiedad_id,
+    SELECT p.id, p.fecha, p.monto, p.tipo, p.categoria, p.usuario_id,
+      p.propiedad_id,
       p.detalle, u.nombre as cliente, pr.direccion as propiedad, p.pagado
       
     FROM pagos_t p

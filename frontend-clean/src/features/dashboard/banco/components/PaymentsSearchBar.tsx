@@ -1,32 +1,48 @@
+import { payment_search_params_t } from "@/types";
 import { useState } from "react";
-import { Col, Form, Row } from "react-bootstrap";
+import { Button, Col, Form, Row } from "react-bootstrap";
 
-type PaymentsSearchParams = {
-    property_name?: string,
-    date?: Date,
-    paid?: boolean,
-}
+type PaymentsSearchParams = payment_search_params_t;
 
 type Props = {
   onSearch: (params: PaymentsSearchParams) => void;
 };
 
-export default function PaymentsSearchbar() {
+export default function PaymentsSearchbar({onSearch}: Props) {
   const [searchParams, setSearchParams] = useState<PaymentsSearchParams>({})
   return (
     <>
-    <Form className="mb-3">
+    <Form className="">
       <Row className="justify-content-end align-items-end g-2">
+
         <Col xs="auto">
-          <Form.Group controlId = "name">
-            <Form.Label>Nombre propiedad</Form.Label>
+          <Form.Group controlId = "property_name">
+            <Form.Label>Dirección</Form.Label>
             <Form.Control 
-              value= {searchParams.property_name}
-              onChange={(e) => setSearchParams({...searchParams, property_name: e.target.value})}
+            value = {searchParams.propiedad! || ""}
+            onChange = {(e) => {setSearchParams({...searchParams, propiedad: e.target.value !== "" ? e.target.value : undefined})}}
             >
             </Form.Control>
+
           </Form.Group>
         </Col>
+
+        <Col xs="auto">
+            <Form.Group controlId = "user_name">
+              <Form.Label>Nombre cliente</Form.Label>
+              <Form.Control 
+            value = {searchParams.cliente! || ""}
+            onChange = {(e) => {setSearchParams({...searchParams, cliente: e.target.value !== "" ? e.target.value : undefined })}}
+              >
+              </Form.Control>
+
+            </Form.Group>
+        </Col>
+
+        <Col xs="auto" className="d-flex align-items-end">
+          <Button onClick={() => onSearch(searchParams)}>🔎 Buscar</Button>
+        </Col>
+
       </Row>
       
     </Form>

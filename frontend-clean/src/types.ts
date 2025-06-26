@@ -253,6 +253,7 @@ export const payment_view_schema = payment_schema.extend({
 export type payment_view_t = z.infer<typeof payment_view_schema>;
 
 export const payment_search_params = payment_view_schema.partial();
+
 export type payment_search_params_t = z.infer<typeof payment_search_params>;
 
 export const payment_form_data_schema = payment_schema.partial({id: true});

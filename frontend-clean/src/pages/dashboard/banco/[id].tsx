@@ -16,6 +16,7 @@ export default function () {
   const [paymentData, setPaymentData] = useState<payment_view_t| null>(null);
 
   useEffect(()=> {
+    const auth = useAuth();
     const fn = async () => {
       const parsed_payment_id = Number.parseInt(payment_id as string);
       if (!parsed_payment_id) return;
