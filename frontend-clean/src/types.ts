@@ -428,3 +428,19 @@ export const zodKeys = <T extends z.ZodTypeAny>(schema: T): string[] => {
 
 
 
+
+export const report_schema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  filename: z.string(),
+  created_at: z.coerce.date(), // could use z.coerce.date() if you want Date objects!
+  mimetype: z.string().optional(),
+  // Add other fields as above
+});
+
+export const report_view_schema = report_schema.extend({
+  user_name: z.string(),
+})
+
+export type report_t = z.infer<typeof report_schema>;
+export type report_view_t = z.infer<typeof report_view_schema>;
