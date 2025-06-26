@@ -18,6 +18,8 @@ import DeletePaymentPopup from "@/features/dashboard/banco/components/DeletePaym
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatDate } from "@/utils";
+import ReporteModal from "@/features/dashboard/banco/components/ReporteModal";
+import { uploadReport } from "@/services/reports";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({ fecha: z.string() });
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
@@ -27,6 +29,7 @@ export default function DashboardBancoPage() {
   const router = useRouter();
 
   const [showModal, setShowModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [editing, setIsEditing] = useState(false);
 
@@ -127,43 +130,62 @@ export default function DashboardBancoPage() {
     }
   }
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Listado de Pagos", 14, 15);
 
-    const data = banco.pagos.map((p) => [
-      formatDate(p.fecha) ?? "",
-      p.id        ?? "",
-      p.categoria ?? "",
-      p.cliente   ?? "",
-      p.propiedad ?? "",
-      p.detalle   ?? "",
-      p.tipo      && p.monto || "",
-      p.tipo      && ""      || p.monto,
-      p.pagado     ? "Sí" : "No"
-    ]);
+const handleExportPDF = async () => {
+  const doc = new jsPDF();
+  doc.text("Listado de Pagos", 14, 15);
 
-    const fields = [
-      "Fecha",
-      "ID",
-      "Categoría",
-      "Cliente",
-      "Propiedad",
-      "Detalle",
-      "Depósito",
-      "Giro",
-      "Pagado",
-      "Acciones",
-    ];
+  const data = banco.pagos.map((p) => [
+    formatDate(p.fecha) ?? "",
+    p.id        ?? "",
+    p.categoria ?? "",
+    p.cliente   ?? "",
+    p.propiedad ?? "",
+    p.detalle   ?? "",
+    p.tipo      && p.monto || "",
+    p.tipo      && ""      || p.monto,
+    p.pagado     ? "Sí" : "No"
+  ]);
 
-    autoTable(doc, {
-      head: [fields.slice(0, -1)], // sin "Acciones"
-      body: data,
-      startY: 20,
-    });
+  const fields = [
+    "Fecha",
+    "ID",
+    "Categoría",
+    "Cliente",
+    "Propiedad",
+    "Detalle",
+    "Depósito",
+    "Giro",
+    "Pagado",
+    "Acciones",
+  ];
 
-    doc.save("pagos.pdf");
-  };
+  autoTable(doc, {
+    head: [fields.slice(0, -1)],
+    body: data,
+    startY: 20,
+  });
+
+  // Generate a Blob from the PDF
+  const pdfBlob = doc.output("blob");
+
+  // Create FormData
+  const formData = new FormData();
+  formData.append("user_id", "1"); // replace with actual user ID
+  formData.append("pdf", pdfBlob, "pagos.pdf");
+
+  // Send it via fetch
+  const res = await fetch("/api/reports", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    console.error("Error uploading PDF");
+  } else {
+    console.log("PDF uploaded successfully");
+  }
+};
 
 
 
@@ -189,6 +211,56 @@ export default function DashboardBancoPage() {
     propiedad_id: -1,
   })
 
+  async function generarReporte(userId: number): Promise<void> {
+    const token = localStorage.getItem("token")
+    if (!token) return;
+    if (userId === -1) return;
+
+    console.log("Generando reporte para usuario n", userId);
+
+    const doc = new jsPDF();
+    doc.text("Listado de Pagos", 14, 15);
+
+    const data = banco.pagos.map((p) => [
+        formatDate(p.fecha) ?? "",
+        p.id        ?? "",
+        p.categoria ?? "",
+        p.cliente   ?? "",
+        p.propiedad ?? "",
+        p.detalle   ?? "",
+        p.tipo      && p.monto || "",
+        p.tipo      && ""      || p.monto,
+        p.pagado     ? "Sí" : "No"
+    ]);
+
+    const fields = [
+      "Fecha",
+      "ID",
+      "Categoría",
+      "Cliente",
+      "Propiedad",
+      "Detalle",
+      "Depósito",
+      "Giro",
+      "Pagado",
+      "Acciones",
+    ];
+
+    autoTable(doc, {
+      head: [fields.slice(0, -1)],
+      body: data,
+      startY: 20,
+    });
+
+    const pdfBlob = doc.output("blob");
+    const file = new File([pdfBlob], "reporte.pdf", { type: "application/pdf" });
+
+    const res = await uploadReport(userId, file, token);
+    if (res.status === "success") {
+      addSuccess("Reporte generado correctamente");
+    }
+  }
+
   return (<>
     <NavigationBar />
     <Container className="mt-5">
@@ -196,8 +268,8 @@ export default function DashboardBancoPage() {
 
       <div className="d-flex flex-row mb-3 align-items-end justify-content-end  gap-2">
         <PaymentsSearchBar onSearch = {(params) => {banco.handleSearch(params)}}/>
-        <Button variant="outline-danger" className="h-50 align-self-end" onClick={handleExportPDF}>
-          Exportar a PDF
+        <Button variant="primary" className="h-50 align-self-end" onClick={() => setShowReportModal(true)} >
+          Generar Reporte
         </Button>
       </div>
 
@@ -211,6 +283,12 @@ export default function DashboardBancoPage() {
       />
 
       <TimedAlerts alerts={visibleAlerts} onDismiss={() => { }} />
+
+      <ReporteModal
+        show={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={generarReporte}
+      />
 
       <PaymentModal
         show={showModal}
