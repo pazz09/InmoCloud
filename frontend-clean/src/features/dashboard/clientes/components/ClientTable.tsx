@@ -109,7 +109,7 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
           {sortedUsers.length === 0 ? (
             <tr>
               <td colSpan={6} className="text-center">
-                No hay usuarios registrados
+                No hay usuarios para mostrar
               </td>
             </tr>
           ) : (

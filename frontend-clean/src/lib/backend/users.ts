@@ -188,54 +188,41 @@ export async function login(rut: string, password: string):
 
 
 
-export async function searchUsers(params: user_search_t): Promise<user_t[]> {
-  // Validar parámetros con Zod
-  const search = user_search_schema.parse(params);
+export async function searchUsers(searchParams: user_search_t): Promise<user_t[]> {
+  let where = [];
+  let params: any[] = [];
+  console.log(searchParams)
 
-  // Construcción dinámica del WHERE
-  const whereClauses: string[] = [];
-  const values: SQLParam[] = [];
-
-  if (search.name) {
-    whereClauses.push(`
-    (
-      LOWER(u.nombre) LIKE LOWER(?) OR
-      LOWER(u.apellidos) LIKE LOWER(?) OR
-      LOWER(CONCAT(u.nombre, ' ', u.apellidos)) LIKE LOWER(?)
-    )
-  `);
-    const pattern = `%${search.name}%`;
-    values.push(pattern, pattern, pattern);
+  // Filtro nombre
+  if (searchParams['nombre'] != null) {
+    params.push(`%${searchParams['nombre']}%`);
+    where.push(`(u.nombre LIKE ? OR u.apellidos LIKE ?)`);
+    params.push(`%${searchParams['nombre']}%`); // segundo ?
   }
 
-  if (search.property_name) {
-    whereClauses.push(`
-      EXISTS (
-        SELECT 1
-        FROM properties_t p
-        WHERE (p.arrendatario_id = u.id OR p.propietario_id = u.id)
-        AND p.direccion LIKE ?
-      )
-    `);
-    values.push(`%${search.property_name}%`);
+  // Filtro rut
+  if (searchParams['rut'] != null) {
+    params.push(searchParams['rut']);
+    where.push(`u.rut = ?`);
   }
 
-  const where = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  // Filtro rol
+  if (searchParams['role'] != null) {
+    params.push(searchParams['role']);
+    where.push(`u.role = ?`);
+  }
 
   // Obtener columnas válidas para SELECT (sin "type")
   const keys = zodKeys(user_schema).filter(k => k !== "type");
   // console.log("Valid keys for user schema:", keys);
   const columns = keys.map(k => `u.${k}`).join(", ");
 
-  const q = `
+  const sql = `
     SELECT ${columns}
     FROM users_t u
-    ${where}
-  `;
-
-  // console.log("Executing search query:", q, "with values:", values);
-
-  const rows = await db.query(q, values);
+    ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+  `
+  const rows = await db.query(sql, params);
 
   // Parsear con schema completo (agregar "type" manualmente)
   const parsed = z.array(user_schema).parse(
@@ -243,26 +230,6 @@ export async function searchUsers(params: user_search_t): Promise<user_t[]> {
   );
 
   return parsed;
-}
-
-
-
-/**
- * Returns all users (unsafe) with or without filters.
- * Delegates to either getUsers() or searchUsers().
- */
-
-export async function getUsersFiltered(params?: user_search_t): Promise<user_t[]> {
-  const safe_params = user_search_schema.safeParse(params);
-  const hasFilters = safe_params.data;
-
-  if (hasFilters) {
-    return await searchUsers(params!);
-  }
-
-  const users = await getUsers();
-  return users;
-
 }
 
 

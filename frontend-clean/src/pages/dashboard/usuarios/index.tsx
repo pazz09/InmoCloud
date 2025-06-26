@@ -16,9 +16,10 @@ import { useUserList } from "@/features/dashboard/usuarios/hooks/useUserList";
 // import { Head } from "next/document";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { Container } from "react-bootstrap";
+import { Button, Container } from "react-bootstrap";
 import { createUser, editUser } from "@/services/user";
 import  { AppError } from "@/utils/errors"
+import UserSearchBar from "@/features/common/components/UserSearchBar";
 
 const initialValues = {name: "", role: "", rut: "", passwordHash: ""}
 
@@ -26,7 +27,7 @@ export default function UsersDashboard() {
   const [showModal, setShowModal] = useState(false);
   const auth = useAuth();
   const router = useRouter();
-  const { users, loading, error, searchUsers, refresh } = useUserList();
+  const { users, searchUsers, refresh } = useUserList();
 
   const { visibleAlerts, addError, addSuccess, dismissAlert } = useTimedAlerts();
 
@@ -200,13 +201,36 @@ const confirmDelete = async () => {
   //   }
   // }, [auth.isAuthenticated, router]);
 
+  const [ token, setToken ] = useState("");
+  useEffect(() => {
+    setToken(localStorage.getItem("token")!);
+  }, []);
+
+  const handleSearch = (params: {
+    name?: string;
+    role?: UserRoleEnum;
+    rut?: string;
+  }) => {
+    searchUsers(params);
+  };
+
 
   return (
     <>
     <NavigationBar />
     <Container className="mt-5">
-    <h2 className="mb-4 text-left">Lista de Usuarios</h2>
-    {users ? <UserTable users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
+      <h2 className="mb-4 text-left">Lista de Usuarios</h2>
+      <UserSearchBar onSearch={handleSearch} />
+      {users && (
+        <>
+        {users ? <UserTable users={users} onEdit={onUserEdit} onDelete={onUserDelete} /> : null}
+        </>
+      )}
+      <div className="text-end mb-3">
+        <Button variant="success" onClick={onUserAdd}>
+          Agregar Usuario
+        </Button>
+      </div>
     </Container>
 
     <TimedAlerts alerts={visibleAlerts} onDismiss={dismissAlert}/>

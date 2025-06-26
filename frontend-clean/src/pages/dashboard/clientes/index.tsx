@@ -189,7 +189,7 @@ const confirmDelete = async () => {
   const handleSearch = (params: {
     name?: string;
     role?: UserRoleEnum;
-    property_name?: string;
+    rut?: string;
   }) => {
     searchClients(params);
   };

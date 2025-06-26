@@ -50,8 +50,6 @@ export async function searchProperties(searchParams: property_search_t)
   ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
   `
 
-  console.log(sql)
-
   const results = await db.query(sql, params);
   //console.log("Results:", results);
   const transformed = results.map((row: { valor: number; arrendatario_id: number,  propietario_nombre: string; propietario_apellidos: string; arrendatario_nombre: string; arrendatario_apellidos: string; })=> ({
