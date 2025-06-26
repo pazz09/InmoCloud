@@ -13,7 +13,7 @@ import UserSearchBar from "@/features/common/components/UserSearchBar";
 import { useClientList } from "@/features/dashboard/clientes/hooks/useClientList";
 import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import { useState } from "react";
-import { Container } from "react-bootstrap";
+import { Button, Container } from "react-bootstrap";
 import { createUser, editUser } from "@/services/user"
 import { useRouter } from "next/router";
 import { AppError } from "@/utils/errors";
@@ -202,9 +202,15 @@ const confirmDelete = async () => {
         <UserSearchBar onSearch={handleSearch} />
         {users && (
           <>
-          {users ? <ClientTable onView = {()=> {}} users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
+          {users ? <ClientTable onView = {(c) => router.push(`/dashboard/clientes/${c.id}`)} 
+          users={users} onEdit={onUserEdit} onAdd={onUserAdd} onDelete={onUserDelete} /> : null}
           </>
         )}
+        <div className="text-end mb-3">
+          <Button variant="success" onClick={onUserAdd}>
+            Agregar Cliente
+          </Button>
+        </div>
       </Container>
       <UserModal
         show={showModal} 

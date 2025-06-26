@@ -78,7 +78,6 @@ export default function () {
             <tr><th>Monto</th><td>${paymentData.monto.toLocaleString()}</td></tr>
             <tr><th>Pagado</th><td>{paymentData.pagado ? "Sí" : "No"}</td></tr>
             <tr><th>Categoría</th><td>{paymentData.categoria}</td></tr>
-            <tr><th>Cliente</th><td>{paymentData.cliente}</td></tr>
             <tr><th>Detalle</th><td>{paymentData.detalle || "—"}</td></tr>
           </tbody>
         </Table>

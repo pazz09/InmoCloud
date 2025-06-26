@@ -16,7 +16,7 @@ interface ClientTableProps {
 }
 
 
-type SortKey = "id" | "nombre" | "role" | "canon" | "ficha_propiedad";
+type SortKey = "id" | "nombre" | "role" | "canon" | "ficha_propiedad" | "rut";
 type SortDirection = "asc" | "desc";
 
 export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: ClientTableProps) {
@@ -92,6 +92,9 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
             <th onClick={() => handleSort("nombre")} style={{ cursor: "pointer" }}>
               Nombre {sortIcon("nombre")}
             </th>
+            <th onClick={() => handleSort("rut")} style={{ cursor: "pointer" }}>
+              RUT {sortIcon("rut")}
+            </th>
             <th onClick={() => handleSort("role")} style={{ cursor: "pointer" }}>
               Rol {sortIcon("role")}
             </th>
@@ -117,6 +120,7 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
               <tr key={user.id}>
                 <td>{user.id}</td>
                 <td>{`${user.nombre} ${user.apellidos}`}</td>
+                <td>{user.rut}</td>
                 <td>{isArrendatario(user.role) ? "A" : "P"}</td>
                 <td>
                   {isArrendatario(user.role) && ((user as arrendatario_t).propiedad
@@ -160,12 +164,6 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
           )}
         </tbody>
       </Table>
-
-      <div className="text-end mb-3">
-        <Button variant="success" onClick={onAdd}>
-          + Agregar Usuario
-        </Button>
-      </div>
     </>
   );
 }
