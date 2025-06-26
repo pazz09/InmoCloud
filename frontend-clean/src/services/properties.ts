@@ -12,7 +12,6 @@ export async function fetchProperties(
   token: string, filters?: property_search_t)
 : Promise<property_view_t[]> {
 
-  try {
     const res = await fetch("/api/properties/search", {
       method: "POST",
       headers: {
@@ -23,25 +22,13 @@ export async function fetchProperties(
     });
     const json = await res.json();
     const schema = response_schema(z.array(property_view_schema));
-    const parsedRes = schema.parse(json);
+    const response = schema.parse(json);
     if (!res.ok) {
       const error_data = error_response_schema(z.null()).parse(json);
       throw new AppError(error_data.code, res.status, error_data.message);
     }
+    return response.data!;
 
-    return parsedRes.data!;
-
-  } catch (e) {
-    if (e instanceof z.ZodError) {
-      console.log(e)
-      throw new AppError(
-        "FAILED_PARSE", -1, "Respuesta inválida del servidor (FAILED_TO_PARSE)"
-      )
-    } else if (e instanceof AppError) {
-      throw e;
-    }
-    throw new AppError("UNKNOWN_ERROR", -1, "Error desconocido");
-  }
 }
 
 export async function createProperty(values: property_form_add_t, token: string) {
@@ -56,15 +43,10 @@ export async function createProperty(values: property_form_add_t, token: string)
 
   const json = await res.json();
   
-  try {
     const response = response_schema(property_view_schema).parse(json);
     if (res.ok) return response.data;
-
-    const error = response as error_response_t<z.ZodNull>;
+    const error = error_response_schema(property_view_schema).parse(json)
     throw new AppError(error.code, res.status, error.message)
-  } catch(e) {
-    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
-  }
 }
 
 export async function editProperty(id: number, values: property_form_edit_t, token: string) {
@@ -79,15 +61,11 @@ export async function editProperty(id: number, values: property_form_edit_t, tok
 
   const json = await res.json();
   
-  try {
-    const response = response_schema(property_view_schema).parse(json);
-    if (res.ok) return response.data;
+  const response = response_schema(property_view_schema).parse(json);
+  if (res.ok) return response.data;
+  const error = error_response_schema(property_view_schema).parse(json)
+  throw new AppError(error.code, res.status, error.message)
 
-    const error = response as error_response_t<z.ZodNull>;
-    throw new AppError(error.code, res.status, error.message)
-  } catch(e) {
-    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
-  }
 }
 
 export async function deleteProperty(id: number, token: string) {
@@ -100,15 +78,9 @@ export async function deleteProperty(id: number, token: string) {
 
   const json = await res.json();
   
-  try {
-    if (res.ok) return;
-
-    const error = json as error_response_t<z.ZodNull>;
-    throw new AppError(error.code, res.status, error.message);
-  } catch (e) {
-    if (e instanceof AppError) throw e;
-    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
-  }
+  if (res.ok) return;
+  const error = error_response_schema(property_view_schema).parse(json)
+  throw new AppError(error.code, res.status, error.message)
 }
 
 /*
@@ -130,15 +102,9 @@ export async function asignarArrendatario(id: number, values: property_form_arre
   });
 
   const json = await res.json();
-  
-  try {
-    const response = response_schema(property_view_schema).parse(json);
-    if (res.ok) return response.data;
+  const response = response_schema(property_view_schema).parse(json);
+  if (res.ok) return response.data;
 
-    const error = response as error_response_t<z.ZodNull>;
-    throw new AppError(error.code, res.status, error.message);
-  } catch (e) {
-    if (e instanceof AppError) throw e;
-    throw new AppError("FRONTEND_ERROR", res.status, "Respuesta inválida del servidor");
-  }
+  const error = response as error_response_t<z.ZodNull>;
+  throw new AppError(error.code, res.status, error.message);
 }
