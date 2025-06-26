@@ -77,9 +77,7 @@ export async function searchClients(params: user_search_t): Promise<client_union
   console.log(rows)
 
   for (const row of rows) {
-    console.log("Iterating")
     const user = extractFromRow({...row, u_type: "full"}, "u", user_schema);
-    console.log(user)
     const prop = extractFromRow(row, "p", property_schema, true);
 
     let property = null;
@@ -89,13 +87,29 @@ export async function searchClients(params: user_search_t): Promise<client_union
 
     if (user.role === Roles.PROPIETARIO) {
       if (!clientsMap[user.id]) {
-        clientsMap[user.id] = { ...user, propiedades: property ? [property] : [] } as propietario_t;
+        const rows = await db.query(
+          `SELECT SUM(monto) as saldo FROM pagos_t 
+          WHERE usuario_id = ? AND tipo = TRUE AND pagado = FALSE`,
+            [user.id]
+        );
+
+        const saldo_a_pagar = Number(rows?.[0]?.saldo ?? 0);
+        console.log("Iterating", user?.nombre, saldo_a_pagar)
+        clientsMap[user.id] = { ...user, saldo: saldo_a_pagar, propiedades: property ? [property] : [] } as propietario_t;
+
       } else if (property) {
         (clientsMap[user.id] as propietario_t).propiedades?.push(property);
       }
     } else if (user.role === Roles.ARRENDATARIO) {
       if (!clientsMap[user.id]) {
-        clientsMap[user.id] = { ...user, propiedad: property ?? null } as arrendatario_t;
+        const rows = await db.query(
+          `SELECT SUM(monto) as deuda FROM pagos_t 
+          WHERE usuario_id = ? AND tipo = FALSE AND pagado = FALSE`,
+            [user.id]
+        );
+        const deuda = Number(rows?.[0]?.deuda ?? 0);
+        console.log("Iterating", user?.nombre, deuda)
+        clientsMap[user.id] = { ...user, debe: deuda, propiedad: property ?? null } as arrendatario_t;
       }
     }
   }
