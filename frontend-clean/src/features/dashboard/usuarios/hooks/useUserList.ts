@@ -79,7 +79,9 @@ export function useUserList() {
         setUsers(data);
       } catch (err: unknown) {
         const message = (err as Error).message || 'Error inesperado.';
+        /*
         if (message === 'No autorizado') router.push('/login');
+        */
         setError(message);
       } finally {
         setLoading(false);
