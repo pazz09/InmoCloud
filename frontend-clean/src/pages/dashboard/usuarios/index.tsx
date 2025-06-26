@@ -201,11 +201,6 @@ const confirmDelete = async () => {
   //   }
   // }, [auth.isAuthenticated, router]);
 
-  const [ token, setToken ] = useState("");
-  useEffect(() => {
-    setToken(localStorage.getItem("token")!);
-  }, []);
-
   const handleSearch = (params: {
     name?: string;
     role?: UserRoleEnum;
