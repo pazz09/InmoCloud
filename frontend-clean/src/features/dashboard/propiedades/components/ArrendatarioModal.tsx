@@ -29,18 +29,10 @@ export default function PropertyModal({
 
   useEffect(() => {
     if (show) {
-        if (initialFormValues) {
-            setFormValues({
-                arrendatario_id: initialFormValues.arrendatario_id,
-                fecha_arriendo: initialFormValues.fecha_arriendo
-            });
-        } else {
-            // Reset form for new property
-            setFormValues({
-                arrendatario_id: -1,
-                fecha_arriendo: null
-            });
-        }
+      setFormValues({
+          arrendatario_id: initialFormValues?.arrendatario_id,
+          fecha_arriendo: initialFormValues?.fecha_arriendo
+      });
     }
     setFormErrors({});
   }, [show, initialFormValues]);
@@ -52,10 +44,11 @@ export default function PropertyModal({
     
     setFormValues((prev) => {
       if (name === "arrendatario_id") {
-        return { ...prev, [name]: Number(value) };
-      } else {
-        return { ...prev, [name]: value };
+        return { ...prev, arrendatario_id: Number(value) };
+      } else if (name === "fecha_arriendo") {
+        return { ...prev, fecha_arriendo: new Date(value) };
       }
+      return prev; // Asegura que siempre haya retorno
     });
   };
 
@@ -97,6 +90,22 @@ export default function PropertyModal({
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               {formErrors.arrendatario_id}
+            </Form.Control.Feedback>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Fecha de contrato</Form.Label>
+          <Form.Control
+            type="date"
+            name="fecha_arriendo"
+            value={
+              formValues.fecha_arriendo
+                ? `${formValues.fecha_arriendo.getFullYear()}-${String(formValues.fecha_arriendo.getMonth() + 1).padStart(2, '0')}-${String(formValues.fecha_arriendo.getDate()).padStart(2, '0')}`
+                : ""
+            }
+            onChange={handleChange}
+          />
+            <Form.Control.Feedback type="invalid">
+              {formErrors.fecha_arriendo}
             </Form.Control.Feedback>
           </Form.Group>
         </Form>
