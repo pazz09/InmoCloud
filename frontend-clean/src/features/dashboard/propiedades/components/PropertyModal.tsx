@@ -30,10 +30,11 @@ export default function PropertyModal({
   });
 
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof property_form_add_t, string>>>({});
+  const [reset, setReset] = useState(true);
   const { users } = useUserList();
 
   useEffect(() => {
-    if (show) {
+    if (show && reset) {
       if (editing && initialFormValues) {
         setFormValues({
           rol: initialFormValues.rol,
@@ -52,9 +53,14 @@ export default function PropertyModal({
           propietario_id: -1,
         });
       }
+      setReset(false);
     }
     setFormErrors({});
   }, [show, editing, initialFormValues]);
+
+  useEffect(() => {
+    if (show == false) setReset(true)
+  }, [show])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

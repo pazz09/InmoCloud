@@ -191,6 +191,12 @@ export default function PropiedadesPage() {
           </Modal.Header>
           <Modal.Body>
             <p>¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.</p>
+            {selectedProperty &&
+              <>
+                <p className="text-end"><b>Ficha propiedad: </b>{selectedProperty.direccion}</p>
+                <p className="text-end"><b>Propietario: </b>{selectedProperty.propietario}</p>
+              </>
+            }
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModal(false)}>

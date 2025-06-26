@@ -2,6 +2,7 @@ import { property_form_add_schema, property_form_add_t, property_form_arrendatar
 import { useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { useUserList } from "../../usuarios/hooks/useUserList";
+import { fechaToString } from "@/utils/fecha";
 
 interface PropertyModalProps {
   show: boolean;
@@ -18,39 +19,33 @@ export default function PropertyModal({
   initialFormValues,
   mode = null
 }: PropertyModalProps) {
-  
-  const [formValues, setFormValues] = useState<property_form_arrendatario_t>({
-    arrendatario_id: -1,
-    fecha_arriendo: null
-  });
+  const [arrendatarioId, setArrendatarioId] = useState<string>("-1");
+  const [fechaString, setFechaString] = useState<string>("");
+  const [reset, setReset] = useState(true);
 
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof property_form_arrendatario_t, string>>>({});
   const { users } = useUserList();
 
   useEffect(() => {
-    if (show) {
-      setFormValues({
-          arrendatario_id: initialFormValues?.arrendatario_id,
-          fecha_arriendo: initialFormValues?.fecha_arriendo
-      });
+    if (show && reset && initialFormValues) {
+      if (initialFormValues.arrendatario_id)
+        setArrendatarioId(initialFormValues.arrendatario_id.toString());
+      else
+        setArrendatarioId("-1");
+
+      if (initialFormValues.fecha_arriendo)
+        setFechaString(fechaToString(initialFormValues.fecha_arriendo));
+      else
+        setFechaString("");
+
+      setReset(false)
     }
     setFormErrors({});
   }, [show, initialFormValues]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    
-    setFormValues((prev) => {
-      if (name === "arrendatario_id") {
-        return { ...prev, arrendatario_id: Number(value) };
-      } else if (name === "fecha_arriendo") {
-        return { ...prev, fecha_arriendo: new Date(value) };
-      }
-      return prev; // Asegura que siempre haya retorno
-    });
-  };
+  useEffect(() => {
+    if (show == false) setReset(true)
+  }, [show])
 
   const validateForm = (): boolean => {
     const errors: Partial<Record<keyof property_form_arrendatario_t, string>> = {};
@@ -61,8 +56,17 @@ export default function PropertyModal({
 
   const handleSubmit = () => {
     if (validateForm()) {
-        formValues.arrendatario_id = formValues.arrendatario_id !== -1 ? formValues.arrendatario_id : null
-        onSubmit(formValues);
+        console.log(fechaString)
+        const formValues = {
+          arrendatario_id: arrendatarioId !== "-1" ? Number(arrendatarioId) : null,
+          fecha_arriendo: new Date(fechaString)
+        };
+        console.log(formValues.fecha_arriendo)
+
+        const errors: Partial<Record<keyof property_form_arrendatario_t, string>> = {};
+        setFormErrors(errors);
+        if(Object.keys(errors).length === 0)
+          onSubmit(formValues);
     }
   };
 
@@ -78,8 +82,8 @@ export default function PropertyModal({
             <Form.Label>Arrendatario *</Form.Label>
             <Form.Select
               name="arrendatario_id"
-              value={formValues.arrendatario_id ? formValues.arrendatario_id : -1}
-              onChange={handleChange}
+              value={arrendatarioId}
+              onChange={(e) => setArrendatarioId(e.target.value)}
             >
               <option value={-1}>Seleccione un arrendatario</option>
               {users?.map((user) => (
@@ -97,12 +101,8 @@ export default function PropertyModal({
           <Form.Control
             type="date"
             name="fecha_arriendo"
-            value={
-              formValues.fecha_arriendo
-                ? `${formValues.fecha_arriendo.getFullYear()}-${String(formValues.fecha_arriendo.getMonth() + 1).padStart(2, '0')}-${String(formValues.fecha_arriendo.getDate()).padStart(2, '0')}`
-                : ""
-            }
-            onChange={handleChange}
+            value={fechaString}
+            onChange={(e) => setFechaString(e.target.value)}
           />
             <Form.Control.Feedback type="invalid">
               {formErrors.fecha_arriendo}

@@ -25,7 +25,7 @@ export default function TimedAlerts({ alerts, onDismiss }: TimedAlertsProps) {
         top: '10px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 1050,
+        zIndex: 2000,
         width: '100%',
         maxWidth: '500px',
         pointerEvents: 'none',
