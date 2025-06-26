@@ -1,5 +1,6 @@
 import { property_view_t } from "@/types";
 import { Table, Button, ButtonGroup } from "react-bootstrap";
+import { FaEdit, FaEye, FaTrash, FaUser } from "react-icons/fa";
 
 const fields = [
   "Folio",
@@ -45,37 +46,42 @@ export const TablaPropiedades = ({
               <td>{propiedad.arrendatario || "Sin arrendatario"}</td>
               <td>${propiedad.valor.toLocaleString()}</td>
               <td>-</td>
-              <td>
-                <ButtonGroup size="sm">
-                  <Button 
-                    variant="outline-primary" 
-                    onClick={() => onView(propiedad)}
-                    title="Ver detalles"
-                  >
-                    Ver
-                  </Button>
-                  <Button 
-                    variant="outline-secondary" 
-                    onClick={() => onEdit(propiedad)}
-                    title="Editar propiedad"
-                  >
-                    Editar
-                  </Button>
-                  <Button 
-                    variant="outline-danger" 
-                    onClick={() => onDelete(propiedad)}
-                    title="Eliminar propiedad"
-                  >
-                    Eliminar
-                  </Button>
-                  <Button 
-                    variant="outline-info" 
-                    onClick={() => onArrendatario(propiedad)}
-                    title="Asignar arrendatario"
-                  >
-                    Arriendo
-                  </Button>
-                </ButtonGroup>
+              <td className="text-center">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="me-1"
+                  onClick={() => onView(propiedad)}
+                >
+                  <FaEye />
+                </Button>
+
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  className="me-1"
+                  onClick={() => onEdit(propiedad)}
+                >
+                  <FaEdit />
+                </Button>
+
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  className="me-1"
+                  onClick={() => onDelete(propiedad)}
+                >
+                  <FaTrash />
+                </Button>
+
+                <Button
+                  variant="outline-info"
+                  size="sm"
+                  className="me-1"
+                  onClick={() => onArrendatario(propiedad)}
+                >
+                  <FaUser />
+                </Button>
               </td>
             </tr>
           ))}
