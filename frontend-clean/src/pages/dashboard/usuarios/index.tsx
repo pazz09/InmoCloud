@@ -218,7 +218,8 @@ const confirmDelete = async () => {
       <UserSearchBar onSearch={handleSearch} />
       {users && (
         <>
-        {users ? <UserTable users={users} onEdit={onUserEdit} onDelete={onUserDelete} /> : null}
+        {users ? <UserTable onView = {(u) => router.push(`/dashboard/usuarios/${u.id}`)} 
+        users={users} onEdit={onUserEdit} onDelete={onUserDelete} /> : null}
         </>
       )}
       <div className="text-end mb-3">

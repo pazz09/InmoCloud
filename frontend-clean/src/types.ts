@@ -199,7 +199,7 @@ export type users_list_t = z.infer<typeof users_list_schema>;
 
 
 // Búsqueda de usuario (esquema)
-export const user_search_schema = user_schema.partial();
+export const user_search_schema = user_schema.extend({nombre: z.string(), rut: z.string()}).partial();
 export type user_search_t = z.infer<typeof user_search_schema>;
 
 export const user_response_schema = response_schema(user_schema);

@@ -1,13 +1,15 @@
 import { Table, Button } from "react-bootstrap";
 import { user_union_t } from "@/types";
+import { FaEdit, FaEye, FaTrash } from "react-icons/fa";
 
 interface UserTableProps {
   users: user_union_t[];
   onEdit: (user: user_union_t) => void;
   onDelete: (user: user_union_t) => void;
+  onView: (user: user_union_t) => void;
 }
 
-export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
+export default function UserTable({ users, onEdit, onDelete, onView }: UserTableProps) {
   return (
     <>
       <Table striped bordered hover responsive>
@@ -23,7 +25,7 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan={5} className="text-center">
+              <td colSpan={7} className="text-center">
                 No hay usuarios para mostrar
               </td>
             </tr>
@@ -34,21 +36,29 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                 <td>{`${user.nombre} ${user.apellidos}`}</td>
                 <td>{user.rut}</td>
                 <td>{user.role}</td>
-                <td>
+                <td className="text-center">
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    className="me-2"
+                    className="me-1"
+                    onClick={() => onView(user)}
+                  >
+                    <FaEye />
+                  </Button>
+                  <Button
+                    variant="outline-success"
+                    size="sm"
+                    className="me-1"
                     onClick={() => onEdit(user)}
                   >
-                    Editar
+                    <FaEdit />
                   </Button>
                   <Button
                     variant="outline-danger"
                     size="sm"
                     onClick={() => onDelete(user)}
                   >
-                    Eliminar
+                    <FaTrash />
                   </Button>
                 </td>
               </tr>

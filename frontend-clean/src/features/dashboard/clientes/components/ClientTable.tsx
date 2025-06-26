@@ -12,14 +12,13 @@ interface ClientTableProps {
   onEdit: (user: client_union_t) => void;
   onDelete: (user: client_union_t) => void;
   onView: (user: client_union_t) => void;
-  onAdd: () => void;
 }
 
 
 type SortKey = "id" | "nombre" | "role" | "canon" | "ficha_propiedad" | "rut";
 type SortDirection = "asc" | "desc";
 
-export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: ClientTableProps) {
+export default function ClientTable({ users, onEdit, onDelete, onView }: ClientTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [searchText, setSearchText] = useState("");
@@ -111,7 +110,7 @@ export default function ClientTable({ users, onEdit, onDelete, onAdd, onView }: 
         <tbody>
           {sortedUsers.length === 0 ? (
             <tr>
-              <td colSpan={6} className="text-center">
+              <td colSpan={7} className="text-center">
                 No hay usuarios para mostrar
               </td>
             </tr>

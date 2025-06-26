@@ -11,6 +11,7 @@ import {
 } from "@/types";
 import { AppError } from "@/utils/errors";
 import { error } from "console";
+import z from "zod";
 
 // CREATE USER
 export async function createUser(values: user_form_data_t, token: string) {
@@ -99,17 +100,13 @@ export async function fetchUserList(
     body: JSON.stringify(searchParams),
   });
 
-  if (!res.ok) {
-    const errorData = await res.json(); // You may want to log or throw this
-    throw new Error('No autorizado');
-  }
-
   const json = await res.json();
-  const parsed = response_schema(users_list_schema).safeParse(json);
-
-  if (!parsed.success) {
-    throw new Error('Error al validar los datos de usuarios.');
+  const schema = response_schema(users_list_schema)
+  const parsedRes = schema.parse(json);
+  if (!res.ok) {
+    const error_data = error_response_schema(z.null()).parse(json);
+    throw new AppError(error_data.code, res.status, error_data.message);
   }
 
-  return parsed.data.data!;
+  return parsedRes.data!;
 };
