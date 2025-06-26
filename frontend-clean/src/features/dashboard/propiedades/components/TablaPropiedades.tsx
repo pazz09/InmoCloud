@@ -52,7 +52,7 @@ export const TablaPropiedades = ({
               <td>{propiedad.propietario}</td>
               <td>{propiedad.arrendatario || "Sin arrendatario"}</td>
               <td>${propiedad.valor.toLocaleString()}</td>
-              <td>-</td>
+              <td>{propiedad.arrendatario ? `$${propiedad.deuda}` : ""}</td>
               <td className="text-center">
                 <Button
                   variant="outline-primary"

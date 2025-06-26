@@ -133,7 +133,7 @@ export default function ClientTable({ users, onEdit, onDelete, onView }: ClientT
                     ? `$${(user as arrendatario_t).propiedad!.valor.toLocaleString("es-CL")}`
                     : "No asignado") || "N/A"}
                 </td>
-                <td>{isArrendatario(user.role) && (user as arrendatario_t).debe || (user as propietario_t).saldo}</td>
+                <td>{isArrendatario(user.role) ? (user as arrendatario_t).debe : (user as propietario_t).saldo}</td>
                 <td className="text-center">
                   <Button
                     variant="outline-primary"

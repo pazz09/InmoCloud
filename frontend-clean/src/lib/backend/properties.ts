@@ -4,78 +4,86 @@ import { PropertyHasPayments, RolAlreadyExistsError, TenantAlreadyAssigned, Unex
 import { SqlError } from "mariadb";
 
 
-/// GET PROPERTIES
 export async function searchProperties(searchParams: property_search_t)
 : Promise<property_view_t[]> {
-  console.log(searchParams)
+  console.log(searchParams);
 
   let where = [];
   let params: any[] = [];
 
-  // Filtro propietario
-  if (searchParams['propietario'] != null) {
-    params.push(`%${searchParams['propietario']}%`);
+  // Filters
+  if (searchParams.propietario != null) {
+    params.push(`%${searchParams.propietario}%`);
     where.push(`(propietario.nombre LIKE ? OR propietario.apellidos LIKE ?)`);
-    params.push(`%${searchParams['propietario']}%`); // segundo ?
+    params.push(`%${searchParams.propietario}%`);
   }
 
-  // Filtro arrendatario
-  if (searchParams['arrendatario'] != null) {
-    params.push(`%${searchParams['arrendatario']}%`);
+  if (searchParams.arrendatario != null) {
+    params.push(`%${searchParams.arrendatario}%`);
     where.push(`(arrendatario.nombre LIKE ? OR arrendatario.apellidos LIKE ?)`);
-    params.push(`%${searchParams['arrendatario']}%`);
+    params.push(`%${searchParams.arrendatario}%`);
   }
 
-  // Filtro dirección
-  if (searchParams['direccion']) {
-    params.push(`%${searchParams['direccion']}%`);
+  if (searchParams.direccion) {
+    params.push(`%${searchParams.direccion}%`);
     where.push(`p.direccion LIKE ?`);
   }
 
-  // Filtro dirección
   if (searchParams.id) {
     params.push(searchParams.id);
     where.push(`p.id = ?`);
   }
 
-  // Filtro rol
   if (searchParams.rol) {
     params.push(searchParams.rol);
     where.push(`p.rol = ?`);
   }
 
   const sql = `
-  SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol, p.fecha_arriendo,
-
-  propietario.nombre AS propietario_nombre,
-  propietario.apellidos AS propietario_apellidos,
-
-  arrendatario.nombre AS arrendatario_nombre,
-  arrendatario.apellidos AS arrendatario_apellidos
-  
-  FROM properties_t p
-  JOIN 
-    users_t propietario ON p.propietario_id = propietario.id
-  LEFT JOIN
-    users_t arrendatario ON p.arrendatario_id = arrendatario.id
-
-  ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-
-  ORDER BY p.id;
-  `
+    SELECT 
+      p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol, p.fecha_arriendo,
+      propietario.nombre AS propietario_nombre,
+      propietario.apellidos AS propietario_apellidos,
+      arrendatario.nombre AS arrendatario_nombre,
+      arrendatario.apellidos AS arrendatario_apellidos
+    FROM properties_t p
+    JOIN users_t propietario ON p.propietario_id = propietario.id
+    LEFT JOIN users_t arrendatario ON p.arrendatario_id = arrendatario.id
+    ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+    ORDER BY p.id;
+  `;
 
   const results = await db.query(sql, params);
-  //console.log("Results:", results);
-  const transformed = results.map((row: { valor: number; arrendatario_id: number,  propietario_nombre: string; propietario_apellidos: string; arrendatario_nombre: string; arrendatario_apellidos: string; })=> ({
-    ...row,
-    valor: row.valor ? Number(row.valor) : null,
-    propietario: `${row.propietario_nombre} ${row.propietario_apellidos}`,
-    arrendatario: row.arrendatario_id ? `${row.arrendatario_nombre} ${row.arrendatario_apellidos}` : ""
-  }));
 
-  return property_view_schema.array().parse(transformed);
+  const enriched: any[] = [];
+
+  for (const row of results) {
+    const base = {
+      ...row,
+      valor: row.valor ? Number(row.valor) : null,
+      propietario: `${row.propietario_nombre} ${row.propietario_apellidos}`,
+      arrendatario: row.arrendatario_id
+        ? `${row.arrendatario_nombre} ${row.arrendatario_apellidos}`
+        : "",
+    };
+
+    if (row.arrendatario_id) {
+      const deudaRows = await db.query(
+        `SELECT SUM(monto) as deuda 
+         FROM pagos_t 
+         WHERE usuario_id = ? AND propiedad_id = ? AND tipo = FALSE AND pagado = FALSE`,
+        [row.arrendatario_id, row.id]
+      );
+
+      const deuda = Number(deudaRows?.[0]?.deuda ?? 0);
+      enriched.push({ ...base, deuda });
+    } else {
+      enriched.push(base);
+    }
+  }
+
+  return property_view_schema.array().parse(enriched);
 }
-
 
 export async function addProperty(property: property_form_add_t): Promise<property_view_t> 
 {

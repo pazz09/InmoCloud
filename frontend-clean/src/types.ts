@@ -388,6 +388,7 @@ export type property_form_arrendatario_t = z.infer<typeof property_form_arrendat
 export const property_view_schema = property_schema.extend({
   "propietario": z.string(),
   "arrendatario": z.string().optional().nullable(),
+  "deuda": z.number().optional()
 })
 export type property_view_t = z.infer<typeof property_view_schema>;
 
