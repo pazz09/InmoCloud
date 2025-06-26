@@ -2,8 +2,14 @@ import { error_response_schema, error_response_t, property_form_add_t, property_
 import { AppError } from "@/utils/errors";
 import z from "zod";
 
+export type PropertySearchFilters = {
+  owner_name?: string;
+  tenant_name?: string;
+  address?: string;
+};
+
 export async function fetchProperties(
-  token: string, searchParams: property_search_t)
+  token: string, filters?: property_search_t)
 : Promise<property_view_t[]> {
 
   try {
@@ -13,7 +19,7 @@ export async function fetchProperties(
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify(searchParams),
+      body: JSON.stringify(filters || {}),
     });
     const json = await res.json();
     const schema = response_schema(z.array(property_view_schema));
@@ -103,11 +109,13 @@ export async function deleteProperty(id: number, token: string) {
   }
 }
 
+/*
 export async function viewProperty(id: number, token: string) {
   const searchParams = {id}
   const property = await fetchProperties(token, searchParams);
   return property[0];
 }
+*/
 
 export async function asignarArrendatario(id: number, values: property_form_arrendatario_t, token: string) {
   const res = await fetch(`/api/properties/${id}/arrendatario`, {

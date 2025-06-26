@@ -7,24 +7,31 @@ import { SqlError } from "mariadb";
 /// GET PROPERTIES
 export async function searchProperties(searchParams: property_search_t)
 : Promise<property_view_t[]> {
+  console.log(searchParams)
 
-  const key_map: Record<string, string> = {
-    id: "p.id",
-    rol: "p.rol"
-  };
+  let where = [];
+  let params: any[] = [];
 
-  const fields = zodKeys(property_search_schema);
-  const whereClauses: string[] = []
-  const values: SQLParam[] = [];
-  fields.forEach((key: string) => {
-    const value = searchParams[key as keyof property_search_t];
-    if (value !== undefined && value !== null) {
-      const final_key = key in key_map ? key_map[key] : key;
-      whereClauses.push(`${final_key} = ?`)
-      values.push(value);
-    }
-  });
-  const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  // Filtro propietario
+  if (searchParams['propietario'] != null) {
+    params.push(`%${searchParams['propietario']}%`);
+    where.push(`(propietario.nombre LIKE ? OR propietario.apellidos LIKE ?)`);
+    params.push(`%${searchParams['propietario']}%`); // segundo ?
+  }
+
+  // Filtro arrendatario
+  if (searchParams['arrendatario'] != null) {
+    params.push(`%${searchParams['arrendatario']}%`);
+    where.push(`(arrendatario.nombre LIKE ? OR arrendatario.apellidos LIKE ?)`);
+    params.push(`%${searchParams['arrendatario']}%`);
+  }
+
+  // Filtro dirección
+  if (searchParams['direccion']) {
+    params.push(`%${searchParams['direccion']}%`);
+    where.push(`p.direccion LIKE ?`);
+  }
+
   const sql = `
   SELECT p.id, p.direccion, p.activa, p.valor, p.propietario_id, p.arrendatario_id, p.rol, p.fecha_arriendo,
 
@@ -40,11 +47,13 @@ export async function searchProperties(searchParams: property_search_t)
   LEFT JOIN
     users_t arrendatario ON p.arrendatario_id = arrendatario.id
 
-  ${whereSQL}
+  ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
   `
 
-  const results = await db.query(sql, values);
-  console.log("Results:", results);
+  console.log(sql)
+
+  const results = await db.query(sql, params);
+  //console.log("Results:", results);
   const transformed = results.map((row: { valor: number; arrendatario_id: number,  propietario_nombre: string; propietario_apellidos: string; arrendatario_nombre: string; arrendatario_apellidos: string; })=> ({
     ...row,
     valor: row.valor ? Number(row.valor) : null,

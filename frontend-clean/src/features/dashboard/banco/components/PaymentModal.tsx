@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import z from "zod";
 import { useUserList } from "../../usuarios/hooks/useUserList";
-import { usePropiedadesPage } from "../../propiedades/hooks/usePropiedadesPage";
+import { usePropertyList } from "../../propiedades/hooks/usePropertyList";
 
 const payment_form_data_input_schema = payment_form_data_schema.extend({fecha: z.string()});
 type payment_form_data_input_t = z.infer<typeof payment_form_data_input_schema>;
@@ -40,7 +40,7 @@ export default function PaymentModal({show, onClose, onSubmit, editing, initialF
 
   
   const { users } = useUserList();
-  const { propiedades } = usePropiedadesPage();
+  const { propiedades } = usePropertyList();
 
 
   const [tipo, setTipo] = useState("false");

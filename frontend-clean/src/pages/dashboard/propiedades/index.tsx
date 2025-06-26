@@ -1,18 +1,19 @@
 import NavigationBar from "@/features/common/components/NavigationBar";
 import { Container, Modal, Button } from "react-bootstrap";
 import { TablaPropiedades } from "@/features/dashboard/propiedades/components/TablaPropiedades";
-import { usePropiedadesPage } from "@/features/dashboard/propiedades/hooks/usePropiedadesPage";
 import PropertyModal from "@/features/dashboard/propiedades/components/PropertyModal";
 import { useState } from "react";
 import { property_view_t, property_form_add_t, property_form_edit_t, property_form_arrendatario_t } from "@/types";
-import { asignarArrendatario, createProperty, deleteProperty, editProperty } from "@/services/properties";
+import { asignarArrendatario, createProperty, deleteProperty, editProperty, PropertySearchFilters } from "@/services/properties";
 import { useTimedAlerts } from "@/features/common/hooks/useTimedAlerts";
 import { createUser } from "@/services/user";
 import ArrendatarioModal from "@/features/dashboard/propiedades/components/ArrendatarioModal";
 import TimedAlerts from "@/features/common/components/TimedAlerts";
+import PropertySearchBar from "@/features/dashboard/propiedades/components/PropertySearchBar";
+import { usePropertyList } from "@/features/dashboard/propiedades/hooks/usePropertyList";
 
 export default function PropiedadesPage() {
-  const { propiedades, refresh } = usePropiedadesPage();
+  const { propiedades, searchProperties, refresh } = usePropertyList();
   
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<"view" | "edit" | "delete" | "arrendatario" | null>(null);
@@ -137,6 +138,10 @@ export default function PropiedadesPage() {
     }
   }
 
+  const handleSearch = (params: PropertySearchFilters) => {
+    searchProperties(params);
+  };
+
   return (
     <>
       <NavigationBar />
@@ -144,14 +149,19 @@ export default function PropiedadesPage() {
       
       <Container className="mt-5">
         <h2 className="mb-4">Tabla Propiedades</h2>
+        <PropertySearchBar onSearch={handleSearch} />
         <TablaPropiedades 
-          propiedades={propiedades}
-          onAdd={handleAdd}
+          propiedades={propiedades ? propiedades : []}
           onView={(p) => handleAction("view", p)}
           onEdit={(p) => handleAction("edit", p)}
           onDelete={(p) => handleAction("delete", p)}
           onArrendatario={(p) => handleAction("arrendatario", p)}
         />
+        <div className="mb-3 text-end">
+          <Button variant="success" onClick={handleAdd}>
+            Agregar Propiedad
+          </Button>
+        </div>
       </Container>
       
       {(modalMode === undefined || modalMode === null || modalMode === "edit") && (

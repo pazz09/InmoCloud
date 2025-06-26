@@ -13,7 +13,6 @@ const fields = [
 
 type TablaPropiedadesProps = {
   propiedades: property_view_t[];
-  onAdd: () => void;
   onView: (property: property_view_t) => void;
   onEdit: (property: property_view_t) => void;
   onDelete: (property: property_view_t) => void;
@@ -22,7 +21,6 @@ type TablaPropiedadesProps = {
 
 export const TablaPropiedades = ({
   propiedades,
-  onAdd,
   onView,
   onEdit,
   onDelete,
@@ -30,12 +28,6 @@ export const TablaPropiedades = ({
 }: TablaPropiedadesProps) => {
   return (
     <>
-      <div className="mb-3 text-end">
-        <Button variant="success" onClick={onAdd}>
-          Agregar Propiedad
-        </Button>
-      </div>
-      
       <Table striped bordered hover responsive>
         <thead>
           <tr>
@@ -89,15 +81,6 @@ export const TablaPropiedades = ({
           ))}
         </tbody>
       </Table>
-      
-      {propiedades.length === 0 && (
-        <div className="text-center py-4">
-          <p className="text-muted">No hay propiedades registradas</p>
-          <Button variant="success" onClick={onAdd}>
-            Agregar Primera Propiedad
-          </Button>
-        </div>
-      )}
     </>
   );
 };

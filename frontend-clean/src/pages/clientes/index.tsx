@@ -1,7 +1,6 @@
 import NavigationBar from "@/features/common/components/NavigationBar";
 import { Container, Modal, Button } from "react-bootstrap";
 import { TablaPropiedades } from "@/features/dashboard/propiedades/components/TablaPropiedades";
-import { usePropiedadesPage } from "@/features/dashboard/propiedades/hooks/usePropiedadesPage";
 import PropertyModal from "@/features/dashboard/propiedades/components/PropertyModal";
 import { useState } from "react";
 import { property_view_t, property_form_add_t, property_form_edit_t, property_form_arrendatario_t } from "@/types";

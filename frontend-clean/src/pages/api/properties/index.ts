@@ -1,7 +1,7 @@
 import { withAuth } from '@/backend/auth';
 import { AppError, convertZodError, MethodNotAllowedError, PropertyParsingError, UnexpectedError } from '@/backend/errors';
 import { AppErrorResponse, SuccessTemplate } from '@/backend/messages';
-import { property_form_add_schema, property_form_delete_schema, property_form_edit_schema, Roles } from '@/types';
+import { property_form_add_schema, property_form_delete_schema, property_form_edit_schema, property_search_schema, Roles } from '@/types';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { addProperty, deleteProperty, searchProperties, updateProperty } from '@/lib/backend/properties';
 import z from 'zod';
@@ -20,7 +20,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 function get(req: NextApiRequest, res: NextApiResponse) {
     withAuth(
         async (req: NextApiRequest, Res: NextApiResponse) => {
-            const users = await searchProperties({});
+            const parsedBody = property_search_schema.safeParse(req.body);
+            if (!parsedBody.success) {
+                console.log(parsedBody.error);
+                return AppErrorResponse(res, PropertyParsingError());
+            } 
+
+            const users = await searchProperties(parsedBody.data);
             return res.status(200).json(SuccessTemplate(users, "Lista de propiedades obtenida correctamente"));
         },
         [Roles.ADMINISTRADOR, Roles.CORREDOR]
