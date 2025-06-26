@@ -8,8 +8,8 @@ export async function searchProperties(searchParams: property_search_t)
 : Promise<property_view_t[]> {
   console.log(searchParams);
 
-  let where = [];
-  let params: any[] = [];
+  const where = [];
+  const params: SQLParam[] = [];
 
   // Filters
   if (searchParams.propietario != null) {
@@ -55,7 +55,7 @@ export async function searchProperties(searchParams: property_search_t)
 
   const results = await db.query(sql, params);
 
-  const enriched: any[] = [];
+  const enriched: SQLParam[] = [];
 
   for (const row of results) {
     const base = {

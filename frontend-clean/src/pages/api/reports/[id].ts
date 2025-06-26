@@ -26,7 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const result = await deleteReport(reportId);
       if (!result.deleted) return res.status(404).json({ error: "Not found" });
       return res.json({ success: true, id: reportId });
-    } catch (e: any) {
+    } catch (e) {
+      if (e instanceof Error)
       return res.status(500).json({ error: e.message || "Failed to delete" });
     }
   }

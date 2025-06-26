@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { AppErrorResponse, handleZodError, SuccessTemplate } from "@/lib/backend/messages";
 import { AppError } from "@/utils/errors";
 import { addReport, getReports } from "@/lib/backend/reports"; // <-- Implement this!
-import { report_upload_schema } from "@/types"; // See previous answer's schema!
 import z from "zod";
 import formidable, { File as FormidableFile } from "formidable";
 import { fileURLToPath } from "url";

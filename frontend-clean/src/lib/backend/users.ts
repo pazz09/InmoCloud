@@ -189,8 +189,8 @@ export async function login(rut: string, password: string):
 
 
 export async function searchUsers(searchParams: user_search_t): Promise<user_t[]> {
-  let where = [];
-  let params: any[] = [];
+  const where = [];
+  const params: SQLParam[] = [];
   console.log(searchParams)
 
   // Filtro nombre

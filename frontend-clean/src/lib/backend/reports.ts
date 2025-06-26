@@ -1,4 +1,4 @@
-import { SQLParam } from "@/types";
+import { OkPacket_t, SQLParam } from "@/types";
 import db from "./db";
 
 interface AddReportInput {
@@ -20,7 +20,7 @@ export async function addReport(input: AddReportInput) {
 
   // (You can return inserted id and whatever you choose)
   return {
-    id: (result as any).insertId,
+    id: (result as OkPacket_t).insertId,
     user_id,
   };
 }
@@ -70,7 +70,7 @@ export async function deleteReport(reportId: number): Promise<{ deleted: boolean
   );
 
   // result.affectedRows (usually - check your db lib) indicates rows removed
-  const deleted = (result as any).affectedRows > 0;
+  const deleted = (result as OkPacket_t).affectedRows > 0;
 
   return { deleted, id: reportId };
 }

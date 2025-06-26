@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Container, Spinner, Table } from "react-bootstrap";
 import { FaArrowLeft } from "react-icons/fa";
 
-export default function () {
+export default function PropiedadesView () {
 
   const router = useRouter();
   const property_id = router.query.id;

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Container, Spinner, Table } from "react-bootstrap";
 import { FaArrowLeft } from "react-icons/fa";
 
-export default function () {
+export default function PaymentData () {
 
   const router = useRouter();
   const payment_id = router.query.id;
@@ -36,7 +36,7 @@ export default function () {
         setPropertyData(property_data[0]);
       }
 
-      const user_data = await fetchUserList(token!, { id: payment.usuario_id });
+      const user_data = await fetchUserList(token!, { id: payment.usuario_id! });
       setUserData(user_data[0]);
     };
     fn();
